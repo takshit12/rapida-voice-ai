@@ -93,10 +93,9 @@ func (ec *ExternalConnect) ToToken(value map[string]interface{}) (*oauth2.Token,
 
 	// Extract refresh token, if present
 	refreshToken, ok := value["refreshToken"].(string)
-	if !ok {
-		return nil, connect, errors.New("refresh_token not found or invalid type")
+	if ok {
+		token.RefreshToken = refreshToken
 	}
-	token.RefreshToken = refreshToken
 
 	if expiryStr, ok := value["expiry"].(string); ok {
 		expiry, err := time.Parse(time.RFC3339, expiryStr)

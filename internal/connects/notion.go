@@ -48,13 +48,16 @@ type NotionTokenResponse struct {
 	TokenType   string `json:"token_type"`
 	BotId       string `json:"bot_id"`
 	Owner       struct {
-		Id   string `json:"id"`
 		Type string `json:"type"`
-		Name string `json:"name"`
+		User struct {
+			Object string `json:"object"`
+			Id     string `json:"id"`
+		} `json:"user"`
 	} `json:"owner"`
 	WorkspaceName string `json:"workspace_name"`
 	WorkspaceIcon string `json:"workspace_icon"`
 	WorkspaceId   string `json:"workspace_id"`
+	RequestId     string `json:"request_id"`
 }
 
 func (gtr *NotionTokenResponse) Token() *oauth2.Token {
@@ -73,6 +76,7 @@ func (gtr *NotionTokenResponse) Map() map[string]interface{} {
 		"workspaceName": gtr.WorkspaceName,
 		"workspaceIcon": gtr.WorkspaceIcon,
 		"workspaceId":   gtr.WorkspaceId,
+		"requestId":     gtr.RequestId,
 	}
 }
 
