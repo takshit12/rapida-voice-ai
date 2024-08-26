@@ -187,6 +187,7 @@ func (assistantGRPCApi *webAssistantGRPCApi) UpdateAssistantDetail(ctx context.C
 }
 
 func (assistantGRPCApi *webAssistantGRPCApi) PersonalizeAssistant(ctx context.Context, iRequest *web_api.PersonalizeAssistantRequest) (*web_api.GetAssistantResponse, error) {
+	assistantGRPCApi.logger.Debugf("personalize assistant request ctx %v", ctx)
 	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
 	if !isAuthenticated {
 		assistantGRPCApi.logger.Errorf("unauthenticated request to personalize assistant")

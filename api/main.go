@@ -98,7 +98,7 @@ func main() {
 	// if application json
 	http2GRPCFilteredListener := cmuxListener.Match(cmux.HTTP2())
 	grpcFilteredListener := cmuxListener.Match(
-		cmux.HTTP1HeaderField("Content-type", "application/grpc-web+proto"),
+		cmux.HTTP1HeaderField("content-type", "application/grpc-web+proto"),
 		cmux.HTTP1HeaderField("x-grpc-web", "1"))
 	rpcFilteredListener := cmuxListener.Match(cmux.Any())
 	// rpcFilteredListener := cmuxListener.Match(cmux.HTTP2())

@@ -128,9 +128,6 @@ func (assistant *webTalkGRPCApi) GetAllAssistantConversaction(c context.Context,
 			"Unable to get your assistant, please try again in sometime.")
 	}
 
-	for _, _ep := range _assistantConvo {
-		_ep.User = assistant.GetUser(c, iAuth, _ep.GetUserId())
-	}
 	return utils.PaginatedSuccess[web_api.GetAllAssistantConversactionResponse, []*web_api.AssistantConversaction](
 		_page.GetTotalItem(), _page.GetCurrentPage(),
 		_assistantConvo)
