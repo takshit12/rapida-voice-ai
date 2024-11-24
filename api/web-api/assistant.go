@@ -28,6 +28,11 @@ type webAssistantGRPCApi struct {
 	webAssistantApi
 }
 
+// GetAllAssistantSession implements lexatic_backend.AssistantServiceServer.
+func (*webAssistantGRPCApi) GetAllAssistantSession(context.Context, *web_api.GetAllAssistantSessionRequest) (*web_api.GetAllAssistantSessionResponse, error) {
+	panic("unimplemented")
+}
+
 // GetAllAssistantMessage implements lexatic_backend.AssistantServiceServer.
 func (assistant *webAssistantGRPCApi) GetAllAssistantMessage(c context.Context, iRequest *web_api.GetAllAssistantMessageRequest) (*web_api.GetAllAssistantMessageResponse, error) {
 	assistant.logger.Debugf("GetAllAssistantMessage from grpc with requestPayload %v, %v", iRequest, c)
