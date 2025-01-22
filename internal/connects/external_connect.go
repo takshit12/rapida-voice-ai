@@ -86,10 +86,9 @@ func (ec *ExternalConnect) ToToken(value map[string]interface{}) (*oauth2.Token,
 	token.AccessToken = accessToken
 	// Extract token type
 	tokenType, ok := value["tokenType"].(string)
-	if !ok {
-		return nil, connect, errors.New("token_type not found or invalid type")
+	if ok {
+		token.TokenType = tokenType
 	}
-	token.TokenType = tokenType
 
 	// Extract refresh token, if present
 	refreshToken, ok := value["refreshToken"].(string)

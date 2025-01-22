@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	config "github.com/lexatic/web-backend/config"
+	internal_connects "github.com/lexatic/web-backend/internal/connects"
 	internal_services "github.com/lexatic/web-backend/internal/services"
 	internal_vault_service "github.com/lexatic/web-backend/internal/services/vault"
 	integration_client "github.com/lexatic/web-backend/pkg/clients/integration"
@@ -24,6 +25,8 @@ type webVaultApi struct {
 	vaultService      internal_services.VaultService
 	providerClient    provider_client.ProviderServiceClient
 	integrationClient integration_client.IntegrationServiceClient
+	// hubspot connect
+	hubspotConnect internal_connects.HubspotConnect
 }
 
 type webVaultRPCApi struct {
@@ -43,6 +46,7 @@ func NewVaultRPC(config *config.AppConfig, logger commons.Logger, postgres conne
 			vaultService:      internal_vault_service.NewVaultService(logger, postgres),
 			providerClient:    provider_client.NewProviderServiceClientGRPC(config, logger, redis),
 			integrationClient: integration_client.NewIntegrationServiceClientGRPC(config, logger, redis),
+			hubspotConnect:    internal_connects.NewHubspotConnect(config, logger, postgres),
 		},
 	}
 }
@@ -57,6 +61,7 @@ func NewVaultGRPC(config *config.AppConfig, logger commons.Logger, postgres conn
 			vaultService:      internal_vault_service.NewVaultService(logger, postgres),
 			providerClient:    provider_client.NewProviderServiceClientGRPC(config, logger, redis),
 			integrationClient: integration_client.NewIntegrationServiceClientGRPC(config, logger, redis),
+			hubspotConnect:    internal_connects.NewHubspotConnect(config, logger, postgres),
 		},
 	}
 }
@@ -216,4 +221,35 @@ func (wVault *webVaultGRPCApi) CreateToolCredential(
 		wVault.logger.Errorf("unable to cast the provider credentials to proto %v", err)
 	}
 	return utils.Success[web_api.CreateToolCredentialResponse](out)
+}
+
+func (wVault *webVaultGRPCApi) GetOauth2VaultCredential(ctx context.Context, request *web_api.GetOauth2VaultCredentialRequest) (*web_api.GetOauth2VaultCredentialResponse, error) {
+	wVault.logger.Debugf("GetOauth2VaultCredential from grpc with requestPayload %v, %v", request, ctx)
+	iAuth, isAuthenticated := types.GetClaimPrincipleGRPC[*types.ServiceScope](ctx)
+	if !isAuthenticated {
+		wVault.logger.Errorf("GetAllProviderCredential from grpc with unauthenticated request")
+		return nil, errors.New("unauthenticated request")
+	}
+	vlt, err := wVault.vaultService.GetToolCredential(
+		ctx, iAuth, request.GetProviderId())
+
+	if err != nil {
+		wVault.logger.Errorf("unable to get tool credentials %v", err)
+		return utils.Error[web_api.GetOauth2VaultCredentialResponse](err, "Unable to get tool credential to get list of files.")
+	}
+	token, _, err := wVault.hubspotConnect.ToToken(vlt.Value)
+	if err != nil {
+		wVault.logger.Errorf("unable to get tool credentials %v", err)
+		return utils.Error[web_api.GetOauth2VaultCredentialResponse](err, "Unable to get tool credential to get list of files.")
+	}
+	newToken, err := wVault.hubspotConnect.RefreshToken(ctx, token)
+
+	vlt.Value = newToken.Map()
+	//
+	var out web_api.VaultCredential
+	err = utils.Cast(vlt, &out)
+	if err != nil {
+		wVault.logger.Errorf("unable to cast vault object to proto %v", err)
+	}
+	return utils.Success[web_api.GetOauth2VaultCredentialResponse, *web_api.VaultCredential](&out)
 }

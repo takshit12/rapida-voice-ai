@@ -19,7 +19,9 @@ type HubspotConnect struct {
 }
 
 var (
-	HUBSPOT_SCOPE   = []string{"crm.objects.leads.read", "crm.objects.leads.write"}
+	HUBSPOT_SCOPE = []string{"crm.objects.leads.read", "crm.objects.leads.write",
+		"crm.objects.companies.read", "crm.objects.companies.write",
+		"crm.objects.contacts.read", "crm.objects.contacts.write"}
 	HUBSPOT_CONNECT = "/connect-crm/hubspot"
 )
 
@@ -90,6 +92,35 @@ func (hubspotConnect *HubspotConnect) Token(c context.Context, code string) (Ext
 		return nil, fmt.Errorf("failed to decode token response: %v", err)
 	}
 
+	return &tokenResponse, nil
+}
+
+func (hubspotConnect *HubspotConnect) RefreshToken(c context.Context, token *oauth2.Token) (ExternalConnectToken, error) {
+	resp, err := hubspotConnect.NewHttpClient().R().
+		SetBasicAuth(hubspotConnect.hubspotOauthConfig.ClientID, hubspotConnect.hubspotOauthConfig.ClientSecret).
+		SetHeader("content-type", "application/x-www-form-urlencoded").
+		SetFormData(map[string]string{
+			"grant_type":    "refresh_token",
+			"refresh_token": token.RefreshToken,
+			"client_id":     hubspotConnect.hubspotOauthConfig.ClientID,
+			"client_secret": hubspotConnect.hubspotOauthConfig.ClientSecret,
+		}).
+		Post(hubspotConnect.hubspotOauthConfig.Endpoint.TokenURL)
+	if err != nil {
+		hubspotConnect.log.Errorf("Error while creating request: %v", err)
+		return nil, err
+	}
+
+	if resp.IsError() {
+		hubspotConnect.log.Errorf("Error response: %s", resp.String())
+		return nil, fmt.Errorf("failed to get token: %s", resp.Status())
+	}
+
+	var tokenResponse HubspotTokenResponse
+	err = json.Unmarshal(resp.Body(), &tokenResponse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode token response: %v", err)
+	}
 	return &tokenResponse, nil
 }
 
