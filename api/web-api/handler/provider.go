@@ -42,20 +42,19 @@ func NewProviderGRPC(config *config.AppConfig, logger commons.Logger, postgres c
 
 // GetAllModel implements lexatic_backend.ProviderServiceServer.
 func (w *webProviderGRPCApi) GetAllModel(ctx context.Context, r *web_api.GetAllModelRequest) (*web_api.GetAllModelResponse, error) {
-	_mdls, err := w.providerService.GetAllModel(ctx, r.GetCriterias())
+	models, err := w.providerService.GetAllModel(ctx, r.GetCriterias())
 	if err != nil {
 		w.logger.Errorf("error while getting all the model with %+v type err %v", r.GetCriterias(), err)
 		return utils.Error[web_api.GetAllModelResponse](err, "Unable to get all the models, please try again.")
 	}
 
 	var mdls = []*web_api.ProviderModel{}
-	err = utils.Cast(&_mdls, &mdls)
+	err = utils.Cast(models, &mdls)
 	if err != nil {
 		w.logger.Errorf("error while type casting model type err %v", err)
-		return nil, err
 	}
 	return utils.PaginatedSuccess[web_api.GetAllModelResponse, []*web_api.ProviderModel](
-		uint32(len(mdls)), 1,
+		uint32(len(mdls)), 0,
 		mdls)
 }
 

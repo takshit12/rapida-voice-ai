@@ -59,7 +59,7 @@ func (ps *providerService) GetAllModel(c context.Context, criterias []*web_api.C
 	}
 
 	if err := qry.
-		Where("provider_models.status = ?", "active").
+		Where("provider_models.status = ?", "ACTIVE").
 		Order("provider_models.name desc").
 		Find(&pv).
 		Error; err != nil {
