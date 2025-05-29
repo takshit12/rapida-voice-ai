@@ -15,7 +15,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/opensearch-project/opensearch-go v1.1.0
+	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkoukk/tiktoken-go v0.1.7
 	github.com/redis/go-redis/v9 v9.5.3
 	github.com/soheilhy/cmux v0.1.5
