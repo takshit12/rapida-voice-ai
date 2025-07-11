@@ -73,7 +73,7 @@ func (assistant *webAssistantGRPCApi) GetAllAssistantMessage(c context.Context, 
 		return exceptions.AuthenticationError[web_api.GetAllAssistantMessageResponse]()
 	}
 
-	_page, _assistant, err := assistant.assistantClient.GetAllAssistantMessage(c, iAuth, iRequest.GetAssistantId(), iRequest.GetCriterias(), iRequest.GetPaginate(), iRequest.GetOrder())
+	_page, _assistant, err := assistant.assistantClient.GetAllAssistantMessage(c, iAuth, iRequest.GetAssistantId(), iRequest.GetCriterias(), iRequest.GetPaginate(), iRequest.GetOrder(), iRequest.GetSelectors())
 	if err != nil {
 		return exceptions.InternalServerError[web_api.GetAllAssistantMessageResponse](err, "Unable to get all the assistant messages")
 	}
@@ -353,4 +353,16 @@ func (assistantGRPCApi *webAssistantGRPCApi) GetAssistantWebhook(ctx context.Con
 			"Unable to get webhook, please try again in sometime.")
 	}
 	return utils.Success[web_api.GetAssistantWebhookResponse, *web_api.AssistantWebhook](wk)
+}
+
+// GetAssistantWebhook implements lexatic_backend.AssistantServiceServer.
+func (assistantGRPCApi *webAssistantGRPCApi) GetAssistantConversation(ctx context.Context, iRequest *web_api.GetAssistantConversationRequest) (*web_api.GetAssistantConversationResponse, error) {
+	assistantGRPCApi.logger.Debugf("update assistant request %v, %v", iRequest, ctx)
+	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
+	if !isAuthenticated {
+		assistantGRPCApi.logger.Errorf("unauthenticated request to create assistant tag")
+		return nil, errors.New("unauthenticated request")
+	}
+	return assistantGRPCApi.assistantClient.GetAssistantConversation(ctx, iAuth, iRequest)
+
 }
