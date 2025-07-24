@@ -68,8 +68,6 @@ func (knowledge *webKnowledgeGRPCApi) GetKnowledge(c context.Context, iRequest *
 	}
 
 	_knowledge.CreatedUser = knowledge.GetUser(c, iAuth, _knowledge.GetCreatedBy())
-	_knowledge.EmbeddingProviderModel = knowledge.GetProviderModel(c, iAuth, _knowledge.GetEmbeddingProviderModelId())
-
 	return utils.Success[web_api.GetKnowledgeResponse, *web_api.Knowledge](_knowledge)
 
 }
@@ -96,7 +94,6 @@ func (knowledge *webKnowledgeGRPCApi) GetAllKnowledge(c context.Context, iReques
 
 	for _, _ep := range _knowledge {
 		_ep.CreatedUser = knowledge.GetUser(c, iAuth, _ep.GetCreatedBy())
-		_ep.EmbeddingProviderModel = knowledge.GetProviderModel(c, iAuth, _ep.GetEmbeddingProviderModelId())
 	}
 	return utils.PaginatedSuccess[web_api.GetAllKnowledgeResponse, []*web_api.Knowledge](
 		_page.GetTotalItem(), _page.GetCurrentPage(),

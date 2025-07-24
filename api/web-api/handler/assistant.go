@@ -139,7 +139,6 @@ func (assistant *webAssistantGRPCApi) GetAssistant(c context.Context, iRequest *
 
 	if _assistant.AssistantProviderModel != nil {
 		_assistant.AssistantProviderModel.CreatedUser = assistant.GetUser(c, iAuth, _assistant.AssistantProviderModel.GetCreatedBy())
-		_assistant.AssistantProviderModel.ProviderModel = assistant.GetProviderModel(c, iAuth, _assistant.AssistantProviderModel.GetProviderModelId())
 	}
 	return utils.Success[web_api.GetAssistantResponse, *web_api.Assistant](_assistant)
 }
@@ -167,7 +166,6 @@ func (assistant *webAssistantGRPCApi) GetAllAssistant(c context.Context, iReques
 	for _, _ep := range _assistant {
 		if _ep.GetAssistantProviderModel() != nil {
 			_ep.AssistantProviderModel.CreatedUser = assistant.GetUser(c, iAuth, _ep.AssistantProviderModel.GetCreatedBy())
-			_ep.AssistantProviderModel.ProviderModel = assistant.GetProviderModel(c, iAuth, _ep.AssistantProviderModel.GetProviderModelId())
 		}
 	}
 	return utils.PaginatedSuccess[web_api.GetAllAssistantResponse, []*web_api.Assistant](
@@ -222,7 +220,6 @@ func (assistantGRPCApi *webAssistantGRPCApi) GetAllAssistantProviderModel(ctx co
 
 	for _, _ep := range _assistant {
 		_ep.CreatedUser = assistantGRPCApi.GetUser(ctx, iAuth, _ep.GetCreatedBy())
-		_ep.ProviderModel = assistantGRPCApi.GetProviderModel(ctx, iAuth, _ep.GetProviderModelId())
 	}
 	return utils.PaginatedSuccess[web_api.GetAllAssistantProviderModelResponse, []*web_api.AssistantProviderModel](
 		_page.GetTotalItem(), _page.GetCurrentPage(),
@@ -364,5 +361,16 @@ func (assistantGRPCApi *webAssistantGRPCApi) GetAssistantConversation(ctx contex
 		return nil, errors.New("unauthenticated request")
 	}
 	return assistantGRPCApi.assistantClient.GetAssistantConversation(ctx, iAuth, iRequest)
+
+}
+
+func (assistantGRPCApi *webAssistantGRPCApi) DeleteAssistant(ctx context.Context, iRequest *web_api.DeleteAssistantRequest) (*web_api.BaseResponse, error) {
+	assistantGRPCApi.logger.Debugf("update assistant request %v, %v", iRequest, ctx)
+	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
+	if !isAuthenticated {
+		assistantGRPCApi.logger.Errorf("unauthenticated request to create assistant tag")
+		return nil, errors.New("unauthenticated request")
+	}
+	return assistantGRPCApi.assistantClient.DeleteAssistant(ctx, iAuth, iRequest)
 
 }

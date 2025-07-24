@@ -17,11 +17,12 @@ import (
 
 type webEndpointApi struct {
 	WebApi
-	cfg            *config.AppConfig
-	logger         commons.Logger
-	postgres       connectors.PostgresConnector
-	redis          connectors.RedisConnector
-	endpointClient endpoint_client.EndpointServiceClient
+	cfg               *config.AppConfig
+	logger            commons.Logger
+	postgres          connectors.PostgresConnector
+	redis             connectors.RedisConnector
+	endpointClient    endpoint_client.EndpointServiceClient
+	marketplaceClient endpoint_client.MarketplaceServiceClient
 }
 
 type webEndpointGRPCApi struct {
@@ -31,12 +32,13 @@ type webEndpointGRPCApi struct {
 func NewEndpointGRPC(config *config.AppConfig, logger commons.Logger, postgres connectors.PostgresConnector, redis connectors.RedisConnector) web_api.EndpointServiceServer {
 	return &webEndpointGRPCApi{
 		webEndpointApi{
-			WebApi:         NewWebApi(config, logger, postgres, redis),
-			cfg:            config,
-			logger:         logger,
-			postgres:       postgres,
-			redis:          redis,
-			endpointClient: endpoint_client.NewEndpointServiceClientGRPC(config, logger, redis),
+			WebApi:            NewWebApi(config, logger, postgres, redis),
+			cfg:               config,
+			logger:            logger,
+			postgres:          postgres,
+			redis:             redis,
+			endpointClient:    endpoint_client.NewEndpointServiceClientGRPC(config, logger, redis),
+			marketplaceClient: endpoint_client.NewMarketplaceServiceClientGRPC(config, logger, redis),
 		},
 	}
 }
@@ -55,11 +57,6 @@ func (endpoint *webEndpointGRPCApi) GetEndpoint(c context.Context, iRequest *web
 			"Unable to get your endpoint, please try again in sometime.")
 	}
 
-	if _endpoint.EndpointProviderModel != nil {
-		_endpoint.EndpointProviderModel.CreatedUser = endpoint.GetUser(c, iAuth, _endpoint.EndpointProviderModel.GetCreatedBy())
-		_endpoint.EndpointProviderModel.ProviderModel = endpoint.GetProviderModel(c, iAuth, _endpoint.EndpointProviderModel.GetProviderModelId())
-	}
-
 	return utils.Success[web_api.GetEndpointResponse, *web_api.Endpoint](_endpoint)
 
 }
@@ -75,7 +72,7 @@ func (endpoint *webEndpointGRPCApi) GetAllDeployment(c context.Context, iRequest
 		return nil, errors.New("unauthenticated request")
 	}
 
-	_page, _deployments, err := endpoint.endpointClient.GetAllDeployment(c, iAuth, iRequest.GetCriterias(), iRequest.GetPaginate())
+	_page, _deployments, err := endpoint.marketplaceClient.GetAllDeployment(c, iAuth, iRequest.GetCriterias(), iRequest.GetPaginate())
 	if err != nil {
 		return utils.Error[web_api.GetAllDeploymentResponse](
 			err,
@@ -111,7 +108,6 @@ func (endpoint *webEndpointGRPCApi) GetAllEndpoint(c context.Context, iRequest *
 	for _, _ep := range _endpoint {
 		if _ep.GetEndpointProviderModel() != nil {
 			_ep.EndpointProviderModel.CreatedUser = endpoint.GetUser(c, iAuth, _ep.EndpointProviderModel.GetCreatedBy())
-			_ep.EndpointProviderModel.ProviderModel = endpoint.GetProviderModel(c, iAuth, _ep.EndpointProviderModel.GetProviderModelId())
 		}
 	}
 	return utils.PaginatedSuccess[web_api.GetAllEndpointResponse, []*web_api.Endpoint](
@@ -146,7 +142,6 @@ func (endpointGRPCApi *webEndpointGRPCApi) GetAllEndpointProviderModel(ctx conte
 
 	for _, _ep := range _endpoints {
 		_ep.CreatedUser = endpointGRPCApi.GetUser(ctx, iAuth, _ep.GetCreatedBy())
-		_ep.ProviderModel = endpointGRPCApi.GetProviderModel(ctx, iAuth, _ep.GetProviderModelId())
 	}
 	return utils.PaginatedSuccess[web_api.GetAllEndpointProviderModelResponse, []*web_api.EndpointProviderModel](
 		_page.GetTotalItem(), _page.GetCurrentPage(),

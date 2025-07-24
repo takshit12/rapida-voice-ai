@@ -61,16 +61,3 @@ func (w *WebApi) GetOrganization(c context.Context, auth types.SimplePrinciple, 
 	}
 	return ot
 }
-
-func (w *WebApi) GetProviderModel(ctx context.Context, auth types.SimplePrinciple, providerModelId uint64) *web_api.ProviderModel {
-	mdl, err := w.providerService.GetModel(ctx, providerModelId)
-	if err != nil {
-		w.logger.Errorf("unable to get provider model %v", err)
-	}
-	model := &web_api.ProviderModel{}
-	err = utils.Cast(mdl, model)
-	if err != nil {
-		w.logger.Debugf("error while type casting model type err %v", err)
-	}
-	return model
-}
