@@ -230,3 +230,35 @@ func (endpointGRPCApi *webEndpointGRPCApi) Invoke(ctx context.Context, iRequest 
 	}
 	return endpointGRPCApi.endpointClient.ForkEndpoint(ctx, iAuth, iRequest)
 }
+
+func (endpoint *webEndpointGRPCApi) GetEndpointLog(c context.Context, iRequest *web_api.GetEndpointLogRequest) (*web_api.GetEndpointLogResponse, error) {
+	endpoint.logger.Debugf("GetEndpoint from grpc with requestPayload %v, %v", iRequest, c)
+	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	if !isAuthenticated {
+		endpoint.logger.Errorf("unauthenticated request for get actvities")
+		return nil, errors.New("unauthenticated request")
+	}
+	return endpoint.endpointClient.GetEndpointLog(c, iAuth, iRequest)
+}
+
+/*
+ */
+
+func (endpoint *webEndpointGRPCApi) GetAllEndpointLog(c context.Context, iRequest *web_api.GetAllEndpointLogRequest) (*web_api.GetAllEndpointLogResponse, error) {
+	endpoint.logger.Debugf("GetAllEndpoint from grpc with requestPayload %v, %v", iRequest, c)
+	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	if !isAuthenticated {
+		endpoint.logger.Errorf("unauthenticated request for get actvities")
+		return nil, errors.New("unauthenticated request")
+	}
+
+	_page, _deployments, err := endpoint.endpointClient.GetAllEndpointLog(c, iAuth, iRequest.GetEndpointId(), iRequest.GetCriterias(), iRequest.GetPaginate())
+	if err != nil {
+		return utils.Error[web_api.GetAllEndpointLogResponse](
+			err,
+			"Unable to get deployments, please try again in sometime.")
+	}
+	return utils.PaginatedSuccess[web_api.GetAllEndpointLogResponse, []*web_api.EndpointLog](
+		_page.GetTotalItem(), _page.GetCurrentPage(),
+		_deployments)
+}
