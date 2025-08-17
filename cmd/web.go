@@ -246,7 +246,6 @@ func (g *AppRunner) AllRouters() {
 	g.DocumentApiRoute()
 	g.ProviderApiRoute()
 	g.KnowledgeConnectApiRoute()
-	g.ToolApiRoute()
 
 }
 
@@ -318,10 +317,6 @@ func (g *AppRunner) DocumentApiRoute() {
 
 func (g *AppRunner) ProviderApiRoute() {
 	web_api.RegisterProviderServiceServer(g.S, webApi.NewProviderGRPC(&g.Cfg.AppConfig, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) ToolApiRoute() {
-	web_api.RegisterToolServiceServer(g.S, webApi.NewToolGRPC(&g.Cfg.AppConfig, g.Logger, g.Postgres, g.Redis))
 }
 
 func (g *AppRunner) KnowledgeConnectApiRoute() {
