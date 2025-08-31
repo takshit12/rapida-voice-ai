@@ -28,7 +28,7 @@ type webAssistantDeploymentGRPCApi struct {
 
 // GetAssistantApiDeployment implements lexatic_backend.AssistantDeploymentServiceServer.
 func (w *webAssistantDeploymentGRPCApi) GetAssistantApiDeployment(c context.Context, iRequest *web_api.GetAssistantDeploymentRequest) (*web_api.AssistantApiDeploymentResponse, error) {
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		return nil, errors.New("unauthenticated request")
 	}
@@ -37,7 +37,7 @@ func (w *webAssistantDeploymentGRPCApi) GetAssistantApiDeployment(c context.Cont
 
 // GetAssistantDebuggerDeployment implements lexatic_backend.AssistantDeploymentServiceServer.
 func (w *webAssistantDeploymentGRPCApi) GetAssistantDebuggerDeployment(c context.Context, iRequest *web_api.GetAssistantDeploymentRequest) (*web_api.AssistantDebuggerDeploymentResponse, error) {
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		return nil, errors.New("unauthenticated request")
 	}
@@ -46,7 +46,7 @@ func (w *webAssistantDeploymentGRPCApi) GetAssistantDebuggerDeployment(c context
 
 // GetAssistantPhoneDeployment implements lexatic_backend.AssistantDeploymentServiceServer.
 func (w *webAssistantDeploymentGRPCApi) GetAssistantPhoneDeployment(c context.Context, iRequest *web_api.GetAssistantDeploymentRequest) (*web_api.AssistantPhoneDeploymentResponse, error) {
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		return nil, errors.New("unauthenticated request")
 	}
@@ -55,7 +55,7 @@ func (w *webAssistantDeploymentGRPCApi) GetAssistantPhoneDeployment(c context.Co
 
 // GetAssistantWebpluginDeployment implements lexatic_backend.AssistantDeploymentServiceServer.
 func (w *webAssistantDeploymentGRPCApi) GetAssistantWebpluginDeployment(c context.Context, iRequest *web_api.GetAssistantDeploymentRequest) (*web_api.AssistantWebpluginDeploymentResponse, error) {
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		return nil, errors.New("unauthenticated request")
 	}
@@ -64,7 +64,7 @@ func (w *webAssistantDeploymentGRPCApi) GetAssistantWebpluginDeployment(c contex
 
 // GetAssistantWhatsappDeployment implements lexatic_backend.AssistantDeploymentServiceServer.
 func (w *webAssistantDeploymentGRPCApi) GetAssistantWhatsappDeployment(c context.Context, iRequest *web_api.GetAssistantDeploymentRequest) (*web_api.AssistantWhatsappDeploymentResponse, error) {
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		return nil, errors.New("unauthenticated request")
 	}

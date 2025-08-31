@@ -44,7 +44,7 @@ func NewActivityGRPC(config *config.AppConfig, logger commons.Logger, postgres c
 
 func (wActivity *webActivityGRPCApi) GetAuditLog(c context.Context, irRequest *web_api.GetAuditLogRequest) (*web_api.GetAuditLogResponse, error) {
 	wActivity.logger.Debugf("GetActivities from grpc with requestPayload %v, %v", irRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		wActivity.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -54,7 +54,7 @@ func (wActivity *webActivityGRPCApi) GetAuditLog(c context.Context, irRequest *w
 
 func (wActivity *webActivityGRPCApi) GetAllAuditLog(c context.Context, irRequest *web_api.GetAllAuditLogRequest) (*web_api.GetAllAuditLogResponse, error) {
 	wActivity.logger.Debugf("GetActivities from grpc with requestPayload %v, %v", irRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		wActivity.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")

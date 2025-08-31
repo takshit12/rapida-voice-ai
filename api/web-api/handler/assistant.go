@@ -30,7 +30,7 @@ type webAssistantGRPCApi struct {
 
 func (assistant *webAssistantGRPCApi) GetAllAssistantConversation(c context.Context, iRequest *web_api.GetAllAssistantConversationRequest) (*web_api.GetAllAssistantConversationResponse, error) {
 	assistant.logger.Debugf("GetAllAssistantConversation from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		assistant.logger.Errorf("unauthenticated request for get actvities")
 		return exceptions.AuthenticationError[web_api.GetAllAssistantConversationResponse]()
@@ -48,7 +48,7 @@ func (assistant *webAssistantGRPCApi) GetAllAssistantConversation(c context.Cont
 
 func (assistant *webAssistantGRPCApi) GetAllConversationMessage(c context.Context, iRequest *web_api.GetAllConversationMessageRequest) (*web_api.GetAllConversationMessageResponse, error) {
 	assistant.logger.Debugf("GetAllConversationMessage from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		assistant.logger.Errorf("unauthenticated request for get actvities")
 		return exceptions.AuthenticationError[web_api.GetAllConversationMessageResponse]()
@@ -67,7 +67,7 @@ func (assistant *webAssistantGRPCApi) GetAllConversationMessage(c context.Contex
 // GetAllAssistantMessage implements lexatic_backend.AssistantServiceServer.
 func (assistant *webAssistantGRPCApi) GetAllAssistantMessage(c context.Context, iRequest *web_api.GetAllAssistantMessageRequest) (*web_api.GetAllAssistantMessageResponse, error) {
 	assistant.logger.Debugf("GetAllAssistantMessage from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		assistant.logger.Errorf("unauthenticated request for get actvities")
 		return exceptions.AuthenticationError[web_api.GetAllAssistantMessageResponse]()
@@ -84,7 +84,7 @@ func (assistant *webAssistantGRPCApi) GetAllAssistantMessage(c context.Context, 
 }
 
 func (assistant *webAssistantGRPCApi) GetAllMessage(c context.Context, iRequest *web_api.GetAllMessageRequest) (*web_api.GetAllMessageResponse, error) {
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		assistant.logger.Errorf("unauthenticated request for get actvities")
 		return exceptions.AuthenticationError[web_api.GetAllMessageResponse]()
@@ -121,7 +121,7 @@ func NewAssistantGRPC(config *config.AppConfig, logger commons.Logger, postgres 
 
 func (assistant *webAssistantGRPCApi) GetAssistant(c context.Context, iRequest *web_api.GetAssistantRequest) (*web_api.GetAssistantResponse, error) {
 	assistant.logger.Debugf("GetAssistant from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		assistant.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -150,7 +150,7 @@ func (assistant *webAssistantGRPCApi) GetAssistant(c context.Context, iRequest *
  */
 func (assistant *webAssistantGRPCApi) GetAllAssistant(c context.Context, iRequest *web_api.GetAllAssistantRequest) (*web_api.GetAllAssistantResponse, error) {
 	assistant.logger.Debugf("GetAllAssistant from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		assistant.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")

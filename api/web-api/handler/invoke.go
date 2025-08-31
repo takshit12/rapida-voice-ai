@@ -46,7 +46,7 @@ func (*webInvokeGRPCApi) Update(context.Context, *web_api.UpdateRequest) (*web_a
 
 func (endpointGRPCApi *webInvokeGRPCApi) Invoke(ctx context.Context, iRequest *web_api.InvokeRequest) (*web_api.InvokeResponse, error) {
 	endpointGRPCApi.logger.Debugf("invoking endpoint with context %v", ctx)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(ctx)
 	if !isAuthenticated {
 		endpointGRPCApi.logger.Errorf("unauthenticated request to fork endpoint")
 		return nil, errors.New("unauthenticated request")

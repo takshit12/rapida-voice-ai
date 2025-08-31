@@ -41,7 +41,7 @@ func NewDocumentGRPCApi(config *config.AppConfig, logger commons.Logger,
 
 func (iApi *indexerApi) IndexKnowledgeDocument(ctx context.Context, cer *knowledge_api.IndexKnowledgeDocumentRequest) (*knowledge_api.IndexKnowledgeDocumentResponse, error) {
 	iApi.logger.Debugf("index document request %v, %v", cer, ctx)
-	iAuth, isAuthenticated := types.GetClaimPrincipleGRPC[*types.ServiceScope](ctx)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(ctx)
 	if !isAuthenticated || !iAuth.HasProject() {
 		iApi.logger.Errorf("unauthenticated request for invoke")
 		return utils.Error[knowledge_api.IndexKnowledgeDocumentResponse](

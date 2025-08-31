@@ -572,7 +572,9 @@ func (connectApi *webConnectGRPCApi) GetConnectorFiles(ctx context.Context,
 		connectApi.logger.Errorf("unauthenticated request to fork endpoint")
 		return utils.AuthenticateError[web_api.GetConnectorFilesResponse]()
 	}
-	crd, err := connectApi.vaultService.GetToolCredential(
+
+	// need to modify
+	crd, err := connectApi.vaultService.Get(
 		ctx, auth, r.GetToolId())
 	if err != nil {
 		connectApi.logger.Errorf("unable to get tool credentials %v", err)

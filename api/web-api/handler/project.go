@@ -192,13 +192,12 @@ func (wProjectApi *webProjectGRPCApi) GetAllProject(ctx context.Context, irReque
 		}
 
 	}
-
 	return utils.PaginatedSuccess[web_api.GetAllProjectResponse, []*web_api.Project](uint32(cnt), irRequest.GetPaginate().GetPage(), out)
 }
 
 func (wProjectApi *webProjectGRPCApi) GetProject(ctx context.Context, irRequest *web_api.GetProjectRequest) (*web_api.GetProjectResponse, error) {
 	wProjectApi.logger.Debugf("GetProject from grpc with requestPayload %v, %v", irRequest, ctx)
-	iAuth, isAuthenticated := types.GetClaimPrincipleGRPC[*types.ServiceScope](ctx)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(ctx)
 	if !isAuthenticated {
 		wProjectApi.logger.Errorf("GetProject from grpc with unauthenticated request")
 		return nil, errors.New("unauthenticated request")

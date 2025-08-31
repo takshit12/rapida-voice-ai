@@ -45,7 +45,7 @@ func NewEndpointGRPC(config *config.AppConfig, logger commons.Logger, postgres c
 
 func (endpoint *webEndpointGRPCApi) GetEndpoint(c context.Context, iRequest *web_api.GetEndpointRequest) (*web_api.GetEndpointResponse, error) {
 	endpoint.logger.Debugf("GetEndpoint from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		endpoint.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -66,7 +66,7 @@ func (endpoint *webEndpointGRPCApi) GetEndpoint(c context.Context, iRequest *web
 
 func (endpoint *webEndpointGRPCApi) GetAllDeployment(c context.Context, iRequest *web_api.GetAllDeploymentRequest) (*web_api.GetAllDeploymentResponse, error) {
 	endpoint.logger.Debugf("GetAllEndpoint from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		endpoint.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -92,7 +92,7 @@ func (endpoint *webEndpointGRPCApi) GetAllDeployment(c context.Context, iRequest
  */
 func (endpoint *webEndpointGRPCApi) GetAllEndpoint(c context.Context, iRequest *web_api.GetAllEndpointRequest) (*web_api.GetAllEndpointResponse, error) {
 	endpoint.logger.Debugf("GetAllEndpoint from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		endpoint.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -127,7 +127,7 @@ func (endpoint *webEndpointGRPCApi) CreateEndpoint(c context.Context, iRequest *
 
 func (endpointGRPCApi *webEndpointGRPCApi) GetAllEndpointProviderModel(ctx context.Context, iRequest *web_api.GetAllEndpointProviderModelRequest) (*web_api.GetAllEndpointProviderModelResponse, error) {
 	endpointGRPCApi.logger.Debugf("Create endpoint from grpc with requestPayload %v, %v", iRequest, ctx)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(ctx)
 	if !isAuthenticated {
 		endpointGRPCApi.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -221,16 +221,6 @@ func (endpointGRPCApi *webEndpointGRPCApi) ForkEndpoint(ctx context.Context, iRe
 	return endpointGRPCApi.endpointClient.ForkEndpoint(ctx, iAuth, iRequest)
 }
 
-func (endpointGRPCApi *webEndpointGRPCApi) Invoke(ctx context.Context, iRequest *web_api.ForkEndpointRequest) (*web_api.BaseResponse, error) {
-	endpointGRPCApi.logger.Debugf("Create endpoint provider model request %v, %v", iRequest, ctx)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
-	if !isAuthenticated {
-		endpointGRPCApi.logger.Errorf("unauthenticated request to fork endpoint")
-		return nil, errors.New("unauthenticated request")
-	}
-	return endpointGRPCApi.endpointClient.ForkEndpoint(ctx, iAuth, iRequest)
-}
-
 func (endpoint *webEndpointGRPCApi) GetEndpointLog(c context.Context, iRequest *web_api.GetEndpointLogRequest) (*web_api.GetEndpointLogResponse, error) {
 	endpoint.logger.Debugf("GetEndpoint from grpc with requestPayload %v, %v", iRequest, c)
 	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
@@ -246,7 +236,7 @@ func (endpoint *webEndpointGRPCApi) GetEndpointLog(c context.Context, iRequest *
 
 func (endpoint *webEndpointGRPCApi) GetAllEndpointLog(c context.Context, iRequest *web_api.GetAllEndpointLogRequest) (*web_api.GetAllEndpointLogResponse, error) {
 	endpoint.logger.Debugf("GetAllEndpoint from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		endpoint.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")

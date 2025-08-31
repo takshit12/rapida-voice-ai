@@ -30,7 +30,7 @@ type webKnowledgeGRPCApi struct {
 // GetAllKnowledgeDocumentSegment implements lexatic_backend.KnowledgeServiceServer.
 func (knowledge *webKnowledgeGRPCApi) GetAllKnowledgeDocumentSegment(c context.Context, iRequest *web_api.GetAllKnowledgeDocumentSegmentRequest) (*web_api.GetAllKnowledgeDocumentSegmentResponse, error) {
 	knowledge.logger.Debugf("GetAllKnowledgeDocumentSegment from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -55,7 +55,7 @@ func NewKnowledgeGRPC(config *config.AppConfig, logger commons.Logger, postgres 
 
 func (knowledge *webKnowledgeGRPCApi) GetKnowledge(c context.Context, iRequest *web_api.GetKnowledgeRequest) (*web_api.GetKnowledgeResponse, error) {
 	knowledge.logger.Debugf("GetKnowledge from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -79,7 +79,7 @@ func (knowledge *webKnowledgeGRPCApi) GetKnowledge(c context.Context, iRequest *
  */
 func (knowledge *webKnowledgeGRPCApi) GetAllKnowledge(c context.Context, iRequest *web_api.GetAllKnowledgeRequest) (*web_api.GetAllKnowledgeResponse, error) {
 	knowledge.logger.Debugf("GetAllKnowledge from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
 		return nil, errors.New("unauthenticated request")
@@ -144,7 +144,7 @@ func (knowledgeGRPCApi *webKnowledgeGRPCApi) CreateKnowledgeDocument(ctx context
 // GetAllKnowledgeDocument implements lexatic_backend.KnowledgeServiceServer.
 func (knowledgeGRPCApi *webKnowledgeGRPCApi) GetAllKnowledgeDocument(ctx context.Context, iRequest *web_api.GetAllKnowledgeDocumentRequest) (*web_api.GetAllKnowledgeDocumentResponse, error) {
 	knowledgeGRPCApi.logger.Debugf("Get all knowledge document request %v, %v", iRequest, ctx)
-	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
+	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(ctx)
 	if !isAuthenticated {
 		knowledgeGRPCApi.logger.Errorf("unauthenticated request to get all knowledge document")
 		return nil, errors.New("unauthenticated request")

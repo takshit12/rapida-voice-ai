@@ -172,7 +172,9 @@ func (pS *projectService) GetAllCredential(ctx context.Context, auth types.Princ
 	db := pS.postgres.DB(ctx)
 	var pcs []internal_entity.ProjectCredential
 	var cnt int64
-	qry := db.Model(internal_entity.ProjectCredential{}).
+	qry := db.
+		Model(internal_entity.ProjectCredential{}).
+		Preload("CreatedUser").
 		Where("project_id = ? AND organization_id = ? AND status = ? ", projectId, organizationId, "active")
 	for _, ct := range criterias {
 		qry.Where(fmt.Sprintf("%s = ?", ct.GetKey()), ct.GetValue())

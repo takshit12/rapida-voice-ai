@@ -42,38 +42,6 @@ func NewProviderGRPC(config *config.AppConfig, logger commons.Logger, postgres c
 	}
 }
 
-// // GetAllModel implements lexatic_backend.ProviderServiceServer.
-// func (w *webProviderGRPCApi) GetAllModel(ctx context.Context, r *web_api.GetAllModelRequest) (*web_api.GetAllModelResponse, error) {
-// 	models, err := w.providerService.GetAllModel(ctx, r.GetCriterias())
-// 	if err != nil {
-// 		w.logger.Errorf("error while getting all the model with %+v type err %v", r.GetCriterias(), err)
-// 		return utils.Error[web_api.GetAllModelResponse](err, "Unable to get all the models, please try again.")
-// 	}
-
-// 	var mdls = []*web_api.ProviderModel{}
-// 	err = utils.Cast(models, &mdls)
-// 	if err != nil {
-// 		w.logger.Errorf("error while type casting model type err %v", err)
-// 	}
-// 	return utils.PaginatedSuccess[web_api.GetAllModelResponse, []*web_api.ProviderModel](
-// 		uint32(len(mdls)), 0,
-// 		mdls)
-// }
-
-// GetModel implements lexatic_backend.ProviderServiceServer.
-// func (w *webProviderGRPCApi) GetModel(ctx context.Context, r *web_api.GetModelRequest) (*web_api.GetModelResponse, error) {
-// 	provider, err := w.providerService.GetModel(ctx, r.ModelId)
-// 	if err != nil {
-// 		return utils.Error[web_api.GetModelResponse](err, "Unable to get the models, please try again.")
-// 	}
-// 	model := &web_api.ProviderModel{}
-// 	err = utils.Cast(provider, model)
-// 	if err != nil {
-// 		w.logger.Debugf("error while type casting model type err %v", err)
-// 	}
-// 	return utils.Success[web_api.GetModelResponse](model)
-// }
-
 // GetAllProvider implements lexatic_backend.ProviderServiceServer.
 func (w *webProviderGRPCApi) GetAllModelProvider(ctx context.Context, gat *web_api.GetAllModelProviderRequest) (*web_api.GetAllModelProviderResponse, error) {
 	providers, err := w.providerService.GetAllModelProvider(ctx, gat.GetCriterias())
