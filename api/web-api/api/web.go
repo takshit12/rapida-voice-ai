@@ -6,7 +6,6 @@ import (
 	config "github.com/rapidaai/api/web-api/config"
 	internal_service "github.com/rapidaai/api/web-api/internal/service"
 	internal_organization_service "github.com/rapidaai/api/web-api/internal/service/organization"
-	internal_provider_service "github.com/rapidaai/api/web-api/internal/service/provider"
 	internal_user_service "github.com/rapidaai/api/web-api/internal/service/user"
 	commons "github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
@@ -16,21 +15,19 @@ import (
 )
 
 type WebApi struct {
-	cfg             *config.WebAppConfig
-	logger          commons.Logger
-	postgres        connectors.PostgresConnector
-	redis           connectors.RedisConnector
-	userService     internal_service.UserService
-	providerService internal_service.ProviderService
-	orgService      internal_service.OrganizationService
+	cfg         *config.WebAppConfig
+	logger      commons.Logger
+	postgres    connectors.PostgresConnector
+	redis       connectors.RedisConnector
+	userService internal_service.UserService
+	orgService  internal_service.OrganizationService
 }
 
 func NewWebApi(cfg *config.WebAppConfig, logger commons.Logger, postgres connectors.PostgresConnector, redis connectors.RedisConnector) WebApi {
 	return WebApi{
 		cfg: cfg, logger: logger, postgres: postgres, redis: redis,
-		userService:     internal_user_service.NewUserService(logger, postgres),
-		orgService:      internal_organization_service.NewOrganizationService(logger, postgres),
-		providerService: internal_provider_service.NewProviderService(logger, postgres),
+		userService: internal_user_service.NewUserService(logger, postgres),
+		orgService:  internal_organization_service.NewOrganizationService(logger, postgres),
 	}
 }
 

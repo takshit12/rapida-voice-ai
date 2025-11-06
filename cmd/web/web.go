@@ -17,16 +17,14 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	webApi "github.com/rapidaai/api/web-api/api"
-	healthCheckApi "github.com/rapidaai/api/web-api/api/health"
-	webProxyApi "github.com/rapidaai/api/web-api/api/proxy"
+
 	web_authenticators "github.com/rapidaai/api/web-api/authenticator"
 	"github.com/rapidaai/api/web-api/config"
+	web_router "github.com/rapidaai/api/web-api/router"
 	"github.com/rapidaai/pkg/authenticators"
 	commons "github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	middlewares "github.com/rapidaai/pkg/middlewares"
-	web_api "github.com/rapidaai/protos"
 	"github.com/soheilhy/cmux"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -242,25 +240,13 @@ func (app *AppRunner) Close(ctx context.Context) {
 
 // all router initialize
 func (g *AppRunner) AllRouters() {
-	g.HealthCheckRoutes()
-	g.AuthApiRoutes()
-	g.OauthApiRoute()
-	g.VaultApiRoute()
-	g.OrganizationApiRoute()
-	g.ProjectApiRoute()
-	g.ProviderApiRoute()
-	g.KnowledgeConnectApiRoute()
-	g.LeadApiRoute()
+	web_router.HealthCheckRoutes(g.Cfg, g.E, g.Logger, g.Postgres)
+	web_router.WebApiRoute(g.Cfg, g.E, g.S, g.Logger, g.Postgres, g.Redis)
 
 }
 
 func (g *AppRunner) AllProxyRouter() {
-	g.ActivityApiRoute()
-	g.EndpointApiRoute()
-	g.InvokeApiRoute()
-	g.KnowledgeApiRoute()
-	g.AssistantApiRoute()
-	g.DocumentApiRoute()
+	web_router.ProxyApiRoute(g.Cfg, g.S, g.Logger, g.Postgres, g.Redis)
 }
 
 // all middleware
@@ -270,113 +256,6 @@ func (g *AppRunner) AllMiddlewares() {
 	g.CorsMiddleware()
 	g.RequestLoggerMiddleware()
 	g.E.Use(middlewares.NewAuthenticationMiddleware(web_authenticators.GetUserAuthenticator(g.Logger, g.Postgres), g.Logger))
-}
-
-func (g *AppRunner) AuthApiRoutes() {
-	apiv1 := g.E.Group("/v1")
-	{
-		apiv1.POST("/auth/authenticate/", webApi.NewAuthRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres).Authenticate)
-		apiv1.POST("/auth/register-user/", webApi.NewAuthRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres).RegisterUser)
-
-	}
-	web_api.RegisterAuthenticationServiceServer(g.S, webApi.NewAuthGRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres))
-
-}
-
-func (g *AppRunner) OauthApiRoute() {
-	apiOauth := g.E.Group("/oauth")
-	auth := webApi.NewAuthRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres)
-	{
-		apiOauth.GET("/google/", auth.Google)
-		apiOauth.GET("/linkedin/", auth.Linkedin)
-		apiOauth.GET("/github/", auth.Github)
-	}
-}
-
-func (g *AppRunner) VaultApiRoute() {
-	web_api.RegisterVaultServiceServer(g.S, webApi.NewVaultGRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) OrganizationApiRoute() {
-	web_api.RegisterOrganizationServiceServer(g.S, webApi.NewOrganizationGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) ProjectApiRoute() {
-	web_api.RegisterProjectServiceServer(g.S, webApi.NewProjectGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) ProviderApiRoute() {
-	web_api.RegisterProviderServiceServer(g.S, webApi.NewProviderGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) LeadApiRoute() {
-	web_api.RegisterLeadGeneratorServiceServer(g.S, webApi.NewLeadGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) InvokeApiRoute() {
-	web_api.RegisterDeploymentServer(g.S, webProxyApi.NewInvokeGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) ActivityApiRoute() {
-	web_api.RegisterAuditLoggingServiceServer(g.S, webProxyApi.NewActivityGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) EndpointApiRoute() {
-	web_api.RegisterEndpointServiceServer(g.S, webProxyApi.NewEndpointGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) KnowledgeApiRoute() {
-	web_api.RegisterKnowledgeServiceServer(g.S, webProxyApi.NewKnowledgeGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-func (g *AppRunner) AssistantApiRoute() {
-	web_api.RegisterAssistantServiceServer(g.S, webProxyApi.NewAssistantGRPC(g.Cfg, g.Logger, g.Postgres, g.Redis))
-	web_api.RegisterAssistantDeploymentServiceServer(g.S, webProxyApi.NewAssistantDeploymentGRPCApi(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) DocumentApiRoute() {
-	web_api.RegisterDocumentServiceServer(g.S, webProxyApi.NewDocumentGRPCApi(g.Cfg, g.Logger, g.Postgres, g.Redis))
-}
-
-func (g *AppRunner) KnowledgeConnectApiRoute() {
-	web_api.RegisterConnectServiceServer(g.S, webApi.NewConnectGRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres))
-	g.Logger.Info("Internal HealthCheckRoutes and Connectors added to engine.")
-	apiv1 := g.E.Group("/connect-knowledge")
-	connectApi := webApi.NewConnectRPC(g.Cfg, &g.Cfg.OAuthConfig, g.Logger, g.Postgres)
-	{
-		// working
-		apiv1.GET("/notion/", connectApi.NotionConnect)
-
-		apiv1.GET("/confluence/", connectApi.ConfluenceConnect)
-		apiv1.GET("/google-drive/", connectApi.GoogleDriveConnect)
-		//
-		apiv1.GET("/github/", connectApi.GithubCodeConnect)
-		apiv1.GET("/gitlab/", connectApi.GitlabCodeConnect)
-
-		apiv1.GET("/microsoft-onedrive/", connectApi.MicrosoftOnedriveConnect)
-		apiv1.GET("/sharepoint/", connectApi.MicrosoftSharepointConnect)
-	}
-
-	actionApiv1 := g.E.Group("/connect-action")
-	{
-		actionApiv1.GET("/gmail/", connectApi.GmailActionConnect)
-		actionApiv1.GET("/jira/", connectApi.JiraActionConnect)
-		actionApiv1.GET("/slack/", connectApi.SlackActionConnect)
-	}
-
-	crmConnectApiv1 := g.E.Group("/connect-crm")
-	{
-		crmConnectApiv1.GET("/hubspot/", connectApi.HubspotCRMConnect)
-	}
-}
-
-func (g *AppRunner) HealthCheckRoutes() {
-	g.Logger.Info("Internal HealthCheckRoutes and Connectors added to engine.")
-	apiv1 := g.E.Group("")
-	hcApi := healthCheckApi.New(g.Cfg, g.Logger, g.Postgres)
-	{
-		apiv1.GET("/readiness/", hcApi.Readiness)
-		apiv1.GET("/healthz/", hcApi.Healthz)
-	}
 }
 
 // Logger middleware
