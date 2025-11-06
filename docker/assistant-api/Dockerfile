@@ -10,15 +10,15 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy all necessary directories (from root context)
-COPY api/web-api ./api/web-api
+COPY api/assistant-api ./api/assistant-api
 COPY bin/ ./bin/
 COPY config/ ./config/
 COPY cmd/ ./cmd/
 COPY protos/ ./protos/
 COPY pkg/ ./pkg/
 
-# Build the application from cmd/web/web.go
-RUN CGO_ENABLED=0 GOOS=linux go build -o web-api ./cmd/web/web.go
+# Build the application from cmd/assistant/assistant.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o assistant-api ./cmd/assistant/assistant.go
 
 # Final stage
 FROM alpine:latest
@@ -32,13 +32,13 @@ RUN addgroup -g 1000 rapida-app && \
 WORKDIR /opt/apps
 
 # Copy compiled binary from builder
-COPY --from=builder /app/web-api .
+COPY --from=builder /app/assistant-api .
 
 # Copy migrations directory
-COPY api/web-api/migrations/ ./api/web-api/migrations/
+COPY api/assistant-api/migrations/ ./api/assistant-api/migrations/
 
-# Copy environment file from docker/web-api
-COPY docker/web-api/.web.env ./env/.web.env
+# Copy environment file from docker/assistant-api
+COPY docker/assistant-api/.assistant.env ./env/.assistant.env
 
 
 # Create directory for assets
@@ -60,4 +60,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:9001/healthz/ || exit 1
 
 # Run the application
-CMD ["./web-api"]
+CMD ["./assistant-api"]
