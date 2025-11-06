@@ -18,7 +18,6 @@ type AssistantConfig struct {
 	OpenSearchConfig configs.OpenSearchConfig `mapstructure:"opensearch" validate:"required"`
 	WeaviateConfig   configs.WeaviateConfig   `mapstructure:"weaviate" validate:"required"`
 	AssetStoreConfig configs.AssetStoreConfig `mapstructure:"asset_store" validate:"required"`
-	Batch            configs.BatchConfig      `mapstructure:"batch"`
 }
 
 // reading config and intializing configs for application

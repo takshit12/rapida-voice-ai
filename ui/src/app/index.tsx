@@ -41,7 +41,6 @@ export function App() {
               path="/deployment/*"
               element={<WebRoutes.DeploymentRoute />}
             />
-            <Route path="/hub/*" element={<WebRoutes.HubRoute />} />
 
             <Route
               path="/integration/*"

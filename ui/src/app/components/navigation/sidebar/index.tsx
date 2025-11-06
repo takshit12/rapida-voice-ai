@@ -4,10 +4,8 @@ import { Dashboard } from '@/app/components/navigation/sidebar/dashboard';
 import { Team } from '@/app/components/navigation/sidebar/team';
 import { Project } from '@/app/components/navigation/sidebar/project';
 import { Vault } from '@/app/components/navigation/sidebar/vault';
-import { Model } from '@/app/components/navigation/sidebar/providers-and-models';
 import { SidebarLabel } from '@/app/components/navigation/sidebar/sidebar-label';
 import { Knowledge } from '@/app/components/navigation/sidebar/knowledge';
-import { Discover } from '@/app/components/navigation/sidebar/discover-link';
 import { Aside } from '@/app/components/aside';
 import { ExternalTool } from '@/app/components/navigation/sidebar/external-tools';
 import { useWorkspace } from '@/context/workplace-context';
@@ -28,7 +26,6 @@ export function SidebarNavigation(props: {}) {
         <ul className="space-y-1">
           <Dashboard />
           <Observability />
-          <Discover />
           <Deployment />
           <Knowledge />
         </ul>

@@ -3,7 +3,6 @@ package web_proxy_api
 import (
 	"context"
 	"errors"
-	"strconv"
 
 	endpoint_client "github.com/rapidaai/pkg/clients/endpoint"
 	"github.com/rapidaai/pkg/utils"
@@ -18,12 +17,11 @@ import (
 
 type webEndpointApi struct {
 	web_api.WebApi
-	cfg               *config.WebAppConfig
-	logger            commons.Logger
-	postgres          connectors.PostgresConnector
-	redis             connectors.RedisConnector
-	endpointClient    endpoint_client.EndpointServiceClient
-	marketplaceClient endpoint_client.MarketplaceServiceClient
+	cfg            *config.WebAppConfig
+	logger         commons.Logger
+	postgres       connectors.PostgresConnector
+	redis          connectors.RedisConnector
+	endpointClient endpoint_client.EndpointServiceClient
 }
 
 type webEndpointGRPCApi struct {
@@ -33,13 +31,12 @@ type webEndpointGRPCApi struct {
 func NewEndpointGRPC(config *config.WebAppConfig, logger commons.Logger, postgres connectors.PostgresConnector, redis connectors.RedisConnector) protos.EndpointServiceServer {
 	return &webEndpointGRPCApi{
 		webEndpointApi{
-			WebApi:            web_api.NewWebApi(config, logger, postgres, redis),
-			cfg:               config,
-			logger:            logger,
-			postgres:          postgres,
-			redis:             redis,
-			endpointClient:    endpoint_client.NewEndpointServiceClientGRPC(&config.AppConfig, logger, redis),
-			marketplaceClient: endpoint_client.NewMarketplaceServiceClientGRPC(&config.AppConfig, logger, redis),
+			WebApi:         web_api.NewWebApi(config, logger, postgres, redis),
+			cfg:            config,
+			logger:         logger,
+			postgres:       postgres,
+			redis:          redis,
+			endpointClient: endpoint_client.NewEndpointServiceClientGRPC(&config.AppConfig, logger, redis),
 		},
 	}
 }
@@ -60,33 +57,6 @@ func (endpoint *webEndpointGRPCApi) GetEndpoint(c context.Context, iRequest *pro
 
 	return utils.Success[protos.GetEndpointResponse, *protos.Endpoint](_endpoint)
 
-}
-
-/*
- */
-
-func (endpoint *webEndpointGRPCApi) GetAllDeployment(c context.Context, iRequest *protos.GetAllDeploymentRequest) (*protos.GetAllDeploymentResponse, error) {
-	endpoint.logger.Debugf("GetAllEndpoint from grpc with requestPayload %v, %v", iRequest, c)
-	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
-	if !isAuthenticated {
-		endpoint.logger.Errorf("unauthenticated request for get actvities")
-		return nil, errors.New("unauthenticated request")
-	}
-
-	_page, _deployments, err := endpoint.marketplaceClient.GetAllDeployment(c, iAuth, iRequest.GetCriterias(), iRequest.GetPaginate())
-	if err != nil {
-		return utils.Error[protos.GetAllDeploymentResponse](
-			err,
-			"Unable to get deployments, please try again in sometime.")
-	}
-
-	for _, _ep := range _deployments {
-		orgId, _ := strconv.ParseUint(_ep.GetOrganizationId(), 10, 64)
-		_ep.Organization = endpoint.GetOrganization(c, iAuth, orgId)
-	}
-	return utils.PaginatedSuccess[protos.GetAllDeploymentResponse, []*protos.SearchableDeployment](
-		_page.GetTotalItem(), _page.GetCurrentPage(),
-		_deployments)
 }
 
 /*

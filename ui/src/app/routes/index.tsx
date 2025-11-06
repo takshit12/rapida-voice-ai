@@ -1,6 +1,6 @@
 export { AuthRoute } from '@/app/routes/auth';
 export { OnbaordingRoute } from '@/app/routes/onborading';
-export { DeploymentRoute, HubRoute } from '@/app/routes/deployment';
+export { DeploymentRoute } from '@/app/routes/deployment';
 export { DashboardRoute } from '@/app/routes/dashboard';
 export { StaticRoute } from '@/app/routes/static';
 export { AccountRoute } from '@/app/routes/account';

@@ -36,27 +36,8 @@ import {
 } from '@/app/pages/assistant';
 import { AssistantManageLayout } from '@/app/pages/assistant/actions/assistant-manage.layout';
 import { AssistantViewLayout } from '@/app/pages/assistant/view/assistant-view.layout';
-import { DiscoverPage } from '@/app/pages/discover';
 import { StaticPageNotFoundPage } from '@/app/pages/static-pages';
-import { memo } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
-
-export const HubRoute = memo(() => {
-  return (
-    <Routes>
-      <Route
-        path={'/'}
-        element={
-          <ProtectedBox>
-            <MissionBox>
-              <DiscoverPage />
-            </MissionBox>
-          </ProtectedBox>
-        }
-      />
-    </Routes>
-  );
-});
 
 export function DeploymentRoute() {
   return (
