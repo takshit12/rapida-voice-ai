@@ -107,6 +107,7 @@ services:
     volumes:
       - ./docker/web-api/.web.env:/opt/apps/env/.web.env:ro
       - ~/rapida-data/assets:/opt/apps/assets
+      - go-mod-cache:/go/pkg/mod
 
     networks:
       - api-network
@@ -138,6 +139,7 @@ services:
     volumes:
       - ./docker/assistant-api/.assistant.env:/opt/apps/env/.assistant.env:ro
       - ~/rapida-data/assets:/opt/apps/assets
+      - go-mod-cache:/go/pkg/mod
 
     networks:
       - api-network
@@ -167,6 +169,7 @@ services:
     volumes:
       - ./docker/integration-api/.integration.env:/opt/apps/env/.integration.env:ro
       - ~/rapida-data/assets:/opt/apps/assets
+      - go-mod-cache:/go/pkg/mod
 
     networks:
       - api-network
@@ -196,6 +199,7 @@ services:
     volumes:
       - ./docker/endpoint-api/.endpoint.env:/opt/apps/env/.endpoint.env:ro
       - ~/rapida-data/assets:/opt/apps/assets
+      - go-mod-cache:/go/pkg/mod
 
     networks:
       - api-network
@@ -238,3 +242,6 @@ services:
 networks:
   api-network:
     driver: bridge
+
+volumes:
+  go-mod-cache:
