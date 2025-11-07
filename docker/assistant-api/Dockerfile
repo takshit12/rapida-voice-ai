@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM golang:1.24-bookworm AS builder
+FROM --platform=linux/amd64 golang:1.24-bullseye AS builder
 
 WORKDIR /app
 
@@ -55,7 +55,7 @@ RUN export CGO_CFLAGS="-I/opt/onnxruntime/include -I/usr/local/include -I/opt/az
     CGO_ENABLED=1 go build -v -o assistant-api ./cmd/assistant/assistant.go
 
 # ---- Runtime stage ----
-FROM debian:bookworm-slim AS runtime
+FROM --platform=linux/amd64 golang:1.24-bullseye AS runtime
 
 WORKDIR /opt/apps
 

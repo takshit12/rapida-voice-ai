@@ -661,10 +661,6 @@ CREATE TABLE public.knowledge_collections (
 
 
 
---
--- Name: knowledge_document_embeddings; Type: TABLE; Schema: public; Owner: prashant.srivastav
---
-
 CREATE TABLE public.knowledge_document_embeddings (
     id integer DEFAULT nextval('public.knowledge_document_embeddings_id_seq'::regclass) NOT NULL,
     hash character varying(64) NOT NULL,
@@ -677,11 +673,6 @@ CREATE TABLE public.knowledge_document_embeddings (
 
 
 
-
---
--- Name: knowledge_document_process_rules; Type: TABLE; Schema: public; Owner: prashant.srivastav
---
-
 CREATE TABLE public.knowledge_document_process_rules (
     id bigint NOT NULL,
     created_date timestamp without time zone DEFAULT now() NOT NULL,
@@ -693,11 +684,6 @@ CREATE TABLE public.knowledge_document_process_rules (
     rules text NOT NULL
 );
 
-
-
---
--- Name: knowledge_document_segments; Type: TABLE; Schema: public; Owner: prashant.srivastav
---
 
 CREATE TABLE public.knowledge_document_segments (
     id bigint DEFAULT nextval('public.knowledge_document_segments_id_seq'::regclass) NOT NULL,
@@ -775,11 +761,6 @@ CREATE TABLE public.knowledge_embedding_model_options (
 
 
 
-
---
--- Name: knowledge_logs; Type: TABLE; Schema: public; Owner: prashant.srivastav
---
-
 CREATE TABLE public.knowledge_logs (
     id bigint NOT NULL,
     created_date timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -828,9 +809,6 @@ CREATE TABLE public.knowledge_tags (
 
 
 
---
--- Name: knowledges; Type: TABLE; Schema: public; Owner: prashant.srivastav
---
 
 CREATE TABLE public.knowledges (
     id bigint NOT NULL,

@@ -355,7 +355,7 @@ func (app *AppRunner) Migrate() error {
 	if err != nil {
 		return fmt.Errorf("failed to get current working directory: %w", err)
 	}
-	migrationsPath := fmt.Sprintf("file://%s/api/endpoint-api/migrations", currentDir)
+	migrationsPath := fmt.Sprintf("file://%s/api/assistant-api/migrations", currentDir)
 	app.Logger.Infof("Running migrations with database: %s", app.Cfg.PostgresConfig.DBName)
 	m, err := migrate.New(migrationsPath, dsn)
 	if err != nil {
