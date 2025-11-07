@@ -7,7 +7,7 @@
         restart-all restart-web restart-integration restart-endpoint \
         ps-all shell-web shell-integration shell-endpoint db-shell
 
-COMPOSE := docker-compose -f docker-compose.yml
+COMPOSE := docker compose -f docker-compose.yml
 
 help:
 	@echo ""
@@ -84,7 +84,12 @@ up-all:
 up-ui:
 	@echo "Starting ui..."
 	$(COMPOSE) up -d ui
-	@echo "✓ ui started on port 9001"
+	@echo "✓ ui started on port 3000"
+
+up-document:
+	@echo "Starting document-api..."
+	$(COMPOSE) up -d document-api
+	@echo "✓ web-api started on port 9010"
 
 up-web:
 	@echo "Starting web-api..."
@@ -143,6 +148,11 @@ down-web:
 	$(COMPOSE) stop web-api
 	@echo "✓ web-api stopped"
 
+down-document:
+	@echo "Stopping document-api..."
+	$(COMPOSE) stop document-api
+	@echo "✓ document-api stopped"
+
 down-assistant:
 	@echo "Stopping assistant-api..."
 	$(COMPOSE) stop assistant-api
@@ -195,6 +205,11 @@ build-web:
 	$(COMPOSE) build web-api
 	@echo "✓ web-api built"
 
+build-document:
+	@echo "Building document-api..."
+	$(COMPOSE) build document-api
+	@echo "✓ document-api built"
+
 build-assistant:
 	@echo "Building assistant-api..."
 	$(COMPOSE) build assistant-api
@@ -219,6 +234,12 @@ rebuild-web:
 	@echo "Rebuilding web-api (no cache)..."
 	$(COMPOSE) build --no-cache web-api
 	@echo "✓ web-api rebuilt"
+
+rebuild-document:
+	@echo "Rebuilding document-api (no cache)..."
+	$(COMPOSE) build --no-cache document-api
+	@echo "✓ document-api rebuilt"
+
 
 rebuild-assistant:
 	@echo "Rebuilding assistant-api (no cache)..."
@@ -256,6 +277,11 @@ logs-ui:
 
 logs-web:
 	$(COMPOSE) logs -f web-api
+
+
+logs-document:
+	$(COMPOSE) logs -f document-api
+
 
 logs-assistant:
 	$(COMPOSE) logs -f assistant-api
@@ -296,6 +322,12 @@ restart-web:
 	@echo "Restarting web-api..."
 	$(COMPOSE) restart web-api
 	@echo "✓ web-api restarted"
+
+restart-document:
+	@echo "Restarting document-api..."
+	$(COMPOSE) restart document-api
+	@echo "✓ document-api restarted"
+
 
 restart-assistant:
 	@echo "Restarting assistant-api..."
@@ -349,6 +381,9 @@ shell-ui:
 
 shell-assistant:
 	$(COMPOSE) exec assistant-api sh
+
+shell-document:
+	$(COMPOSE) exec document-api sh
 
 shell-web:
 	$(COMPOSE) exec web-api sh
