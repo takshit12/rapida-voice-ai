@@ -67,7 +67,7 @@ phases:
       - git submodule update --init --recursive
       - echo "Checking out submodule at specific commit"
       - go mod download
-      - sh bin/grpc-server.sh
+      - sh bin/artifacts-generate.sh
       - GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o workflow-api.0.0.1 cmd/workflow.go
       - cp aws/assistant-api/appspec.yml ./appspec.yml
       - cp aws/assistant-api/env/env.production ./env.production

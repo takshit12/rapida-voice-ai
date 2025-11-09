@@ -32,7 +32,7 @@ phases:
       - git submodule update --init --recursive
       - echo "updating submodule"
       - go mod download
-      - sh bin/generate-artifacts.sh
+      - sh bin/artifacts-generate.sh
       - GOOS=linux GOARCH=amd64 go build -o integration-api.0.0.1 cmd/integration.go
       - cp aws/integration-api/appspec.yml ./appspec.yml
       - cp aws/integration-api/env/env.production ./env.production

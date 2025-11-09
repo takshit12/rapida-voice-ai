@@ -32,7 +32,7 @@ phases:
       - git submodule update --init --recursive
       - echo "updating submodule"
       - go mod download
-      - sh bin/generate-artifacts.sh
+      - sh bin/artifacts-generate.sh
       - GOOS=linux GOARCH=amd64 go build -o endpoint-api.0.0.1 cmd/endpoint.go
       - cp aws/endpoint-api/appspec.yml ./appspec.yml
       - cp aws/endpoint-api/env/env.production ./env.production
