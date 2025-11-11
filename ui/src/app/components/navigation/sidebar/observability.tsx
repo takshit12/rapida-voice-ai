@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { ChevronDownIcon } from '@/app/components/Icon/ChevronDown';
-import { Disclosure } from '@/app/components/Disclosure';
+import { Disclosure } from '@/app/components/disclosure';
 import { ChevronUpIcon } from '@/app/components/Icon/ChevronUp';
 import { cn } from '@/utils';
 import { SidebarIconWrapper } from '@/app/components/navigation/sidebar/sidebar-icon-wrapper';

@@ -1,4 +1,4 @@
-import { Disclosure } from '@/app/components/Disclosure';
+import { Disclosure } from '@/app/components/disclosure';
 import { ChevronDownIcon } from '@/app/components/Icon/ChevronDown';
 import { ChevronUpIcon } from '@/app/components/Icon/ChevronUp';
 import { RapidaIcon } from '@/app/components/Icon/Rapida';
@@ -6,7 +6,7 @@ import { SidebarIconWrapper } from '@/app/components/navigation/sidebar/sidebar-
 import { SidebarLabel } from '@/app/components/navigation/sidebar/sidebar-label';
 import { SidebarSimpleListItem } from '@/app/components/navigation/sidebar/sidebar-simple-list-item';
 import { cn } from '@/utils';
-import { FolderKey, Key, KeyIcon, KeySquare } from 'lucide-react';
+import { FolderKey, Key } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 

@@ -1,6 +1,6 @@
-import React, { memo, useContext, useEffect, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { ChevronDownIcon } from '@/app/components/Icon/ChevronDown';
-import { Disclosure } from '@/app/components/Disclosure';
+import { Disclosure } from '@/app/components/disclosure';
 import { ChevronUpIcon } from '@/app/components/Icon/ChevronUp';
 import { cn } from '@/utils';
 import { DeploymentIcon } from '@/app/components/Icon/Deployment';
@@ -12,13 +12,11 @@ import { SidebarSimpleListItem } from '@/app/components/navigation/sidebar/sideb
 import { useLocation } from 'react-router-dom';
 import { Tooltip } from '@/app/components/Tooltip';
 import { BetaIcon } from '@/app/components/Icon/Beta';
-import { AuthContext } from '@/context/auth-context';
 
 export const Deployment = memo(() => {
   const location = useLocation();
   const { pathname } = location;
   const [open, setOpen] = useState(false || pathname.includes('/deployment'));
-  //   const { isFeatureEnable } = useContext(AuthContext);
 
   return (
     <li>
@@ -42,7 +40,6 @@ export const Deployment = memo(() => {
       </SidebarSimpleListItem>
       <Disclosure open={open}>
         <div className="ml-6 dark:border-gray-800 border-l hidden group-hover:block">
-          {/* {isFeatureEnable && isFeatureEnable('/deployment/endpoint/') && ( */}
           <SidebarSimpleListItem
             className="mx-0 mr-2"
             active={pathname.includes('/deployment/endpoint')}
@@ -53,8 +50,7 @@ export const Deployment = memo(() => {
             </SidebarIconWrapper>
             <SidebarLabel>Endpoints</SidebarLabel>
           </SidebarSimpleListItem>
-          {/* )}
-          {isFeatureEnable && isFeatureEnable('/deployment/assistant/') && ( */}
+
           <SidebarSimpleListItem
             className="mx-0 mr-2"
             active={pathname.includes('/deployment/assistant')}
@@ -77,16 +73,6 @@ export const Deployment = memo(() => {
               ></Tooltip>
             </SidebarLabel>
           </SidebarSimpleListItem>
-          {/* <SidebarSimpleListItem
-            className="mx-0 mr-2"
-            active={pathname.includes('/deployment/webhook')}
-            navigate="/deployment/webhook"
-          >
-            <SidebarIconWrapper>
-              <WebhookIcon />
-            </SidebarIconWrapper>
-            <SidebarLabel>Webhooks</SidebarLabel>
-          </SidebarSimpleListItem> */}
         </div>
       </Disclosure>
     </li>

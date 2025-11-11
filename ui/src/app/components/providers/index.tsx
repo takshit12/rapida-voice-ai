@@ -57,7 +57,6 @@ export const COMPLETE_PROVIDER: RapidaProvider[] = [
       { name: 'client_secret', type: 'string', label: 'Client secret' },
     ],
   },
-
   {
     id: '7835356314600149384',
     name: 'Twilio',
@@ -71,7 +70,6 @@ export const COMPLETE_PROVIDER: RapidaProvider[] = [
       { name: 'account_sid', type: 'string', label: 'Account sid' },
     ],
   },
-
   // cloud provider
   {
     id: '1254821443460603620',
@@ -128,41 +126,6 @@ export const COMPLETE_PROVIDER: RapidaProvider[] = [
     website: 'https://cloud.google.com/',
     status: 'ACTIVE',
   },
-  //   {
-  //     id: '12548214434606036',
-  //     code: 'azure-cloud',
-  //     name: 'Azure Cloud',
-  //     description:
-  //       'Microsoft Azure is a cloud computing platform and infrastructure for building, deploying, and managing applications and services through Microsoft-managed data centers.',
-  //     image:
-  //       'https://rapida-assets-01.s3.ap-south-1.amazonaws.com/providers/198796716894742122.png',
-  //     featureList: ['storage'],
-  //     configurations: [
-  //       {
-  //         name: 'subscription_id',
-  //         type: 'string',
-  //         label: 'Subscription ID',
-  //       },
-  //       {
-  //         name: 'tenant_id',
-  //         type: 'string',
-  //         label: 'Tenant ID',
-  //       },
-  //       {
-  //         name: 'client_id',
-  //         type: 'string',
-  //         label: 'Client ID',
-  //       },
-  //       {
-  //         name: 'client_secret',
-  //         type: 'string',
-  //         label: 'Client Secret',
-  //       },
-  //     ],
-  //     humanname: 'Azure Cloud',
-  //     website: 'https://azure.microsoft.com/',
-  //     status: 'ACTIVE',
-  //   },
 
   //   models
   {
@@ -572,69 +535,3 @@ export const TELEPHONY_PROVIDER = COMPLETE_PROVIDER.filter(x =>
 export const EMBEDDING_PROVIDERS = COMPLETE_PROVIDER.filter(x =>
   x.featureList.includes('embedding'),
 );
-
-// export const EMBEDDING_PROVIDERS = [
-//   {
-//     id: '1987967168435716096',
-//     created_date: '2023-11-18 22:21:47.599924',
-//     updated_date: null,
-//     name: 'cohere',
-//     description:
-//       "A smaller and faster version of Cohere's command model with almost as much capability but improved speed.",
-//     human_name: 'Cohere',
-//     website: 'https://cohere.com',
-//     image:
-//       'https://rapida-assets-01.s3.ap-south-1.amazonaws.com/providers/1987967168435716096.png',
-//     status: 'ACTIVE',
-//     connect_configuration: [
-//       { name: 'key', type: 'string', label: 'Provider Key' },
-//     ],
-//   },
-//   {
-//     id: '1987967168452493312',
-//     created_date: '2023-11-18 22:21:47.60321',
-//     updated_date: null,
-//     name: 'openai',
-//     description:
-//       'GPT-4 from OpenAI has broad general knowledge and domain expertise allowing it to follow complex instructions in natural language and solve difficult problems accurately.',
-//     human_name: 'OpenAI',
-//     website: 'https://openai.com',
-//     image:
-//       'https://rapida-assets-01.s3.ap-south-1.amazonaws.com/providers/1987967168452493312.svg',
-//     status: 'ACTIVE',
-//     connect_configuration: [
-//       { name: 'key', type: 'string', label: 'Provider Key' },
-//     ],
-//   },
-//   {
-//     id: '198796716894742118',
-//     created_date: '2023-12-13 17:18:53.32083',
-//     updated_date: null,
-//     name: 'google',
-//     description: 'Gemini is Google latest family of large language models.',
-//     human_name: 'Google',
-//     website: 'https://ai.google.dev/',
-//     image:
-//       'https://rapida-assets-01.s3.ap-south-1.amazonaws.com/providers/198796716894742118.jpg',
-//     status: 'ACTIVE',
-//     connect_configuration: [
-//       { name: 'key', type: 'string', label: 'Provider Key' },
-//     ],
-//   },
-//   {
-//     id: '5212367370329048775',
-//     created_date: '2024-07-08 05:56:08.22595',
-//     updated_date: null,
-//     name: 'voyageai',
-//     description:
-//       'VoyageAI, a cutting-edge AI platform offering comprehensive solutions for various AI applications with high efficiency and performance.',
-//     human_name: 'VoyageAI',
-//     website: 'https://voyageai.com',
-//     image:
-//       'https://rapida-assets-01.s3.ap-south-1.amazonaws.com/providers/5212367370329048775.png',
-//     status: 'ACTIVE',
-//     connect_configuration: [
-//       { name: 'key', type: 'string', label: 'Provider Key' },
-//     ],
-//   },
-// ];

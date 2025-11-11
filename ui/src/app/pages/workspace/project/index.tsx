@@ -21,7 +21,7 @@ import { TableHead } from '@/app/components/base/tables/table-head';
 import { TableBody } from '@/app/components/base/tables/table-body';
 import { TableRow } from '@/app/components/base/tables/table-row';
 import { TableCell } from '@/app/components/base/tables/table-cell';
-import { ProjectUserGroupAvatar } from '@/app/components/Avatar/ProjectUserGroupAvatar';
+import { ProjectUserGroupAvatar } from '@/app/components/avatar/project-user-group-avatar';
 import { toHumanReadableDate } from '@/utils/date';
 import { RoleIndicator } from '@/app/components/indicators/role';
 import { ProjectOption } from '@/app/pages/workspace/project/project-options';
