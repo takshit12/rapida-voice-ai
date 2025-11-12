@@ -9,7 +9,7 @@ import { Endpoint, EndpointProviderModel } from '@rapidaai/react';
 import { InvokeResponse } from '@rapidaai/react';
 import { useRapidaStore } from '@/hooks';
 import { useCredential } from '@/hooks/use-credential';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Variable } from '@rapidaai/react';
 

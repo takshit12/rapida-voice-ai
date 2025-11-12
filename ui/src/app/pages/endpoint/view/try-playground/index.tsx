@@ -4,7 +4,6 @@ import { TryChatComplete } from '@/app/pages/endpoint/view/try-playground/experi
 import { InputGroup } from '@/app/components/input-group';
 import { Helmet } from '@/app/components/helmet';
 import { BotIcon, Code, ExternalLink, PencilRuler } from 'lucide-react';
-import { ToolIcon } from '@/app/components/Icon/tool';
 export function Playground(props: {
   currentEndpoint: Endpoint;
   currentEndpointProviderModel: EndpointProviderModel;
@@ -20,8 +19,8 @@ export function Playground(props: {
         </div>
         <InputGroup
           title={
-            <div className="flex items-center space-x-2">
-              <Code className="w-4 h-4" />
+            <div className="flex items-center space-x-2 text-sm/6">
+              <Code className="w-4 h-4" strokeWidth={1.5} />
               <span>Integrate into your application</span>
             </div>
           }
@@ -47,8 +46,8 @@ export function Playground(props: {
         </InputGroup>
         <InputGroup
           title={
-            <div className="flex items-center space-x-2">
-              <BotIcon className="w-5 h-5" />
+            <div className="flex items-center space-x-2 text-sm/6">
+              <BotIcon className="w-4 h-4" strokeWidth={1.5} />
               <span>Post conversation llm analysis</span>
             </div>
           }
@@ -94,8 +93,8 @@ export function Playground(props: {
         </InputGroup>
         <InputGroup
           title={
-            <div className="flex items-center space-x-2">
-              <PencilRuler className="w-4 h-4" />
+            <div className="flex items-center space-x-2 text-sm/6">
+              <PencilRuler className="w-4 h-4" strokeWidth={1.5} />
               <span>
                 Tool calls to the LLM for targeted use of its capabilities
               </span>

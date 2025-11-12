@@ -80,15 +80,12 @@ export const OutputMessage: FC<{
       />
       <Tab
         active="ouput"
-        className={cn(
-          'text-sm',
-          'bg-gray-50 border-b dark:bg-gray-900 dark:border-gray-800',
-        )}
+        className={cn('text-sm/6 bg-white dark:bg-gray-900')}
         tabs={[
           {
             label: 'ouput',
             element: (
-              <div className="flex-1">
+              <div className="flex-1 bg-white">
                 <div className="min-h-[250px] max-h-[450px] flex flex-col justify-start items-center relative">
                   {outputs ? (
                     outputs.map((out, i) => {
@@ -137,7 +134,7 @@ export const OutputMessage: FC<{
           {
             label: 'attributes',
             element: (
-              <div className="flex-1">
+              <div className="flex-1 bg-white">
                 {callerResponse ? (
                   <CodeHighlighting
                     className="max-w-full h-full"
@@ -159,7 +156,7 @@ export const OutputMessage: FC<{
           {
             label: 'metadatas',
             element: (
-              <div className="flex-1">
+              <div className="flex-1 bg-white">
                 {callerResponse ? (
                   <CodeHighlighting
                     className="max-w-full h-full"
@@ -177,7 +174,7 @@ export const OutputMessage: FC<{
           {
             label: 'metrics',
             element: (
-              <div className="flex-1">
+              <div className="flex-1 bg-white">
                 {callerResponse ? (
                   <CodeHighlighting
                     className="max-w-full h-full"

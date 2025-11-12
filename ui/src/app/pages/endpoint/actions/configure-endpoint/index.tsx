@@ -5,7 +5,7 @@
 // import { useCreateEndpointPageStore } from '@/hooks';
 // import { useNavigate, useParams } from 'react-router-dom';
 // import toast from 'react-hot-toast/headless';
-// import { Helmet } from '@/app/components/Helmet';
+// import { Helmet } from '@/app/components/helmet';
 // import { CreateEndpointContextProvider } from '@/context/create-endpoint-context';
 // import { CreateEndpointContext } from '@/hooks/use-create-endpoint-page-store';
 // import { Endpoint } from '@rapidaai/react';
