@@ -5,7 +5,11 @@ import React, { FC, HTMLAttributes, useState } from 'react';
 
 export interface TabProps extends HTMLAttributes<HTMLDivElement> {
   active: string;
-  tabs: { label: string; element: React.ReactElement }[];
+  tabs: {
+    label: string;
+    labelIcon?: React.ReactElement;
+    element: React.ReactElement;
+  }[];
   strict?: boolean;
   linkClass?: string;
 }
@@ -32,7 +36,8 @@ export const Tab: FC<TabProps> = ({
                   isActive === ix.label ? 'bg-gray-500/10 text-blue-500' : '',
                 )}
               >
-                <div className="px-6 py-2 font-semibold whitespace-nowrap tracking-wide text-pretty capitalize">
+                <div className="px-6 py-2 font-semibold whitespace-nowrap tracking-wide text-pretty capitalize gap-3 flex items-center">
+                  {ix.labelIcon}
                   {ix.label}
                 </div>
               </div>
@@ -85,7 +90,8 @@ export const SideTab: FC<TabProps> = ({
                     : '',
                 )}
               >
-                <div className="capitalize px-3 py-3 font-medium 2xl:text-base">
+                <div className="capitalize px-3 py-3 font-medium  text-sm/6 gap-3 flex items-center">
+                  {ix.labelIcon}
                   {ix.label}
                 </div>
               </div>

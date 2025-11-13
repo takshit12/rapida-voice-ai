@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      Welcome to Rapida — get your first voice assistant online in minutes.
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body,
+      table,
+      td,
+      a {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table,
+      td {
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img {
+        -ms-interpolation-mode: bicubic;
+      }
+      img {
+        border: 0;
+        height: auto;
+        line-height: 100%;
+        outline: none;
+        text-decoration: none;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100% !important;
+        -webkit-font-smoothing: antialiased;
+        background-color: #f0f2f5;
+      }
+      a {
+        color: #1a73e8;
+        text-decoration: underline;
+      }
+      /* Container */
+
+      .email-content {
+        max-width: 680px;
+        margin: 0 auto;
+      }
+      /* Card */
+
+      .logo {
+        text-align: left;
+      }
+
+      .muted {
+        color: #888888;
+        font-size: 13px;
+      }
+      body,
+      table,
+      td {
+        font-family: "IBM Plex Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body style="font-family: 'IBM Plex Sans', sans-serif; margin: 0">
+    <!-- Preheader (shows in inbox preview) -->
+    <span
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        visibility: hidden;
+        mso-hide: all;
+      "
+    >
+      Welcome to Rapida — get your first voice assistant online in minutes.
+    </span>
+
+    <table
+      class="email-wrapper"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      style="width: 100%"
+    >
+      <tr>
+        <td align="center">
+          <table
+            class="email-content"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            role="presentation"
+            style="
+              background-color: #ffff;
+              padding-top: 25px;
+              padding-bottom: 25px;
+            "
+          >
+            <!-- Header / Logo -->
+            <tr>
+              <td style="padding: 0 0 16px">
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  role="presentation"
+                >
+                  <tr>
+                    <td class="logo">
+                      <img
+                        alt="Rapida Logo"
+                        style="
+                          width: auto;
+                          height: 1.5rem;
+                          flex-shrink: 0;
+                          margin-left: 16px;
+                        "
+                        src="http://cdn.mcauto-images-production.sendgrid.net/36b04692ad5082a2/68358382-a4ec-4331-9d1b-dbc920e553ea/5731x1088.png"
+                      />
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Card -->
+
+            <tr>
+              <td style="padding: 0 0px">
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  role="presentation"
+                >
+                  <tr>
+                    <td
+                      style="
+                        font-family: 'IBM Plex Sans', sans-serif;
+                        color: #222222;
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        border-top: 1px solid #cccccc;
+                        border-bottom: 1px solid #cccccc;
+                      "
+                    >
+                      <div
+                        style="
+                          font-family: 'IBM Plex Sans', sans-serif;
+                          padding-top: 20px;
+                          padding-bottom: 20px;
+                        "
+                      >
+                        <!-- Updated greeting -->
+                        {{if .name}}
+                        <div
+                          style="
+                            font-size: 15px;
+                            margin: 8px 0 18px;
+                            letter-spacing: 0.2px;
+                          "
+                        >
+                          Hi {{.name}},
+                        </div>
+                        {{else}}
+                        <div
+                          style="
+                            font-size: 15px;
+                            margin: 8px 0 18px;
+                            letter-spacing: 0.2px;
+                          "
+                        >
+                          Hello,
+                        </div>
+                        {{end}}
+
+                        <!-- Updated email body -->
+                        <div
+                          class="body-text"
+                          style="
+                            font-size: 15px;
+                            line-height: 1.6;
+                            color: #555555;
+                            margin-bottom: 20px;
+                          "
+                        >
+                          Welcome to <strong>Rapida</strong>. We’re thrilled to
+                          have you onboard! Rapida helps product teams bring
+                          <strong>conversational voice AI</strong> directly into
+                          their product — with just a few lines of code.
+                        </div>
+
+                        <div
+                          style="
+                            font-size: 15px;
+                            line-height: 1.6;
+                            color: #555555;
+                            margin-bottom: 20px;
+                          "
+                        >
+                          Here’s how to get started:
+                          <ul
+                            style="
+                              padding-left: 18px;
+                              color: #555555;
+                              margin-top: 12px;
+                            "
+                          >
+                            <li>
+                              <strong>Explore the Dashboard</strong> → Set up
+                              your first assistant.
+                            </li>
+                            <li>
+                              <strong>Connect your data</strong> → Integrate
+                              APIs or knowledge bases.
+                            </li>
+                            <li>
+                              <strong>Launch in minutes</strong> → Deploy your
+                              voice AI anywhere.
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div
+                          class="body-text muted"
+                          style="
+                            font-size: 15px;
+                            line-height: 1.6;
+                            color: #555555;
+                            margin-bottom: 20px;
+                            margin-top: 6px;
+                          "
+                        >
+                          Need help? Our team’s here for you — just reply to
+                          this email or visit our docs.
+                        </div>
+
+                        <div style="margin-top: 22px; font-size: 14px">
+                          Cheers,<br />
+                          <strong>Prashant Srivastav</strong><br />
+                          <a href="https://rapida.ai">rapida.ai</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 10px">
+                <div
+                  style="
+                    max-width: 680px;
+                    margin: 18px auto 0;
+                    text-align: center;
+                    color: #9aa0a6;
+                    font-size: 12px;
+                    font-family: 'IBM Plex Sans', sans-serif;
+                  "
+                >
+                  © <span id="year">2025</span> RapidaAi •
+                  <a
+                    href="https://app.rapida.ai/email/unsubscribe"
+                    style="color: #9aa0a6; text-decoration: underline"
+                    >Unsubscribe</a
+                  >
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

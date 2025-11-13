@@ -17,7 +17,9 @@ import (
 	"github.com/gin-gonic/gin"
 	config "github.com/rapidaai/api/web-api/config"
 	internal_user_service "github.com/rapidaai/api/web-api/internal/service/user"
-	integration_client "github.com/rapidaai/pkg/clients/integration"
+	external_clients "github.com/rapidaai/pkg/clients/external"
+	external_emailer "github.com/rapidaai/pkg/clients/external/emailer"
+	external_emailer_template "github.com/rapidaai/pkg/clients/external/emailer/template"
 	commons "github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/types"
@@ -33,7 +35,7 @@ type webAuthApi struct {
 	userService         internal_services.UserService
 	organizationService internal_services.OrganizationService
 	projectService      internal_services.ProjectService
-	sendgridClient      integration_client.SendgridServiceClient
+	emailerClient       external_clients.Emailer
 	githubConnect       internal_connects.GithubConnect
 	linkedinConnect     internal_connects.LinkedinConnect
 	googleConnect       internal_connects.GoogleConnect
@@ -58,7 +60,7 @@ func NewAuthRPC(config *config.WebAppConfig, oauthCfg *config.OAuthConfig, logge
 			logger:          logger,
 			postgres:        postgres,
 			userService:     internal_user_service.NewUserService(logger, postgres),
-			sendgridClient:  integration_client.NewSendgridServiceClientGRPC(&config.AppConfig, logger),
+			emailerClient:   external_emailer.NewEmailer(&config.AppConfig, logger),
 			githubConnect:   internal_connects.NewGithubAuthenticationConnect(config, oauthCfg, logger, postgres),
 			linkedinConnect: internal_connects.NewLinkedinAuthenticationConnect(config, oauthCfg, logger, postgres),
 			googleConnect:   internal_connects.NewGoogleAuthenticationConnect(config, oauthCfg, logger, postgres),
@@ -75,7 +77,7 @@ func NewAuthGRPC(config *config.WebAppConfig, oauthCfg *config.OAuthConfig, logg
 			userService:         internal_user_service.NewUserService(logger, postgres),
 			organizationService: internal_organization_service.NewOrganizationService(logger, postgres),
 			projectService:      internal_project_service.NewProjectService(logger, postgres),
-			sendgridClient:      integration_client.NewSendgridServiceClientGRPC(&config.AppConfig, logger),
+			emailerClient:       external_emailer.NewEmailer(&config.AppConfig, logger),
 			githubConnect:       internal_connects.NewGithubAuthenticationConnect(config, oauthCfg, logger, postgres),
 			linkedinConnect:     internal_connects.NewLinkedinAuthenticationConnect(config, oauthCfg, logger, postgres),
 			googleConnect:       internal_connects.NewGoogleAuthenticationConnect(config, oauthCfg, logger, postgres),
@@ -144,7 +146,18 @@ func (webAuthApi *webAuthRPCApi) RegisterUser(c *gin.Context) {
 			return
 		}
 
-		_, err = webAuthApi.sendgridClient.WelcomeEmail(c, aUser.GetUserInfo().Id, aUser.GetUserInfo().Name, aUser.GetUserInfo().Email)
+		err = webAuthApi.emailerClient.EmailRichText(
+			c,
+			external_clients.Contact{
+				Name:  aUser.GetUserInfo().Name,
+				Email: aUser.GetUserInfo().Email,
+			},
+			"Welcome to Rapida!",
+			external_emailer_template.WELCOME_MEMBER_TEMPLATE,
+			map[string]string{
+				"name": aUser.GetUserInfo().Name,
+			},
+		)
 		if err != nil {
 			webAuthApi.logger.Errorf("sending welcome email failed with err %v", err)
 		}
@@ -155,11 +168,10 @@ func (webAuthApi *webAuthRPCApi) RegisterUser(c *gin.Context) {
 			Data:    aUser.PlainAuthPrinciple(),
 		})
 		return
-
 	}
 
 	// if it's invited user then
-	if cUser.Status == "invited" {
+	if cUser.Status == type_enums.RECORD_INVITED {
 		// password need to fix
 		_, err := webAuthApi.userService.UpdatePassword(c, cUser.Id, irRequest.Password)
 		if err != nil {
@@ -229,14 +241,14 @@ func (webAuthApi *webAuthRPCApi) RegisterUser(c *gin.Context) {
 func (wAuthApi *webAuthGRPCApi) Authenticate(c context.Context, irRequest *protos.AuthenticateRequest) (*protos.AuthenticateResponse, error) {
 	wAuthApi.logger.Debugf("Authenticate from grpc with requestPayload %v, %v", irRequest, c)
 
-	aUser, err := wAuthApi.userService.Authenticate(c, irRequest.Email, irRequest.Password)
+	aUser, err := wAuthApi.userService.Authenticate(c, irRequest.Email, irRequest.GetPassword())
 	if err != nil {
 		wAuthApi.logger.Errorf("unable to process authentication %v", err)
 		wAuthApi.logger.Debugf("authentication request failed for user %s", irRequest.Email)
 		return &protos.AuthenticateResponse{
 			Code:    401,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    401,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Please provide valid credentials to signin into account.",
@@ -252,7 +264,7 @@ func (wAuthApi *webAuthGRPCApi) Authenticate(c context.Context, irRequest *proto
 		return &protos.AuthenticateResponse{
 			Code:    401,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: "illegal user status",
 				HumanMessage: "Your account is not activated yet. please activate before signin.",
@@ -272,36 +284,36 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 	cUser, err := wAuthApi.userService.Get(c, irRequest.Email)
 	source := "direct"
 	if err != nil {
-		aUser, err := wAuthApi.userService.Create(c, irRequest.Name, irRequest.Email, irRequest.Password, type_enums.RECORD_ACTIVE, &source)
+		aUser, err := wAuthApi.userService.Create(c, irRequest.Name, irRequest.Email, irRequest.GetPassword(), type_enums.RECORD_ACTIVE, &source)
 		if err != nil {
 			wAuthApi.logger.Errorf("creation user failed with err %v", err)
 			return &protos.AuthenticateResponse{
 				Code:    400,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to create an account, please check and try again.",
 				}}, nil
 		}
-		_, err = wAuthApi.sendgridClient.WelcomeEmail(c, aUser.GetUserInfo().Id, aUser.GetUserInfo().Name, aUser.GetUserInfo().Email)
+		err = wAuthApi.emailerClient.EmailRichText(
+			c,
+			external_clients.Contact{
+				Name:  aUser.GetUserInfo().Name,
+				Email: aUser.GetUserInfo().Email,
+			},
+			"Welcome to Rapida!",
+			external_emailer_template.WELCOME_MEMBER_TEMPLATE,
+			map[string]string{
+				"name": aUser.GetUserInfo().Name,
+			},
+		)
 		if err != nil {
 			wAuthApi.logger.Errorf("sending welcome email failed with err %v", err)
 		}
-
-		// this is temp as we don't allow user to register
-		return &protos.AuthenticateResponse{
-			Code:    401,
-			Success: false,
-			Error: &protos.AuthenticationError{
-				ErrorCode:    400,
-				ErrorMessage: "illegal user status",
-				HumanMessage: "Thank you for registering! Your account is currently in the waitlist. We'll be reaching out to you soon to get started. Stay tuned!",
-			}}, nil
-
-		// auth := &protos.Authentication{}
-		// utils.Cast(aUser.PlainAuthPrinciple(), auth)
-		// return &protos.AuthenticateResponse{Code: 200, Success: true, Data: auth}, nil
+		auth := &protos.Authentication{}
+		utils.Cast(aUser.PlainAuthPrinciple(), auth)
+		return &protos.AuthenticateResponse{Code: 200, Success: true, Data: auth}, nil
 	}
 
 	// already have an active account
@@ -310,7 +322,7 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 		return &protos.AuthenticateResponse{
 			Code:    401,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: "illegal user status",
 				HumanMessage: "Your email is already associated with an existing account, try signin.",
@@ -318,14 +330,14 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 
 	}
 	// if it's invited user then
-	if cUser.Status == "invited" {
-		_, err := wAuthApi.userService.UpdatePassword(c, cUser.Id, irRequest.Password)
+	if cUser.Status == type_enums.RECORD_INVITED {
+		_, err := wAuthApi.userService.UpdatePassword(c, cUser.Id, irRequest.GetPassword())
 		if err != nil {
 			wAuthApi.logger.Errorf("Error while updaing password for user %v", err)
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -337,7 +349,7 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -349,7 +361,7 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -363,7 +375,7 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -377,7 +389,7 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -387,7 +399,7 @@ func (wAuthApi *webAuthGRPCApi) RegisterUser(c context.Context, irRequest *proto
 		return &protos.AuthenticateResponse{Code: 200, Success: true, Data: auth}, nil
 	}
 
-	return &protos.AuthenticateResponse{Code: 400, Success: false, Error: &protos.AuthenticationError{
+	return &protos.AuthenticateResponse{Code: 400, Success: false, Error: &protos.Error{
 		ErrorCode:    400,
 		ErrorMessage: "illegal state of data",
 		HumanMessage: "We are facing issue with account creation, please try again in sometime",
@@ -403,7 +415,7 @@ func (wAuthApi *webAuthGRPCApi) ForgotPassword(c context.Context, irRequest *pro
 		return &protos.ForgotPasswordResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Your email is not associated with rapida.ai account, please check and try again",
@@ -415,7 +427,7 @@ func (wAuthApi *webAuthGRPCApi) ForgotPassword(c context.Context, irRequest *pro
 		return &protos.ForgotPasswordResponse{
 			Code:    401,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: "illegal user status",
 				HumanMessage: "Your account is not activated yet. please activate before signin.",
@@ -428,18 +440,26 @@ func (wAuthApi *webAuthGRPCApi) ForgotPassword(c context.Context, irRequest *pro
 		return &protos.ForgotPasswordResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to create reset password token, please try again in sometime.",
 			}}, nil
 	}
 	// userId uint64, name, email,
-	resetPasswordUrl := fmt.Sprintf("https://rapida.ai/auth/change-password/%s", token.Token)
-	_, err = wAuthApi.sendgridClient.ResetPasswordEmail(c, aUser.Id,
-		aUser.Name, aUser.Email,
-		resetPasswordUrl)
-	wAuthApi.logger.Debugf("reset password link created %v", resetPasswordUrl)
+	// resetPasswordUrl :=
+	err = wAuthApi.emailerClient.EmailRichText(
+		c,
+		external_clients.Contact{
+			Name:  aUser.Name,
+			Email: aUser.Email,
+		},
+		"Reset your Rapida password",
+		external_emailer_template.RESET_PASSWORD_TEMPLATE,
+		map[string]string{
+			"name":       aUser.Name,
+			"reset_link": fmt.Sprintf("%s/auth/change-password/%s", wAuthApi.cfg.UiHost, token.Token),
+		})
 	if err != nil {
 		wAuthApi.logger.Errorf("sending forgot password email failed with err %v", err)
 	}
@@ -451,30 +471,66 @@ func (wAuthApi *webAuthGRPCApi) ForgotPassword(c context.Context, irRequest *pro
 
 }
 
+func (wAuthApi *webAuthGRPCApi) ChangePassword(c context.Context, irRequest *protos.ChangePasswordRequest) (*protos.ChangePasswordResponse, error) {
+	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
+	if !isAuthenticated {
+		wAuthApi.logger.Errorf("ChangePassword from grpc with unauthenticated request")
+		return nil, errors.New("unauthenticated request")
+	}
+
+	currentAuth, err := wAuthApi.userService.Authenticate(c, iAuth.GetUserInfo().Email, irRequest.GetOldPassword())
+	if err != nil {
+		return &protos.ChangePasswordResponse{
+			Code:    400,
+			Success: false,
+			Error: &protos.Error{
+				ErrorCode:    400,
+				ErrorMessage: err.Error(),
+				HumanMessage: "Unable to change password, please verify current password and try again.",
+			}}, nil
+	}
+
+	//
+	_, err = wAuthApi.userService.UpdatePassword(c, *currentAuth.GetUserId(), irRequest.GetPassword())
+	if err != nil {
+		wAuthApi.logger.Errorf("unable to change password for user failed %v", err)
+		return &protos.ChangePasswordResponse{
+			Code:    400,
+			Success: false,
+			Error: &protos.Error{
+				ErrorCode:    400,
+				ErrorMessage: err.Error(),
+				HumanMessage: "Unable to change password, please try again in sometime.",
+			}}, nil
+	}
+	return &protos.ChangePasswordResponse{
+		Code:    200,
+		Success: true,
+	}, nil
+
+}
+
 func (wAuthApi *webAuthGRPCApi) CreatePassword(c context.Context, irRequest *protos.CreatePasswordRequest) (*protos.CreatePasswordResponse, error) {
-	wAuthApi.logger.Debugf("ChangePassword from grpc with requestPayload %v, %v", irRequest, c)
-	// CreateToken(ctx context.Context, userId uint64) (*internal_entities.UserAuthToken, error)
-	// wAuthApi.userService.Get(c, irRe)
 	token, err := wAuthApi.userService.GetToken(c, "password-token", irRequest.GetToken())
 	if err != nil {
 		wAuthApi.logger.Errorf("unable to verify password token for user %v failed %v", irRequest.GetToken(), err)
 		return &protos.CreatePasswordResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to verify reset password token, please try again in sometime.",
 			}}, nil
 	}
 
-	_, err = wAuthApi.userService.UpdatePassword(c, token.UserAuthId, irRequest.Password)
+	_, err = wAuthApi.userService.UpdatePassword(c, token.UserAuthId, irRequest.GetPassword())
 	if err != nil {
 		wAuthApi.logger.Errorf("unable to change password for user failed %v", err)
 		return &protos.CreatePasswordResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.AuthenticationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to create reset password token, please try again in sometime.",
@@ -585,12 +641,12 @@ Oauth implimentation block that will help us quickly login and sign up in our sy
 func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_connects.OpenID) (*protos.AuthenticateResponse, error) {
 	cUser, err := wAuthApi.userService.Get(c, inf.Email)
 	if err != nil {
-		aUser, err := wAuthApi.userService.Create(c, inf.Name, inf.Email, inf.Token, "waitlist", &inf.Source)
+		aUser, err := wAuthApi.userService.Create(c, inf.Name, inf.Email, inf.Token, type_enums.RECORD_ACTIVE, &inf.Source)
 		if err != nil {
 			return &protos.AuthenticateResponse{
 				Code:    400,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to create the user, please try again in sometime.",
@@ -605,47 +661,35 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 			return &protos.AuthenticateResponse{
 				Code:    400,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to create the user, please try again in sometime.",
 				}}, nil
 		}
 
-		_, err = wAuthApi.sendgridClient.WelcomeEmail(c, aUser.GetUserInfo().Id, aUser.GetUserInfo().Name, aUser.GetUserInfo().Email)
+		err = wAuthApi.emailerClient.EmailRichText(
+			c,
+			external_clients.Contact{
+				Name:  aUser.GetUserInfo().Name,
+				Email: aUser.GetUserInfo().Email,
+			},
+			"Welcome to Rapida!",
+			external_emailer_template.WELCOME_MEMBER_TEMPLATE,
+			map[string]string{
+				"name": aUser.GetUserInfo().Name,
+			},
+		)
 		if err != nil {
 			wAuthApi.logger.Errorf("sending welcome email failed with err %v", err)
 		}
-
-		// this is temprory as we don;t allow user to singup
-		return &protos.AuthenticateResponse{
-			Code:    401,
-			Success: false,
-			Error: &protos.AuthenticationError{
-				ErrorCode:    400,
-				ErrorMessage: "illegal user status",
-				HumanMessage: "Thank you for registering! Your account is currently in the waitlist. We'll be reaching out to you soon to get started. Stay tuned!",
-			}}, nil
-
-		// auth := &protos.Authentication{}
-		// utils.Cast(aUser.PlainAuthPrinciple(), auth)
-		// return &protos.AuthenticateResponse{Code: 200, Success: true, Data: auth}, nil
-	}
-
-	if cUser.Status == "waitlist" {
-		return &protos.AuthenticateResponse{
-			Code:    401,
-			Success: false,
-			Error: &protos.AuthenticationError{
-				ErrorCode:    400,
-				ErrorMessage: "illegal user status",
-				HumanMessage: "Thank you for registering! Your account is currently in the waitlist. We'll be reaching out to you soon to get started. Stay tuned!",
-			}}, nil
-
+		auth := &protos.Authentication{}
+		utils.Cast(aUser.PlainAuthPrinciple(), auth)
+		return &protos.AuthenticateResponse{Code: 200, Success: true, Data: auth}, nil
 	}
 
 	// if it's invited user then
-	if cUser.Status == "invited" {
+	if cUser.Status == type_enums.RECORD_INVITED {
 
 		// activate org
 		if err = wAuthApi.userService.ActivateAllOrganizationRole(c, cUser.Id); err != nil {
@@ -653,7 +697,7 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -665,7 +709,7 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 			return &protos.AuthenticateResponse{
 				Code:    401,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Unable to activate your account, please try again later.",
@@ -678,7 +722,7 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 			return &protos.AuthenticateResponse{
 				Code:    400,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Failed to activate the user, please check with your organization admin.",
@@ -691,7 +735,7 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 			return &protos.AuthenticateResponse{
 				Code:    400,
 				Success: false,
-				Error: &protos.AuthenticationError{
+				Error: &protos.Error{
 					ErrorCode:    400,
 					ErrorMessage: err.Error(),
 					HumanMessage: "Failed to activate the user, please check with your organization admin.",
@@ -713,7 +757,7 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 				return &protos.AuthenticateResponse{
 					Code:    400,
 					Success: false,
-					Error: &protos.AuthenticationError{
+					Error: &protos.Error{
 						ErrorCode:    400,
 						ErrorMessage: err.Error(),
 						HumanMessage: "Unable to persist the social informaiton, please try again later.",
@@ -729,7 +773,6 @@ func (wAuthApi *webAuthApi) RegisterSocialUser(c context.Context, inf *internal_
 		utils.Cast(aUser.PlainAuthPrinciple(), auth)
 		return &protos.AuthenticateResponse{Code: 200, Success: true, Data: auth}, nil
 	}
-
 	return nil, errors.New("you are already registered, please use the existing method to signin")
 }
 

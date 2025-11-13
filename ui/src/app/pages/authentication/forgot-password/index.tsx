@@ -12,6 +12,7 @@ import { FieldSet } from '@/app/components/form/fieldset';
 import { FormLabel } from '@/app/components/form-label';
 import { FormActionHeading } from '@/app/components/heading/action-heading/form-action-heading';
 import { connectionConfig } from '@/configs';
+import { SuccessMessage } from '@/app/components/form/success-message';
 
 export function ForgotPasswordPage() {
   /**
@@ -86,16 +87,10 @@ export function ForgotPasswordPage() {
           ></Input>
         </FieldSet>
         <ErrorMessage message={error} />
-        {successMessage && (
-          <fieldset>
-            <p className="p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 font-semibold">
-              {successMessage}
-            </p>
-          </fieldset>
-        )}
+        <SuccessMessage message={successMessage} />
         <IBlueBGArrowButton
           type="submit"
-          className="w-full justify-between"
+          className="w-full justify-between h-11"
           isLoading={loading}
         >
           Send Email

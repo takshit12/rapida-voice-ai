@@ -502,7 +502,7 @@ func (aS *userService) UpdatePassword(ctx context.Context, userId uint64, passwo
 func (aS *userService) ActivateAllProjectRoles(ctx context.Context, userId uint64) error {
 	db := aS.postgres.DB(ctx)
 	// Update with struct
-	tx := db.Where("user_auth_id = ? AND status  = ?", userId, "INVITED").
+	tx := db.Where("user_auth_id = ? AND status  = ?", userId, type_enums.RECORD_INVITED.String()).
 		Updates(&internal_entity.UserProjectRole{
 			Mutable: gorm_models.Mutable{
 				Status: type_enums.RECORD_ACTIVE, UpdatedBy: userId,
@@ -519,7 +519,7 @@ func (aS *userService) ActivateAllProjectRoles(ctx context.Context, userId uint6
 func (aS *userService) ActivateAllOrganizationRole(ctx context.Context, userId uint64) error {
 	db := aS.postgres.DB(ctx)
 	// Update with struct
-	tx := db.Where("user_auth_id = ? AND status  = ?", userId, "INVITED").Updates(&internal_entity.UserOrganizationRole{
+	tx := db.Where("user_auth_id = ? AND status  = ?", userId, type_enums.RECORD_INVITED.String()).Updates(&internal_entity.UserOrganizationRole{
 		Mutable: gorm_models.Mutable{
 			Status: type_enums.RECORD_ACTIVE, UpdatedBy: userId,
 		},
@@ -531,15 +531,15 @@ func (aS *userService) ActivateAllOrganizationRole(ctx context.Context, userId u
 	return nil
 }
 
-func (aS *userService) GetAllActiveProjectMember(ctx context.Context, projectId uint64) (*[]internal_entity.UserProjectRole, error) {
+func (aS *userService) GetAllActiveProjectMember(ctx context.Context, projectId uint64) ([]*internal_entity.UserProjectRole, error) {
 	db := aS.postgres.DB(ctx)
-	var rt []internal_entity.UserProjectRole
+	var rt []*internal_entity.UserProjectRole
 	tx := db.Preload("Member").Where("project_id = ? AND status = ?", projectId, type_enums.RECORD_ACTIVE.String()).Find(&rt)
 	if err := tx.Error; err != nil {
 		aS.logger.Errorf("exception in DB transaction %v", err)
-		return &rt, err
+		return rt, err
 	}
-	return &rt, nil
+	return rt, nil
 }
 
 func (aS *userService) GetAllOrganizationMember(ctx context.Context, organizationId uint64, criterias []*web_api.Criteria, paginate *web_api.Paginate) (int64, *[]internal_entity.UserOrganizationRole, error) {

@@ -7,16 +7,11 @@ import {
 } from '@rapidaai/react';
 import { GetAssistantResponse } from '@rapidaai/react';
 import { ServiceError } from '@rapidaai/react';
-import { PageActionButtonBlock } from '@/app/components/blocks/page-action-button-block';
 import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 import { PageTitleBlock } from '@/app/components/blocks/page-title-block';
 import { ErrorContainer } from '@/app/components/error-container';
 import { FormLabel } from '@/app/components/form-label';
-import {
-  IBlueBGButton,
-  ICancelButton,
-  IRedBorderButton,
-} from '@/app/components/form/button';
+import { IBlueBGButton, IRedBGButton } from '@/app/components/form/button';
 import { FieldSet } from '@/app/components/form/fieldset';
 import { Input } from '@/app/components/form/input';
 import { CopyInput } from '@/app/components/form/input/copy-input';
@@ -33,6 +28,7 @@ import { useParams } from 'react-router-dom';
 import { UpdateAssistantDetail } from '@rapidaai/react';
 import { connectionConfig } from '@/configs';
 import { RedNoticeBlock } from '@/app/components/container/message/notice-block';
+import { ErrorMessage } from '@/app/components/form/error-message';
 
 export function EditAssistantPage() {
   /**
@@ -215,6 +211,15 @@ export const EditAssistant: FC<{ assistantId: string }> = ({ assistantId }) => {
               />
             </FieldSet>
           </div>
+          <ErrorMessage message={errorMessage} />
+          <IBlueBGButton
+            type="button"
+            isLoading={loading}
+            onClick={onUpdateAssistantDetail}
+            className="px-4 rounded-[2px]"
+          >
+            Update Assistant
+          </IBlueBGButton>
         </div>
         <InputGroup title="Permanent Actions" initiallyExpanded={false}>
           <RedNoticeBlock>
@@ -229,34 +234,16 @@ export const EditAssistant: FC<{ assistantId: string }> = ({ assistantId }) => {
                 certain
               </InputHelper>
             </FieldSet>
-            <IRedBorderButton
+            <IRedBGButton
               className="rounded-[2px]"
               isLoading={loading}
               onClick={Deletion.showDialog}
             >
-              Delete
-            </IRedBorderButton>
+              Yes, delete the assistant
+            </IRedBGButton>
           </div>
         </InputGroup>
       </div>
-      <PageActionButtonBlock errorMessage={errorMessage}>
-        <ICancelButton
-          className="px-4 rounded-[2px]"
-          onClick={() => {
-            // showDialog(navigator.goBack);
-          }}
-        >
-          Cancel
-        </ICancelButton>
-        <IBlueBGButton
-          type="button"
-          isLoading={loading}
-          onClick={onUpdateAssistantDetail}
-          className="px-4 rounded-[2px]"
-        >
-          Update assistant
-        </IBlueBGButton>
-      </PageActionButtonBlock>
     </div>
   );
 };

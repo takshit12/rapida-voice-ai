@@ -20,7 +20,7 @@ export function CreateOrganizationPage() {
   /**
    * To naviagate to dashboard
    */
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   /**
    * setLoading context
@@ -40,7 +40,11 @@ export function CreateOrganizationPage() {
   /**
    * handle the form
    */
-  const { register, handleSubmit } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
   const [error, setError] = useState('');
 
   /**
@@ -122,16 +126,18 @@ export function CreateOrganizationPage() {
           <FormLabel>Organization Name</FormLabel>
           <Input
             type="text"
+            required
             defaultValue={`${user?.name}'s Organization`}
             placeholder="eg: Lexatic Inc"
             {...register('organizationName', {
-              required: 'Please enter organization name',
+              required: 'Please enter the organization name.',
             })}
           ></Input>
         </FieldSet>
         <FieldSet>
           <FormLabel>How large is your company?</FormLabel>
           <Select
+            required
             placeholder="Select your orgnization size"
             {...register('organizationSize')}
             options={OrgOptions}
@@ -140,17 +146,25 @@ export function CreateOrganizationPage() {
         <FieldSet>
           <FormLabel>Organization Industry</FormLabel>
           <Input
+            required
             type="text"
             {...register('organizationIndustry', {
-              required: 'Please enter industry',
+              required: 'Please provide industry for your organization.',
             })}
             placeholder="eg: Software, Engineering"
           ></Input>
         </FieldSet>
-        <ErrorMessage message={error} />
+        <ErrorMessage
+          message={
+            (errors.organizationName?.message as string) ||
+            (errors.organizationSize?.message as string) ||
+            (errors.organizationIndustry?.message as string) ||
+            error
+          }
+        />
         <IBlueBGArrowButton
           type="submit"
-          className="w-full justify-between"
+          className="w-full justify-between h-11"
           isLoading={loading}
         >
           Continue

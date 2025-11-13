@@ -1,6 +1,5 @@
 import React from 'react';
 import { Popover, PopoverProps } from '@/app/components/popover';
-import { CustomLink } from '@/app/components/custom-link';
 import { Link } from 'react-router-dom';
 
 interface ProfilePopoverProps extends PopoverProps {
@@ -24,7 +23,7 @@ export function ProfilePopover(props: ProfilePopoverProps) {
         </div>
         <div className="flex flex-col divide-y">
           <Link
-            to="/account/personal-settings"
+            to="/account"
             className="px-4 py-3 text-sm dark:hover:bg-gray-950 hover:bg-white"
           >
             Account Settings

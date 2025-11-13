@@ -1,6 +1,9 @@
 package config
 
+import "github.com/rapidaai/pkg/configs"
+
 type AppConfig struct {
+	//
 	Name     string `mapstructure:"service_name" validate:"required"`
 	Version  string `mapstructure:"version"`
 	Host     string `mapstructure:"host" validate:"required"`
@@ -15,6 +18,10 @@ type AppConfig struct {
 	AssistantHost   string `mapstructure:"assistant_host" validate:"required"`
 	WebHost         string `mapstructure:"web_host" validate:"required"`
 	DocumentHost    string `mapstructure:"document_host" validate:"required"`
+
+	// utility
+	UiHost        string                 `mapstructure:"ui_host" validate:"required"`
+	EmailerConfig *configs.EmailerConfig `mapstructure:"emailer"`
 }
 
 func (cfg *AppConfig) IsDevelopment() bool {
@@ -22,9 +29,5 @@ func (cfg *AppConfig) IsDevelopment() bool {
 }
 
 func (cfg *AppConfig) BaseUrl() (baseUrl string) {
-	baseUrl = "https://www.rapida.ai"
-	if cfg.IsDevelopment() {
-		baseUrl = "http://localhost:3000"
-	}
-	return
+	return cfg.UiHost
 }

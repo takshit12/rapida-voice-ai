@@ -148,7 +148,7 @@ func (wVault *webVaultGRPCApi) GetAllOrganizationCredential(c context.Context, i
 		)
 	}
 
-	out := make([]*protos.VaultCredential, len(*vlts))
+	out := make([]*protos.VaultCredential, len(vlts))
 	err = utils.Cast(vlts, &out)
 	if err != nil {
 		wVault.logger.Errorf("unable to cast vault object to proto %v", err)

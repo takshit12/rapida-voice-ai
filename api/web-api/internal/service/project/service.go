@@ -91,9 +91,9 @@ func (pS *projectService) Update(ctx context.Context, auth types.Principle, proj
 	return project, nil
 }
 
-func (pS *projectService) GetAll(ctx context.Context, auth types.SimplePrinciple, organizationId uint64, criterias []*web_api.Criteria, paginate *web_api.Paginate) (int64, *[]internal_entity.Project, error) {
+func (pS *projectService) GetAll(ctx context.Context, auth types.SimplePrinciple, organizationId uint64, criterias []*web_api.Criteria, paginate *web_api.Paginate) (int64, []*internal_entity.Project, error) {
 	db := pS.postgres.DB(ctx)
-	var projects []internal_entity.Project
+	var projects []*internal_entity.Project
 	var cnt int64
 	qry := db.Model(internal_entity.Project{}).
 		Where("organization_id = ? AND status = ? ", organizationId, type_enums.RECORD_ACTIVE)
@@ -118,7 +118,7 @@ func (pS *projectService) GetAll(ctx context.Context, auth types.SimplePrinciple
 		return cnt, nil, tx.Error
 	}
 
-	return cnt, &projects, nil
+	return cnt, projects, nil
 }
 
 func (pS *projectService) Get(ctx context.Context, auth types.SimplePrinciple, projectId uint64) (*internal_entity.Project, error) {
@@ -184,9 +184,9 @@ func (pS *projectService) ArchiveCredential(ctx context.Context, auth types.Prin
 	return ct, nil
 }
 
-func (pS *projectService) GetAllCredential(ctx context.Context, auth types.Principle, projectId, organizationId uint64, criterias []*web_api.Criteria, paginate *web_api.Paginate) (int64, *[]internal_entity.ProjectCredential, error) {
+func (pS *projectService) GetAllCredential(ctx context.Context, auth types.Principle, projectId, organizationId uint64, criterias []*web_api.Criteria, paginate *web_api.Paginate) (int64, []*internal_entity.ProjectCredential, error) {
 	db := pS.postgres.DB(ctx)
-	var pcs []internal_entity.ProjectCredential
+	var pcs []*internal_entity.ProjectCredential
 	var cnt int64
 	qry := db.
 		Model(internal_entity.ProjectCredential{}).
@@ -213,6 +213,6 @@ func (pS *projectService) GetAllCredential(ctx context.Context, auth types.Princ
 		return cnt, nil, tx.Error
 	}
 
-	return cnt, &pcs, nil
+	return cnt, pcs, nil
 
 }

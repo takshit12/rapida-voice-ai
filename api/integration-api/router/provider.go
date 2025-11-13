@@ -25,13 +25,6 @@ func ProviderApiRoute(
 	integration_api.RegisterReplicateServiceServer(S, integrationApi.NewReplicateGRPC(Cfg, Logger, Postgres))
 }
 
-func SendgridApiRoute(Cfg *config.IntegrationConfig,
-	S *grpc.Server,
-	Logger commons.Logger,
-	Postgres connectors.PostgresConnector) {
-	integration_api.RegisterSendgridServiceServer(S, integrationApi.NewSendgridGRPC(Cfg, Logger, Postgres))
-}
-
 func AuditLoggingApiRoute(
 	Cfg *config.IntegrationConfig,
 	S *grpc.Server,

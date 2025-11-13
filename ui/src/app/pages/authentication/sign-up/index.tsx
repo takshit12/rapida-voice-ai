@@ -157,7 +157,7 @@ export function SignUpPage() {
 
         <ErrorMessage message={error} />
         <IBlueBGArrowButton
-          className="w-full justify-between"
+          className="w-full justify-between h-11"
           type="submit"
           isLoading={loading}
         >

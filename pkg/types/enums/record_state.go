@@ -15,7 +15,8 @@ type RecordState string
 // status of record is immutable and common for all table but state of transaction should vary depends on what table is
 // you know what will refactoir this in future
 const (
-	RECORD_ACTIVE RecordState = "ACTIVE"
+	RECORD_ACTIVE  RecordState = "ACTIVE"
+	RECORD_INVITED RecordState = "INVITED"
 
 	RECORD_QUEUED    RecordState = "QUEUED"
 	RECORD_CONNECTED RecordState = "CONNECTED"

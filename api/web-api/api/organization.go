@@ -136,7 +136,7 @@ func (orgG *webOrganizationGRPCApi) CreateOrganization(c context.Context, irRequ
 		return &protos.CreateOrganizationResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.OrganizationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: "Alerady part of another organization, you can't be part of multiple organization.",
 				HumanMessage: "You are already part of an active organization.",
@@ -150,7 +150,7 @@ func (orgG *webOrganizationGRPCApi) CreateOrganization(c context.Context, irRequ
 		return &protos.CreateOrganizationResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.OrganizationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to create organization, please try again.",
@@ -164,7 +164,7 @@ func (orgG *webOrganizationGRPCApi) CreateOrganization(c context.Context, irRequ
 		return &protos.CreateOrganizationResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.OrganizationError{
+			Error: &protos.Error{
 				ErrorCode:    401,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to assign role for your organization.",
@@ -214,7 +214,7 @@ func (orgG *webOrganizationGRPCApi) UpdateOrganization(c context.Context, irRequ
 		return &protos.UpdateOrganizationResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.OrganizationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to update the organization, please try again in sometime.",
@@ -243,7 +243,7 @@ func (orgG *webOrganizationGRPCApi) GetOrganization(c context.Context, irRequest
 		return &protos.GetOrganizationResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.OrganizationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to find role your organization, please try again later.",
@@ -256,7 +256,7 @@ func (orgG *webOrganizationGRPCApi) GetOrganization(c context.Context, irRequest
 		return &protos.GetOrganizationResponse{
 			Code:    400,
 			Success: false,
-			Error: &protos.OrganizationError{
+			Error: &protos.Error{
 				ErrorCode:    400,
 				ErrorMessage: err.Error(),
 				HumanMessage: "Unable to find your organization, please try again later.",

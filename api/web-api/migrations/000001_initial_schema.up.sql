@@ -1,21 +1,3 @@
-
-
---
--- Name: leads; Type: TABLE;
---
-
-CREATE TABLE public.leads (
-    id bigint NOT NULL,
-    email character varying(200) NOT NULL,
-    company_name character varying(200) NOT NULL,
-    expected_volume character varying(200) NOT NULL,
-    created_date timestamp without time zone DEFAULT now() NOT NULL,
-    update_date timestamp without time zone,
-    updated_date timestamp without time zone
-);
-
-
-
 --
 -- Name: o_auth_external_connects; Type: TABLE;
 --
@@ -47,7 +29,7 @@ CREATE TABLE public.organizations (
     size character varying(100) NOT NULL,
     industry character varying(200) NOT NULL,
     contact character varying(200) NOT NULL,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -66,7 +48,7 @@ CREATE TABLE public.project_credentials (
     key character varying(400) NOT NULL,
     created_date timestamp without time zone DEFAULT now() NOT NULL,
     updated_date timestamp without time zone,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -84,7 +66,7 @@ CREATE TABLE public.projects (
     updated_date timestamp without time zone,
     name character varying(200) NOT NULL,
     description character varying(400) NOT NULL,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -103,7 +85,7 @@ CREATE TABLE public.user_auth_tokens (
     expire_at timestamp without time zone DEFAULT now(),
     created_date timestamp without time zone DEFAULT now() NOT NULL,
     updated_date timestamp without time zone,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -119,7 +101,7 @@ CREATE TABLE public.user_auths (
     name character varying(200) NOT NULL,
     email character varying(200) NOT NULL,
     password character varying(400) NOT NULL,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_date timestamp without time zone DEFAULT now() NOT NULL,
     updated_date timestamp without time zone,
     created_by bigint NOT NULL,
@@ -142,7 +124,7 @@ CREATE TABLE public.user_feature_permissions (
     updated_by bigint,
     created_date timestamp without time zone DEFAULT now() NOT NULL,
     updated_date timestamp without time zone,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL
 );
 
 
@@ -158,7 +140,7 @@ CREATE TABLE public.user_organization_roles (
     user_auth_id bigint NOT NULL,
     organization_id bigint NOT NULL,
     role character varying(200) NOT NULL,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -176,7 +158,7 @@ CREATE TABLE public.user_project_roles (
     project_id bigint NOT NULL,
     user_auth_id bigint NOT NULL,
     role character varying(200) NOT NULL,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -194,7 +176,7 @@ CREATE TABLE public.user_roles (
     role character varying(200) NOT NULL,
     created_date timestamp without time zone DEFAULT now() NOT NULL,
     updated_date timestamp without time zone,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
@@ -214,7 +196,7 @@ CREATE TABLE public.user_socials (
     token character varying(500) NOT NULL,
     created_date timestamp without time zone DEFAULT now() NOT NULL,
     updated_date timestamp without time zone,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL
 );
 
 
@@ -233,19 +215,12 @@ CREATE TABLE public.vaults (
     vault_level_id bigint NOT NULL,
     name character varying(200) NOT NULL,
     value json NOT NULL,
-    status character varying(50) DEFAULT 'active'::character varying NOT NULL,
+    status character varying(50) DEFAULT 'ACTIVE'::character varying NOT NULL,
     created_by bigint NOT NULL,
     updated_by bigint NOT NULL
 );
 
 
-
---
--- Name: leads leads_pkey; Type: CONSTRAINT;
---
-
-ALTER TABLE ONLY public.leads
-    ADD CONSTRAINT leads_pkey PRIMARY KEY (id);
 
 
 --

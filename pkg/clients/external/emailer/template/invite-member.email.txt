@@ -1,0 +1,18 @@
+{{if .name}}
+Hi {{.name}},
+{{else}}
+Hello,
+{{end}}
+
+{{.inviter_name}} has invited you to join the {{.project_name}} workspace on Rapida.
+
+Join your team to collaborate, create assistants, and manage voice AI deployments together.
+
+Accept your invitation:
+{{.invite_url}}
+
+This invitation link will expire in 7 days.  
+If you didn’t expect this, you can safely ignore this email.
+
+Cheers,  
+The Rapida Team  

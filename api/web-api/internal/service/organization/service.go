@@ -78,36 +78,3 @@ func (oS *organizationService) Update(ctx context.Context, auth types.Principle,
 		return org, nil
 	}
 }
-
-// func (oS *organizationService) InviteUserToOrg(ctx context.Context, userId uint64, role string, auth types.Principle) (*internal_entity.UserOrganizationRole, error) {
-// 	db := oS.postgres.DB(ctx)
-// 	var org internal_entity.Organization
-// 	tx := db.First(&org, "id = ?", auth.GetOrganizationRole().OrganizationId)
-// 	if tx.Error != nil {
-// 		return nil, tx.Error
-// 	}
-
-// 	orgRole := &internal_entity.UserOrganizationRole{
-// 		UserAuthId:     userId,
-// 		Role:           strings.ToLower(role),
-// 		OrganizationId: auth.GetOrganizationRole().OrganizationId,
-// 		Status:         "invited",
-// 		CreatedBy:      auth.GetUserInfo().Id,
-// 		UpdatedBy:      auth.GetUserInfo().Id,
-// 	}
-
-// 	if err := db.Save(orgRole).Error; err != nil {
-// 		return nil, err
-// 	}
-// 	return orgRole, nil
-// }
-
-// func (oS *organizationService) GetRoles(ctx context.Context, organizationId uint64) ([]*internal_entity.UserOrganizationRole, error) {
-// 	db := oS.postgres.DB(ctx)
-// 	var roles []*internal_entity.UserOrganizationRole
-// 	if err := db.Where("organization_id = ? and status = ?", organizationId, "active").Find(&roles).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	return roles, nil
-// }

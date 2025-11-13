@@ -36,7 +36,7 @@ type UserService interface {
 	CreateSocial(ctx context.Context, userId uint64, id string, token string, source string, verified bool) (*internal_entity.UserSocial, error)
 	GetSocial(ctx context.Context, userId uint64) (*internal_entity.UserSocial, error)
 
-	GetAllActiveProjectMember(ctx context.Context, projectId uint64) (*[]internal_entity.UserProjectRole, error)
+	GetAllActiveProjectMember(ctx context.Context, projectId uint64) ([]*internal_entity.UserProjectRole, error)
 	GetAllUserRolesForOrg(ctx context.Context, organizationId uint64) ([]*internal_entity.UserOrganizationRole, error)
 	GetProjectRolesForUsers(ctx context.Context, pIds []uint64, uIds []uint64) ([]*internal_entity.UserProjectRole, error)
 

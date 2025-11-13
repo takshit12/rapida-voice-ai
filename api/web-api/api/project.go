@@ -3,24 +3,26 @@ package web_api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
-	internal_entity "github.com/rapidaai/api/web-api/internal/entity"
-
-	internal_organization_service "github.com/rapidaai/api/web-api/internal/service/organization"
-	internal_user_service "github.com/rapidaai/api/web-api/internal/service/user"
-	integration_client "github.com/rapidaai/pkg/clients/integration"
-	type_enums "github.com/rapidaai/pkg/types/enums"
-	"github.com/rapidaai/pkg/utils"
-
-	config "github.com/rapidaai/api/web-api/config"
-	internal_service "github.com/rapidaai/api/web-api/internal/service"
-	internal_project_service "github.com/rapidaai/api/web-api/internal/service/project"
+	"github.com/rapidaai/api/web-api/config"
 	"github.com/rapidaai/pkg/ciphers"
-	commons "github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/types"
-	protos "github.com/rapidaai/protos"
+	"github.com/rapidaai/pkg/utils"
+	"github.com/rapidaai/protos"
+
+	internal_entity "github.com/rapidaai/api/web-api/internal/entity"
+	internal_service "github.com/rapidaai/api/web-api/internal/service"
+	internal_organization_service "github.com/rapidaai/api/web-api/internal/service/organization"
+	internal_project_service "github.com/rapidaai/api/web-api/internal/service/project"
+	internal_user_service "github.com/rapidaai/api/web-api/internal/service/user"
+	external_clients "github.com/rapidaai/pkg/clients/external"
+	external_emailer "github.com/rapidaai/pkg/clients/external/emailer"
+	external_emailer_template "github.com/rapidaai/pkg/clients/external/emailer/template"
+	type_enums "github.com/rapidaai/pkg/types/enums"
 )
 
 type webProjectApi struct {
@@ -29,7 +31,7 @@ type webProjectApi struct {
 	redis               connectors.RedisConnector
 	postgres            connectors.PostgresConnector
 	projectService      internal_service.ProjectService
-	sendgridClient      integration_client.SendgridServiceClient
+	emailerClient       external_clients.Emailer
 	userService         internal_service.UserService
 	organizationService internal_service.OrganizationService
 }
@@ -50,7 +52,7 @@ func NewProjectRPC(config *config.WebAppConfig, logger commons.Logger, postgres 
 			postgres:       postgres,
 			redis:          redis,
 			projectService: internal_project_service.NewProjectService(logger, postgres),
-			sendgridClient: integration_client.NewSendgridServiceClientGRPC(&config.AppConfig, logger),
+			emailerClient:  external_emailer.NewEmailer(&config.AppConfig, logger),
 		},
 	}
 }
@@ -64,7 +66,7 @@ func NewProjectGRPC(config *config.WebAppConfig, logger commons.Logger, postgres
 			redis:               redis,
 			projectService:      internal_project_service.NewProjectService(logger, postgres),
 			userService:         internal_user_service.NewUserService(logger, postgres),
-			sendgridClient:      integration_client.NewSendgridServiceClientGRPC(&config.AppConfig, logger),
+			emailerClient:       external_emailer.NewEmailer(&config.AppConfig, logger),
 			organizationService: internal_organization_service.NewOrganizationService(logger, postgres),
 		},
 	}
@@ -79,7 +81,7 @@ func (wProjectApi *webProjectGRPCApi) CreateProject(ctx context.Context, irReque
 	}
 	currentOrgRole := iAuth.GetOrganizationRole()
 	if currentOrgRole == nil {
-		wProjectApi.logger.Errorf("current org is not null, you can't create multiple organization at same time.")
+		wProjectApi.logger.Errorf("current org is null, you can't create project without an organization.")
 		return utils.Error[protos.CreateProjectResponse](
 			errors.New("you cannot create a project when you are not part of any organization"),
 			"Please create organization before creating a project.")
@@ -183,7 +185,7 @@ func (wProjectApi *webProjectGRPCApi) GetAllProject(ctx context.Context, irReque
 			wProjectApi.logger.Errorf("no member in the project %v with err %v", prj.Id, err)
 			continue
 		}
-		for _, upr := range *_m {
+		for _, upr := range _m {
 			prj.Members = append(prj.Members, &protos.User{
 				Role:  upr.Role,
 				Id:    upr.UserAuthId,
@@ -223,15 +225,15 @@ func (wProjectApi *webProjectGRPCApi) GetProject(ctx context.Context, irRequest 
 
 	ot := &protos.Project{}
 	utils.Cast(prj, ot)
-	var projectMemebers *[]internal_entity.UserProjectRole
+	var projectMemebers []*internal_entity.UserProjectRole
 	projectMemebers, err = wProjectApi.userService.GetAllActiveProjectMember(ctx, prj.Id)
 	if err != nil {
 		wProjectApi.logger.Errorf("userService.GetAllProjectMember from grpc with err %v", err)
 		return nil, err
 	}
 
-	projectMembers := make([]*protos.User, len(*projectMemebers))
-	for idx, upr := range *projectMemebers {
+	projectMembers := make([]*protos.User, len(projectMemebers))
+	for idx, upr := range projectMemebers {
 		projectMembers[idx] = &protos.User{
 			Role:  upr.Role,
 			Id:    upr.UserAuthId,
@@ -260,12 +262,23 @@ func (wProjectApi *webProjectGRPCApi) AddUserToProject(ctx context.Context, auth
 		projectNames = append(projectNames, p.Name)
 	}
 
-	// sending email
-	_, err := wProjectApi.sendgridClient.InviteMemberEmail(ctx, *auth.GetUserId(), "", email, auth.GetOrganizationRole().OrganizationName, strings.Join(projectNames[:], ","), auth.GetUserInfo().Name)
+	err := wProjectApi.emailerClient.EmailRichText(
+		ctx,
+		external_clients.Contact{
+			Name:  "",
+			Email: email,
+		},
+		fmt.Sprintf("[RapidaAI] %s has invited you to join the %s organization", auth.GetUserInfo().Name, auth.GetOrganizationRole().OrganizationName),
+		external_emailer_template.INVITE_MEMBER_TEMPLATE,
+		map[string]string{
+			"inviter_name": auth.GetUserInfo().Name,
+			"project_name": strings.Join(projectNames[:], ","),
+			"invite_url":   fmt.Sprintf("%s/auth/signup?utm_source=invite&utm_param=%d", wProjectApi.cfg.UiHost, auth.GetOrganizationRole().OrganizationId),
+		},
+	)
 	if err != nil {
 		wProjectApi.logger.Errorf("error while sending invite email %v", err)
 	}
-
 	out := []*protos.Project{}
 	err = utils.Cast(projectOut, &out)
 	if err != nil {
@@ -296,7 +309,7 @@ func (wProjectApi *webProjectGRPCApi) AddUsersToProject(ctx context.Context, irR
 			)
 		}
 		username = parts[0]
-		eUser, err := wProjectApi.userService.Create(ctx, username, irRequest.GetEmail(), ciphers.RandomHash("rpd_"), "invited", &source)
+		eUser, err := wProjectApi.userService.Create(ctx, username, irRequest.GetEmail(), ciphers.RandomHash("rpd_"), type_enums.RECORD_INVITED, &source)
 		if err != nil {
 			wProjectApi.logger.Errorf("unable to create user for invite err %v", err)
 			return utils.Error[protos.AddUsersToProjectResponse](
@@ -305,7 +318,7 @@ func (wProjectApi *webProjectGRPCApi) AddUsersToProject(ctx context.Context, irR
 			)
 		}
 		// , role string, userId uint64, orgnizationId uint64, status string
-		_, err = wProjectApi.userService.CreateOrganizationRole(ctx, auth, irRequest.GetRole(), eUser.GetUserInfo().Id, auth.GetOrganizationRole().OrganizationId, "invited")
+		_, err = wProjectApi.userService.CreateOrganizationRole(ctx, auth, irRequest.GetRole(), eUser.GetUserInfo().Id, auth.GetOrganizationRole().OrganizationId, type_enums.RECORD_INVITED)
 		if err != nil {
 			wProjectApi.logger.Errorf("unable to create organization role err %v", err)
 			return utils.Error[protos.AddUsersToProjectResponse](
@@ -313,7 +326,7 @@ func (wProjectApi *webProjectGRPCApi) AddUsersToProject(ctx context.Context, irR
 				"Unable to create organization role user for invite err.",
 			)
 		}
-		return wProjectApi.AddUserToProject(ctx, auth, eUser.GetUserInfo().Email, eUser.GetUserInfo().Id, "invited", irRequest.Role, irRequest.ProjectIds)
+		return wProjectApi.AddUserToProject(ctx, auth, eUser.GetUserInfo().Email, eUser.GetUserInfo().Id, type_enums.RECORD_INVITED, irRequest.Role, irRequest.ProjectIds)
 	} else {
 		org, err := wProjectApi.userService.GetOrganizationRole(ctx, eUser.Id)
 		if err == nil {

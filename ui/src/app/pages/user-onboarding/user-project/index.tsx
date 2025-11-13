@@ -89,7 +89,7 @@ export function CreateProjectPage() {
       <Helmet title="Onboarding: Create a Project"></Helmet>
       <DescriptiveHeading
         heading="Create your Project"
-        subheading="This is where your team can work and collabrate on the projects."
+        subheading="Bring your team together! Collaborate, share ideas, and work seamlessly on your projects."
       ></DescriptiveHeading>
       <form className="space-y-6 mt-6" onSubmit={handleSubmit(onCreateProject)}>
         <FieldSet>
@@ -113,7 +113,7 @@ export function CreateProjectPage() {
         <ErrorMessage message={error} />
         <IBlueBGArrowButton
           type="submit"
-          className="w-full justify-between"
+          className="w-full justify-between h-11"
           isLoading={loading}
         >
           Continue

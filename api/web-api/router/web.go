@@ -36,8 +36,6 @@ func WebApiRoute(
 	protos.RegisterVaultServiceServer(S, webApi.NewVaultGRPC(Cfg, &Cfg.OAuthConfig, Logger, Postgres, Redis))
 	protos.RegisterOrganizationServiceServer(S, webApi.NewOrganizationGRPC(Cfg, Logger, Postgres, Redis))
 	protos.RegisterProjectServiceServer(S, webApi.NewProjectGRPC(Cfg, Logger, Postgres, Redis))
-	protos.RegisterLeadGeneratorServiceServer(S, webApi.NewLeadGRPC(Cfg, Logger, Postgres, Redis))
-
 	protos.RegisterConnectServiceServer(S, webApi.NewConnectGRPC(Cfg, &Cfg.OAuthConfig, Logger, Postgres))
 	Logger.Info("Internal HealthCheckRoutes and Connectors added to engine.")
 

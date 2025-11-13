@@ -1,0 +1,22 @@
+{{if .name}}
+Hi {{.name}},
+{{else}}
+Hello,
+{{end}}
+
+Welcome to Rapida.
+We’re thrilled to have you onboard!
+
+Rapida helps product teams bring **conversational voice AI** directly into their apps — with just a few lines of code.  
+Here’s how to get started:
+1. **Explore the Dashboard** → Set up your first assistant.  
+2. **Connect your data** → Integrate APIs or knowledge bases.  
+3. **Launch in minutes** → Deploy your voice AI anywhere.
+
+Need help? Our team’s here for you — just reply to this email or visit our docs.
+
+Let’s build something remarkable together.
+
+Cheers
+Prashant Srivastav
+[rapida.ai](https://rapida.ai)

@@ -245,7 +245,6 @@ func (app *AppRunner) Close(ctx context.Context) {
 func (g *AppRunner) AllRouters() {
 	integration_routers.HealthCheckRoutes(g.Cfg, g.E, g.Logger, g.Postgres)
 	integration_routers.ProviderApiRoute(g.Cfg, g.S, g.Logger, g.Postgres)
-	integration_routers.SendgridApiRoute(g.Cfg, g.S, g.Logger, g.Postgres)
 	integration_routers.AuditLoggingApiRoute(g.Cfg, g.S, g.Logger, g.Postgres)
 
 }
