@@ -208,7 +208,7 @@ export const ValidateCohereTextProviderDefaultOptions = (
     !credentialID.getValue() ||
     credentialID.getValue().length === 0
   ) {
-    return 'Please check and provide a valid credentials for azure openai';
+    return 'Please check and provide a valid credentials for cohere';
   }
   const modelIdOption = options.find(opt => opt.getKey() === 'model.id');
   if (

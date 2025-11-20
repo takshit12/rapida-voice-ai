@@ -1,82 +1,8 @@
 import { Metadata } from '@rapidaai/react';
 import { SetMetadata } from '@/utils/metadata';
-export const GOOGLE_TEXT_MODEL = [
-  {
-    id: 'google/gemini-2.5-pro',
-    created_date: '2024-07-09 10:00:00.000000',
-    updated_date: null,
-    provider_id: '198796716894742118',
-    name: 'gemini-2.5-pro',
-    description:
-      'Enhanced thinking and reasoning, multimodal understanding, advanced coding, and more',
-    human_name: 'Gemini 2.5 Pro',
-    category: 'text',
-    status: 'ACTIVE',
-    owner: 'rapida',
-    input_types: ['Audio', 'images', 'videos', 'text', 'PDF'],
-    output_types: ['Text'],
-  },
-  {
-    id: 'google/gemini-2.5-flash',
-    created_date: '2024-07-09 10:00:00.000000',
-    updated_date: null,
-    provider_id: '198796716894742118',
-    name: 'gemini-2.5-flash',
-    description: 'Adaptive thinking, cost efficiency',
-    human_name: 'Gemini 2.5 Flash',
-    category: 'text',
-    status: 'ACTIVE',
-    owner: 'rapida',
-    input_types: ['Audio', 'images', 'videos', 'text'],
-    output_types: ['Text'],
-  },
-  {
-    id: 'google/gemini-2.5-flash-lite-preview-06-17',
-    created_date: '2024-07-09 10:00:00.000000',
-    updated_date: null,
-    provider_id: '198796716894742118',
-    name: 'gemini-2.5-flash-lite-preview-06-17',
-    description: 'Most cost-efficient model supporting high throughput',
-    human_name: 'Gemini 2.5 Flash-Lite Preview',
-    category: 'text',
-    status: 'PREVIEW',
-    owner: 'rapida',
-    input_types: ['Text', 'image', 'video', 'audio'],
-    output_types: ['Text'],
-  },
-  // ... existing code for gemini-2.5-flash-preview-native-audio-dialog and gemini-2.5-flash-exp-native-audio-thinking-dialog ...
+import { GEMINI_MODEL } from '@/providers';
 
-  {
-    id: 'google/gemini-2.0-flash',
-    created_date: '2024-07-09 10:00:00.000000',
-    updated_date: null,
-    provider_id: '198796716894742118',
-    name: 'gemini-2.0-flash',
-    description: 'Next generation features, speed, and realtime streaming.',
-    human_name: 'Gemini 2.0 Flash',
-    category: 'text',
-    status: 'ACTIVE',
-    owner: 'rapida',
-    input_types: ['Audio', 'images', 'videos', 'text'],
-    output_types: ['Text'],
-  },
-
-  {
-    id: 'google/gemini-2.0-flash-lite',
-    created_date: '2024-07-09 10:00:00.000000',
-    updated_date: null,
-    provider_id: '198796716894742118',
-    name: 'gemini-2.0-flash-lite',
-    description: 'Cost efficiency and low latency',
-    human_name: 'Gemini 2.0 Flash-Lite',
-    category: 'text',
-    status: 'ACTIVE',
-    owner: 'rapida',
-    input_types: ['Audio', 'images', 'videos', 'text'],
-    output_types: ['Text'],
-  },
-];
-export const GetGoogleTextProviderDefaultOptions = (
+export const GetGeminiTextProviderDefaultOptions = (
   current: Metadata[],
 ): Metadata[] => {
   const mtds: Metadata[] = [];
@@ -108,13 +34,8 @@ export const GetGoogleTextProviderDefaultOptions = (
     const metadata = SetMetadata(current, key, defaultValue, validationFn);
     if (metadata) mtds.push(metadata);
   };
-  addMetadata('model.id', GOOGLE_TEXT_MODEL[0].id, value =>
-    GOOGLE_TEXT_MODEL.some(model => model.id === value),
-  );
-
-  addMetadata('model.name', GOOGLE_TEXT_MODEL[0].name, value =>
-    GOOGLE_TEXT_MODEL.some(model => model.name === value),
-  );
+  addMetadata('model.id');
+  addMetadata('model.name');
 
   addMetadata('model.candidate_count', '1');
   addMetadata('model.temperature', '1');
@@ -130,7 +51,7 @@ export const GetGoogleTextProviderDefaultOptions = (
 
   return mtds.filter(m => keysToKeep.includes(m.getKey()));
 };
-export const ValidateGoogleTextProviderDefaultOptions = (
+export const ValidateGeminiTextProviderDefaultOptions = (
   options: Metadata[],
 ): string | undefined => {
   const credentialID = options.find(
@@ -146,7 +67,7 @@ export const ValidateGoogleTextProviderDefaultOptions = (
   const modelIdOption = options.find(opt => opt.getKey() === 'model.id');
   if (
     !modelIdOption ||
-    !GOOGLE_TEXT_MODEL.some(model => model.id === modelIdOption.getValue())
+    !GEMINI_MODEL().some(model => model.id === modelIdOption.getValue())
   ) {
     return 'Please check and select valid model from dropdown.';
   }

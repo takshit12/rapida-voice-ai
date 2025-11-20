@@ -163,3 +163,11 @@ export const CARTESIA_EMOTION_LEVEL_COMBINATION = [
     ].map(level => `${emotion.id}:${level.id}`),
   ),
 ];
+
+/**
+ *
+ */
+
+export const GEMINI_MODEL = () => {
+  return require('./gemini/models.json');
+};

@@ -16,11 +16,11 @@ import {
   GetCohereTextProviderDefaultOptions,
   ValidateCohereTextProviderDefaultOptions,
 } from '@/app/components/providers/text/cohere/constants';
-import { ConfigureGoogleTextProviderModel } from '@/app/components/providers/text/google';
+import { ConfigureGeminiTextProviderModel } from '@/app/components/providers/text/gemini';
 import {
-  GetGoogleTextProviderDefaultOptions,
-  ValidateGoogleTextProviderDefaultOptions,
-} from '@/app/components/providers/text/google/constants';
+  GetGeminiTextProviderDefaultOptions,
+  ValidateGeminiTextProviderDefaultOptions,
+} from '@/app/components/providers/text/gemini/constants';
 import { ConfigureOpenaiTextProviderModel } from '@/app/components/providers/text/openai';
 import {
   GetOpenaiTextProviderDefaultOptions,
@@ -50,7 +50,7 @@ export const GetDefaultTextProviderConfigIfInvalid = (
     case 'azure':
       return GetAzureTextProviderDefaultOptions(parameters);
     case 'gemini':
-      return GetGoogleTextProviderDefaultOptions(parameters);
+      return GetGeminiTextProviderDefaultOptions(parameters);
     case 'anthropic':
       return GetAnthropicTextProviderDefaultOptions(parameters);
     case 'cohere':
@@ -77,7 +77,7 @@ export const ValidateTextProviderDefaultOptions = (
     case 'azure':
       return ValidateAzureTextProviderDefaultOptions(parameters);
     case 'gemini':
-      return ValidateGoogleTextProviderDefaultOptions(parameters);
+      return ValidateGeminiTextProviderDefaultOptions(parameters);
     case 'anthropic':
       return ValidateAnthropicTextProviderDefaultOptions(parameters);
     case 'cohere':
@@ -115,7 +115,7 @@ const TextProviderConfigComponent: FC<ProviderComponentProps> = ({
       );
     case 'gemini':
       return (
-        <ConfigureGoogleTextProviderModel
+        <ConfigureGeminiTextProviderModel
           parameters={parameters}
           onParameterChange={onChangeParameter}
         />

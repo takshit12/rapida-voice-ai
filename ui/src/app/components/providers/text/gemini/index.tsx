@@ -10,10 +10,11 @@ import { useState } from 'react';
 import { Input } from '@/app/components/form/input';
 import { Slider } from '@/app/components/form/slider';
 import { InputHelper } from '@/app/components/input-helper';
-import { GOOGLE_TEXT_MODEL } from '@/app/components/providers/text/google/constants';
-import { Textarea } from '@/app/components/form/textarea';
 
-export const ConfigureGoogleTextProviderModel: React.FC<{
+import { Textarea } from '@/app/components/form/textarea';
+import { GEMINI_MODEL } from '@/providers';
+
+export const ConfigureGeminiTextProviderModel: React.FC<{
   onParameterChange: (parameters: Metadata[]) => void;
   parameters: Metadata[] | null;
 }> = ({ onParameterChange, parameters }) => {
@@ -44,7 +45,7 @@ export const ConfigureGoogleTextProviderModel: React.FC<{
     <div className="flex-1 flex ">
       <Dropdown
         className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
-        currentValue={GOOGLE_TEXT_MODEL.find(
+        currentValue={GEMINI_MODEL().find(
           x => x.id === getParamValue('model.id'),
         )}
         setValue={v => {
@@ -64,7 +65,7 @@ export const ConfigureGoogleTextProviderModel: React.FC<{
           filteredParams.push(newIdParam, newNameParam);
           onParameterChange(filteredParams);
         }}
-        allValue={GOOGLE_TEXT_MODEL}
+        allValue={GEMINI_MODEL()}
         placeholder="Select voice ouput provider"
         option={c => {
           return (
