@@ -82,8 +82,8 @@ export const ConfigureCartesiaTextToSpeech: React.FC<{
             currentValue={CARTESIA_VOICE().find(
               x => x.id === getParamValue('speak.voice.id'),
             )}
-            setValue={(v: { code: string }) => {
-              updateParameter('speak.voice.id', v.code);
+            setValue={(v: { id: string }) => {
+              updateParameter('speak.voice.id', v.id);
             }}
             allValue={filteredVoices}
             placeholder={`Select voice`}
@@ -131,7 +131,7 @@ export const ConfigureCartesiaTextToSpeech: React.FC<{
             updateParameter('speak.language', v.code);
           }}
           allValue={CARTESIA_LANGUAGE()}
-          placeholder={`Select model`}
+          placeholder={`Select languages`}
           option={renderOption}
           label={renderOption}
         />
@@ -149,7 +149,7 @@ export const ConfigureCartesiaTextToSpeech: React.FC<{
             updateParameter('speak.voice.__experimental_controls.speed', v.id);
           }}
           allValue={CARTESIA_SPEED_OPTION()}
-          placeholder={`Select model`}
+          placeholder={`Select Speed`}
           option={renderOption}
           label={renderOption}
         />

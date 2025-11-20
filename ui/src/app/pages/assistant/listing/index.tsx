@@ -122,37 +122,35 @@ export function AssistantPage() {
             </IBlueButton>
             <Popover
               align={'bottom-end'}
-              className="bg-white w-64 mr-10"
+              className="w-60 py-1.5 px-1.5"
               open={createAssistantPopover}
               setOpen={setCreateAssistantPopover}
             >
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 text-sm/6">
                 <IButton
                   className="w-full justify-start"
                   onClick={() =>
                     navigate('/deployment/assistant/create-assistant')
                   }
                 >
-                  <Plus className="w-4 h-4 mr-2" />
                   <span>Create new Assistant</span>
                 </IButton>
+                <hr className="w-full h-[1px] bg-gray-800" />
                 <IButton
                   className="w-full justify-start"
                   onClick={() =>
                     navigate('/deployment/assistant/connect-websocket')
                   }
                 >
-                  <ChevronsLeftRightEllipsis className="w-4 h-4 mr-2" />
                   <span>Connect new Websocket</span>
                 </IButton>
-
+                <hr className="w-full h-[1px] bg-gray-800" />
                 <IButton
                   className="w-full justify-start"
                   onClick={() =>
                     navigate('/deployment/assistant/connect-agentkit')
                   }
                 >
-                  <Code className="w-4 h-4 mr-2" />
                   <span>Connect new AgentKit</span>
                 </IButton>
               </div>

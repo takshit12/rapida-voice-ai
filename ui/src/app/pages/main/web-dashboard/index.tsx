@@ -38,14 +38,6 @@ export const HomePage = () => {
       route: '/deployment/assistant',
     },
     {
-      icon: DeploymentIcon,
-      title: 'Seamless Deployment',
-      description:
-        'One-click agent deployment with built-in auto-scaling, version control, and monitoring.',
-      color: 'bg-orange-500',
-      route: '/deployment',
-    },
-    {
       icon: EndpointIcon,
       title: 'Governance & Endpoints',
       description:
@@ -67,15 +59,7 @@ export const HomePage = () => {
       description:
         'Instantly test AI agents and flows in a live sandbox to iterate faster and ship confidently.',
       color: 'bg-indigo-500',
-      route: '/observability',
-    },
-    {
-      icon: ToolIcon,
-      title: 'External Integrations',
-      description:
-        'Connect effortlessly to CRMs, internal APIs, databases, and third-party tools to extend agent capabilities.',
-      color: 'bg-teal-500',
-      route: '/integration/tools',
+      route: '/logs',
     },
   ];
   const { user } = useCurrentCredential();
@@ -111,7 +95,7 @@ export const HomePage = () => {
       )}
       <main className="px-6 py-6 bg-white dark:bg-gray-900">
         {/* Core Platform Features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {coreFeatures.map((feature, index) => (
             <ClickableCard
               to={feature.route}

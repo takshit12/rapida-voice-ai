@@ -15,14 +15,7 @@ import {
 import { useAssistantPageStore } from '@/hooks/use-assistant-page-store';
 import { TabLink } from '@/app/components/tab-link';
 import { IBlueButton, IButton } from '@/app/components/form/button';
-import {
-  Bolt,
-  ChevronsLeftRightEllipsis,
-  Code,
-  ExternalLink,
-  GitPullRequestCreate,
-  Plus,
-} from 'lucide-react';
+import { Bolt, ExternalLink, GitPullRequestCreate } from 'lucide-react';
 import { useGlobalNavigation } from '@/hooks/use-global-navigator';
 import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 import { PageTitleBlock } from '@/app/components/blocks/page-title-block';

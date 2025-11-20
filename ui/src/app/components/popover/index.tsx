@@ -16,6 +16,7 @@ export interface PopoverProps extends HTMLAttributes<HTMLDivElement> {
   align: Placement;
   open: boolean;
   setOpen: (boolean) => void;
+  arrowClass?: string;
 }
 /**
  *
@@ -77,7 +78,10 @@ export function Popover(props: PopoverProps) {
             ref={arrowRef}
             context={context}
             staticOffset={'5%'}
-            className="w-5 h-5 fill-gray-200 dark:fill-gray-600"
+            className={cn(
+              'w-5 h-5 fill-gray-200 dark:fill-gray-600',
+              props.arrowClass,
+            )}
           />
           {props.children}
         </div>

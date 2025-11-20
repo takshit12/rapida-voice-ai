@@ -1,50 +1,6 @@
 import { SetMetadata } from '@/utils/metadata';
 import { Metadata } from '@rapidaai/react';
 
-// export const CARTESIA_SAMPLE_RATES = [
-//   {
-//     name: '8000 Hz',
-//     value: '8000',
-//   },
-//   {
-//     name: '16000 Hz',
-//     value: '16000',
-//   },
-//   {
-//     name: '24000 Hz',
-//     value: '24000',
-//   },
-//   {
-//     name: '32000 Hz',
-//     value: '32000',
-//   },
-//   {
-//     name: '48000 Hz',
-//     value: '48000',
-//   },
-// ];
-// export const CARTESIA_ENCODINGS = [
-//   {
-//     name: 'PCM 32-bit float (Little Endian)',
-//     id: 'PCM_F32LE',
-//     value: 'pcm_f32le',
-//   },
-//   {
-//     name: 'PCM 16-bit signed integer (Little Endian)',
-//     id: 'PCM_S16LE',
-//     value: 'pcm_s16le',
-//   },
-//   {
-//     name: 'PCM mu-law',
-//     id: 'PCM_MULAW',
-//     value: 'pcm_mulaw',
-//   },
-//   {
-//     name: 'PCM A-law',
-//     id: 'PCM_ALAW',
-//     value: 'pcm_alaw',
-//   },
-// ];
 export const CARTESIA_MODELS = [
   {
     name: 'ink-whisper',

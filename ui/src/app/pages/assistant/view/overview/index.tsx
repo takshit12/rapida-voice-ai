@@ -1,16 +1,11 @@
 import { Assistant } from '@rapidaai/react';
-import { AssistantConversationMessage } from '@rapidaai/react';
 import { SectionLoader } from '@/app/components/loader/section-loader';
-import { Analytics } from '@/app/pages/assistant/view/overview/analytics';
-import { useCredential, useRapidaStore } from '@/hooks';
-import { useAssistantTracePageStore } from '@/hooks/use-assistant-trace-page-store';
-import { FC, useEffect } from 'react';
-import toast from 'react-hot-toast/headless';
+import { AssistantAnalytics } from '@/app/pages/assistant/view/overview/assistant-analytics';
+import { useRapidaStore } from '@/hooks';
+import { FC } from 'react';
 import { YellowNoticeBlock } from '@/app/components/container/message/notice-block';
 import { ExternalLink, Info } from 'lucide-react';
 import { useGlobalNavigation } from '@/hooks/use-global-navigator';
-import { toDateString } from '@/utils/date';
-
 /**
  *
  * @param props
@@ -19,67 +14,8 @@ import { toDateString } from '@/utils/date';
 export const Overview: FC<{ currentAssistant: Assistant }> = (props: {
   currentAssistant: Assistant;
 }) => {
-  const [userId, token, projectId] = useCredential();
   const rapidaContext = useRapidaStore();
   const navigation = useGlobalNavigation();
-  const assistantTraceAction = useAssistantTracePageStore();
-
-  const getDateRangeCriteria = (range: string) => {
-    const now = new Date();
-    let startDate: Date;
-
-    switch (range) {
-      case 'last_24_hours':
-        startDate = new Date(now.setDate(now.getDate() - 1));
-        break;
-      case 'last_3_days':
-        startDate = new Date(now.setDate(now.getDate() - 3));
-        break;
-      case 'last_7_days':
-        startDate = new Date(now.setDate(now.getDate() - 7));
-        break;
-      case 'last_30_days':
-      default:
-        startDate = new Date(now.setDate(now.getDate() - 30));
-        break;
-    }
-
-    return {
-      k: 'assistant_conversation_messages.created_date',
-      v: toDateString(startDate),
-      logic: '>=',
-    };
-  };
-
-  useEffect(() => {
-    assistantTraceAction.clear();
-    assistantTraceAction.addCriterias([getDateRangeCriteria('last_30_days')]);
-  }, []);
-
-  useEffect(() => {
-    rapidaContext.showLoader();
-    assistantTraceAction.setPageSize(0);
-    assistantTraceAction.setFields(['metadata', 'metric']);
-    assistantTraceAction.getAssistantMessages(
-      props.currentAssistant.getId(),
-      projectId,
-      token,
-      userId,
-      (err: string) => {
-        rapidaContext.hideLoader();
-        toast.error(err);
-      },
-      (data: AssistantConversationMessage[]) => {
-        rapidaContext.hideLoader();
-      },
-    );
-  }, [
-    props.currentAssistant.getId(),
-    projectId,
-    JSON.stringify(assistantTraceAction.criteria),
-    token,
-    userId,
-  ]);
 
   if (rapidaContext.loading) {
     return (
@@ -120,7 +56,7 @@ export const Overview: FC<{ currentAssistant: Assistant }> = (props: {
             </button>
           </YellowNoticeBlock>
         )}
-      <Analytics data={assistantTraceAction.assistantMessages} />
+      <AssistantAnalytics assistant={props.currentAssistant} />
     </div>
   );
 };
