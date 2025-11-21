@@ -84,7 +84,7 @@ export function KnowledgeLogDialog(props: KnowledgeLogModalProps) {
         <ChevronRight size={18} className="mx-2" />
         <div className="font-medium text-base">{props.currentActivityId}</div>
       </div>
-      <div className="relative overflow-auto h-[calc(100vh-50px)]">
+      <div className="relative overflow-auto h-[calc(100vh-50px)] flex-1 flex flex-col">
         <Tab
           active="Metadata"
           className={cn(

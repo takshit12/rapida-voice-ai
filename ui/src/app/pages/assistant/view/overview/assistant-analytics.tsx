@@ -356,7 +356,7 @@ export const AssistantAnalytics: FC<{ assistant: Assistant }> = props => {
         <PageTitleBlock className="px-4 text-base/7 font-medium py-2">
           Analytics
         </PageTitleBlock>
-        <div className="divide-x dark:divide-gray-800 flex">
+        <div className=" dark:divide-gray-800 flex">
           <div className="flex border-l">
             <IButton
               className={cn(

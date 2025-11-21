@@ -25,7 +25,7 @@ export const AssistantManageLayout: FC<HTMLAttributes<HTMLDivElement>> = () => {
       </PageHeaderBlock>
       <div className="flex-1 flex relative grow h-full overflow-hidden">
         <aside
-          className="w-80 border-r bg-white dark:bg-gray-900 z-1 overflow-auto shrink-0 dark:text-gray-400"
+          className="w-80 border-r z-1 overflow-auto shrink-0 dark:text-gray-400"
           aria-label="Sidebar"
         >
           <ul className="p-1 space-y-1">

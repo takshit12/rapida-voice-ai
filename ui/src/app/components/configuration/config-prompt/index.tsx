@@ -144,7 +144,7 @@ export const ConfigPrompt: FC<IPromptProps> = ({
       {existingPrompt.variables.length > 0 && (
         <FieldSet>
           <FormLabel>Arguments ({existingPrompt.variables.length})</FormLabel>
-          <div className="text-sm grid bg-white dark:bg-gray-950 w-full divide-y">
+          <div className="text-sm grid bg-light-background dark:bg-gray-950 w-full divide-y">
             {existingPrompt.variables.map((v, idx) => (
               <div key={idx} className="grid grid-cols-3 divide-x">
                 <div className="flex col-span-1 items-center px-4">

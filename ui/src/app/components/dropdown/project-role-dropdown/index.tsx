@@ -13,7 +13,7 @@ export function ProjectRoleDropdown(props: {
       allValue={Roles}
       currentValue={props.projectRole}
       setValue={props.setProjectRoleId}
-      className="bg-white dark:bg-gray-950"
+      className="bg-light-background dark:bg-gray-950"
       placeholder="Select a project role"
       label={prj => {
         return (

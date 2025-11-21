@@ -5,6 +5,7 @@ import {
   IBlueBGArrowButton,
   IBlueBorderButton,
   ICancelButton,
+  IRedBorderButton,
 } from '@/app/components/form/button';
 import { cn } from '@/utils';
 import { FieldSet } from '@/app/components/form/fieldset';
@@ -203,7 +204,6 @@ export const CreateAssistantAnalysis: FC<{ assistantId: string }> = ({
             />
           </FieldSet>
           <EndpointDropdown
-            className="bg-white"
             currentEndpoint={endpointId}
             onChangeEndpoint={(e: Endpoint) => {
               if (e) setEndpointId(e.getId());
@@ -238,8 +238,8 @@ export const CreateAssistantAnalysis: FC<{ assistantId: string }> = ({
                       value={param.key}
                       onChange={newKey => updateParameter(index, 'key', newKey)}
                     />
-                    <div className="bg-white dark:bg-gray-950 h-full flex items-center justify-center">
-                      <ArrowRight strokeWidth={1.5} />
+                    <div className="bg-light-background dark:bg-gray-950 h-full flex items-center justify-center">
+                      <ArrowRight strokeWidth={1.5} className="w-4 h-4" />
                     </div>
                   </div>
 
@@ -252,15 +252,15 @@ export const CreateAssistantAnalysis: FC<{ assistantId: string }> = ({
                       placeholder="Value"
                       className="w-full border-none"
                     />
-                    <ICancelButton
-                      className="border-none outline-hidden dark:bg-gray-950"
+                    <IRedBorderButton
+                      className="border-none outline-hidden dark:bg-gray-950 h-10"
                       onClick={() =>
                         setParameters(parameters.filter((_, i) => i !== index))
                       }
                       type="button"
                     >
                       <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                    </ICancelButton>
+                    </IRedBorderButton>
                   </div>
                 </div>
               ))}

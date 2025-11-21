@@ -34,7 +34,7 @@ export const ProviderDropdown: FC<ProviderDropdownProps> = props => {
       currentValue={props.currentProvider}
       setValue={props.setCurrentProvider}
       allValue={INTEGRATION_PROVIDER}
-      className="bg-white dark:bg-gray-950"
+      className="bg-light-background dark:bg-gray-950"
       placeholder="Select the provider"
       label={dropdownItem}
       option={dropdownItem}

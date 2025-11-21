@@ -22,7 +22,7 @@ export function MissionBox(props: { children?: any }) {
           <SidebarNavigation />
           <div className="w-full pl-14">
             <ActionableHeader />
-            <div className="relative h-[calc(100dvh-3rem)] overflow-hidden dark:bg-gray-900 bg-light-background rounded-tl-md border-t border-l flex-1 flex flex-col">
+            <div className="relative h-[calc(100dvh-3rem)] overflow-hidden dark:bg-gray-900 bg-white rounded-tl-md border-t border-l flex-1 flex flex-col">
               <Toast />
               {props.children}
             </div>

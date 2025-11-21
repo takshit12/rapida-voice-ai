@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Input } from '@/app/components/form/input';
-import { MultipleProjectDropdown } from '@/app/components/dropdown/project-dropdown/MultipleProjectDropdown';
+import { MultipleProjectDropdown } from '@/app/components/dropdown/project-dropdown/multiple-project-dropdown';
 import { ProjectRoleDropdown } from '@/app/components/dropdown/project-role-dropdown';
 import { AddUsersToProject } from '@rapidaai/react';
 import { AddUsersToProjectResponse } from '@rapidaai/react';

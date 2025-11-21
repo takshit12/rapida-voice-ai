@@ -6,7 +6,7 @@ import toast from 'react-hot-toast/headless';
 import { BluredWrapper } from '@/app/components/wrapper/blured-wrapper';
 import { SearchIconInput } from '@/app/components/form/input/IconInput';
 import { TablePagination } from '@/app/components/base/tables/table-pagination';
-import { toDate, toHumanReadableDateTime } from '@/utils/date';
+import { toDate } from '@/utils/date';
 import { useAssistantConversationListPageStore } from '@/hooks/use-assistant-conversation-list-page-store';
 import { AssistantConversation } from '@rapidaai/react';
 import { StatusIndicator } from '@/app/components/indicators/status';
@@ -224,7 +224,7 @@ export function Conversations({ currentAssistant }: ConversationProps) {
       />
 
       <BluredWrapper className="border-none p-0">
-        <SearchIconInput className="bg-light-background" />
+        <SearchIconInput />
         <div className="divide-x dark:divide-gray-800 flex">
           <TablePagination
             columns={assistantConversationListAction.columns}

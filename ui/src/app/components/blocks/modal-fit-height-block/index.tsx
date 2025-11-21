@@ -8,7 +8,7 @@ export const ModalFitHeightBlock: FC<
     <div
       {...props}
       className={cn(
-        'w-[750px] max-w-full bg-light-background dark:bg-gray-900 relative items-start max-h-full',
+        'w-[750px] max-w-full bg-white dark:bg-gray-900 relative items-start max-h-full',
         props.className,
       )}
     >

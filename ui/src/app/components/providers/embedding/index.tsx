@@ -174,12 +174,14 @@ export const EmbeddingProvider: React.FC<ProviderComponentProps> = props => {
             'border-b border-gray-300 dark:border-gray-700',
             'dark:focus-within:border-blue-600 focus-within:border-blue-600',
             'transition-all duration-200 ease-in-out',
+            'bg-light-background dark:bg-gray-950',
+            'divide-x',
             'flex relative',
           )}
         >
           <div className="w-44 relative">
             <Dropdown
-              className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none! outline-hidden"
+              className="max-w-full focus-within:border-none! focus-within:outline-hidden! border-none! outline-hidden"
               currentValue={EMBEDDING_PROVIDERS.find(x => x.code === provider)}
               setValue={v => {
                 onChangeProvider(v.code);

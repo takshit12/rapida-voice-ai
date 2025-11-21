@@ -212,47 +212,51 @@ const ConfigureAssistantWebDeployment: FC<{ assistantId: string }> = ({
       return;
     }
 
-    if (audioInputConfig != null || voiceInputEnable) {
-      if (!audioInputConfig.provider) {
-        hideLoader();
-        setErrorMessage(
-          'Please provide a provider for interpreting input audio of user.',
-        );
-        return;
+    // voice input can be disabled for web widget
+    if (voiceInputEnable)
+      if (audioInputConfig != null) {
+        if (!audioInputConfig.provider) {
+          hideLoader();
+          setErrorMessage(
+            'Please provide a provider for interpreting input audio of user.',
+          );
+          return;
+        }
+
+        if (
+          !ValidateSpeechToTextIfInvalid(
+            audioInputConfig.provider,
+            audioInputConfig.parameters,
+          )
+        ) {
+          hideLoader();
+          setErrorMessage('Please provide a valid speech to text options.');
+          return;
+        }
       }
 
-      if (
-        !ValidateSpeechToTextIfInvalid(
-          audioInputConfig.provider,
-          audioInputConfig.parameters,
-        )
-      ) {
-        hideLoader();
-        setErrorMessage('Please provide a valid speech to text options.');
-        return;
-      }
-    }
+    //   voice output can be disabled for web widget
+    if (voiceOutputEnable)
+      if (audioOutputConfig != null) {
+        if (!audioOutputConfig.provider) {
+          hideLoader();
+          setErrorMessage(
+            'Please provide a provider for interpreting output audio of user.',
+          );
+          return;
+        }
 
-    if (audioOutputConfig != null || voiceOutputEnable) {
-      if (!audioOutputConfig.provider) {
-        hideLoader();
-        setErrorMessage(
-          'Please provide a provider for interpreting output audio of user.',
-        );
-        return;
+        if (
+          !ValidateTextToSpeechIfInvalid(
+            audioOutputConfig.provider,
+            audioOutputConfig.parameters,
+          )
+        ) {
+          hideLoader();
+          setErrorMessage('Please provide a valid text to speech options.');
+          return;
+        }
       }
-
-      if (
-        !ValidateTextToSpeechIfInvalid(
-          audioOutputConfig.provider,
-          audioOutputConfig.parameters,
-        )
-      ) {
-        hideLoader();
-        setErrorMessage('Please provide a valid text to speech options.');
-        return;
-      }
-    }
     const req = new CreateAssistantDeploymentRequest();
     const webDeployment = new AssistantWebpluginDeployment();
     webDeployment.setAssistantid(assistantId);
@@ -273,14 +277,14 @@ const ConfigureAssistantWebDeployment: FC<{ assistantId: string }> = ({
     webDeployment.setArticlecatalogenabled(featureConfig.blogPost);
     webDeployment.setUploadfileenabled(false); // Not provided in the input, set to false by default
 
-    if (audioInputConfig || voiceInputEnable) {
+    if (voiceInputEnable && audioInputConfig) {
       const inputAudioProvider = new DeploymentAudioProvider();
       inputAudioProvider.setAudioprovider(audioInputConfig.provider);
       inputAudioProvider.setAudiooptionsList(audioInputConfig.parameters);
       webDeployment.setInputaudio(inputAudioProvider);
     }
 
-    if (audioOutputConfig || voiceOutputEnable) {
+    if (voiceOutputEnable && audioOutputConfig) {
       const outputAudioProvider = new DeploymentAudioProvider();
       outputAudioProvider.setAudioprovider(audioOutputConfig.provider);
       outputAudioProvider.setAudiooptionsList(audioOutputConfig.parameters);

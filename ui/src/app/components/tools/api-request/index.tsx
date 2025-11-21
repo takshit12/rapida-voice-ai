@@ -1,6 +1,10 @@
 import { Metadata } from '@rapidaai/react';
 import { FormLabel } from '@/app/components/form-label';
-import { IBlueBorderButton, ICancelButton } from '@/app/components/form/button';
+import {
+  IBlueBorderButton,
+  ICancelButton,
+  IRedBorderButton,
+} from '@/app/components/form/button';
 import { FieldSet } from '@/app/components/form/fieldset';
 import { Input } from '@/app/components/form/input';
 import { Select } from '@/app/components/form/select';
@@ -56,7 +60,7 @@ export const ConfigureAPIRequest: React.FC<{
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('p-6 pt-2 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
           <div className="flex space-x-2">
             <FieldSet className="relative w-40">
               <FormLabel>Method</FormLabel>
@@ -117,7 +121,7 @@ export const ConfigureAPIRequest: React.FC<{
             />
           </a>
         </YellowNoticeBlock>
-        <div className={cn('p-6 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('mt-4 flex flex-col gap-8 max-w-6xl')}>
           <FieldSet className="relative w-full">
             <FormLabel>Name</FormLabel>
             <Input
@@ -258,7 +262,7 @@ const ApiParameter: FC<{
                     inputClass,
                   )}
                 >
-                  <ArrowRight strokeWidth={1.5} className="text-blue-600" />
+                  <ArrowRight strokeWidth={1.5} className="w-4 h-4" />
                 </div>
               </div>
               <div className="col-span-1 flex">
@@ -275,8 +279,8 @@ const ApiParameter: FC<{
                     inputClass,
                   )}
                 />
-                <ICancelButton
-                  className="border-none outline-hidden bg-light-background"
+                <IRedBorderButton
+                  className="border-none outline-hidden h-10"
                   onClick={() => {
                     const newParams = requestParameters.filter(
                       (_, i) => i !== index,
@@ -286,7 +290,7 @@ const ApiParameter: FC<{
                   type="button"
                 >
                   <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                </ICancelButton>
+                </IRedBorderButton>
               </div>
             </div>
           );

@@ -54,9 +54,9 @@ export const ConfigureAzureTextProviderModel: React.FC<{
   };
 
   return (
-    <div className="flex-1 flex ">
+    <div className="flex-1 flex items-center divide-x">
       <Dropdown
-        className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
+        className="max-w-full  focus-within:border-none! focus-within:outline-hidden! border-none!"
         currentValue={AZURE_TEXT_MODEL.find(
           x =>
             x.id === getParamValue('model.id') &&
@@ -98,7 +98,6 @@ export const ConfigureAzureTextProviderModel: React.FC<{
       />
       <div>
         <IButton
-          className="bg-white dark:bg-gray-950"
           onClick={() => {
             setOpen(!open);
           }}

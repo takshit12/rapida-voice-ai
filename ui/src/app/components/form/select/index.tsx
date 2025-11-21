@@ -37,7 +37,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             'dark:focus:border-blue-600 focus:border-blue-600',
             'transition-all duration-200 ease-in-out',
             'relative',
-            'bg-white dark:bg-gray-950',
+            'bg-light-background dark:bg-gray-950',
             'ring-0',
             'px-2 py-1.5 pl-3',
             props.className,

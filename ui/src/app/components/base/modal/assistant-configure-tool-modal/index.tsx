@@ -201,7 +201,6 @@ export const ConfigureAssistantToolDialog: FC<
           <BuildinTool
             onChangeToolDefinition={setToolDefinition}
             toolDefinition={toolDefinition}
-            inputClass={'bg-white'}
             onChangeBuildinTool={onChangeBuildinToolConfig}
             onChangeConfig={setBuildinToolConfig}
             config={buildinToolConfig}

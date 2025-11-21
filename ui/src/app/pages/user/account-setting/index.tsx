@@ -24,7 +24,7 @@ export const AccountSettingPage = () => {
           </PageTitleBlock>
         </div>
       </PageHeaderBlock>
-      <div className="flex-1 flex bg-white dark:bg-gray-900 h-full">
+      <div className="flex-1 flex h-full">
         <SideTab
           strict={false}
           active="Account"

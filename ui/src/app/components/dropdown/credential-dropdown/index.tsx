@@ -68,16 +68,16 @@ export const CredentialDropdown: FC<CredentialDropdownProps> = props => {
             'focus-within:border-transparent!',
             'transition-all duration-200 ease-in-out',
             'flex relative items-center',
-            'bg-light-background dark:bg-gray-950',
+            'bg-light-background dark:bg-gray-950 divide-x',
             'pt-px pl-px',
-            props.className,
           )}
         >
           <div className="w-full relative">
             <Dropdown
               disable={loading}
               searchable
-              className="max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none! outline-hidden"
+              className="
+                bg-light-background dark:bg-gray-950 max-w-full focus-within:border-none! focus-within:outline-hidden! border-none! outline-hidden"
               currentValue={currentProviderCredentials.find(
                 x => x.getId() === props.currentCredential,
               )}
@@ -134,6 +134,7 @@ export const CredentialDropdown: FC<CredentialDropdownProps> = props => {
             />
           </div>
           <IButton
+            className="bg-light-background dark:bg-gray-950 h-10"
             onClick={() => {
               ctx.reloadProviderCredentials();
             }}
@@ -141,6 +142,7 @@ export const CredentialDropdown: FC<CredentialDropdownProps> = props => {
             <RotateCcw className={cn('w-4 h-4')} strokeWidth={1.5} />
           </IButton>
           <IButton
+            className="bg-light-background dark:bg-gray-950 h-10"
             onClick={() => {
               setCreateProviderModalOpen(true);
             }}

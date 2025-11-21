@@ -3,7 +3,6 @@ import { ChevronDownIcon } from '@/app/components/Icon/ChevronDown';
 import { Disclosure } from '@/app/components/disclosure';
 import { ChevronUpIcon } from '@/app/components/Icon/ChevronUp';
 import { cn } from '@/utils';
-import { DeploymentIcon } from '@/app/components/Icon/Deployment';
 import { EndpointIcon } from '@/app/components/Icon/Endpoint';
 import { AssistantIcon } from '@/app/components/Icon/Assistant';
 import { SidebarIconWrapper } from '@/app/components/navigation/sidebar/sidebar-icon-wrapper';
@@ -12,6 +11,7 @@ import { SidebarSimpleListItem } from '@/app/components/navigation/sidebar/sideb
 import { useLocation } from 'react-router-dom';
 import { Tooltip } from '@/app/components/tooltip';
 import { BetaIcon } from '@/app/components/Icon/Beta';
+import { BotMessageSquare, Box, Route } from 'lucide-react';
 
 export const Deployment = memo(() => {
   const location = useLocation();
@@ -30,7 +30,7 @@ export const Deployment = memo(() => {
       >
         <div className="flex items-center">
           <SidebarIconWrapper>
-            <DeploymentIcon />
+            <Box className={cn('w-5 h-5 opacity-75')} strokeWidth={1.5} />
           </SidebarIconWrapper>
           <SidebarLabel>Deployment</SidebarLabel>
         </div>
@@ -46,7 +46,7 @@ export const Deployment = memo(() => {
             navigate="/deployment/endpoint"
           >
             <SidebarIconWrapper>
-              <EndpointIcon />
+              <Route className={cn('w-5 h-5 opacity-75')} strokeWidth={1.5} />
             </SidebarIconWrapper>
             <SidebarLabel>Endpoints</SidebarLabel>
           </SidebarSimpleListItem>
@@ -57,7 +57,10 @@ export const Deployment = memo(() => {
             navigate="/deployment/assistant"
           >
             <SidebarIconWrapper>
-              <AssistantIcon />
+              <BotMessageSquare
+                className={cn('w-5 h-5 opacity-75')}
+                strokeWidth={1.5}
+              />
             </SidebarIconWrapper>
             <SidebarLabel>
               Assistants

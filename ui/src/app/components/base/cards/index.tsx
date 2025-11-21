@@ -9,7 +9,7 @@ export const Card: FC<CardProps> = ({ children, className, ...props }) => {
   return (
     <div
       className={cn(
-        'dark:bg-gray-950 bg-white relative flex flex-col overflow-hidden p-4 h-fit',
+        'dark:bg-gray-950 bg-white relative flex flex-col overflow-hidden p-4 h-fit border-[1px]',
         className,
       )}
       {...props}
@@ -29,7 +29,9 @@ export const ClickableCard: FC<ClickableCardProps & CustomLinkProps> = ({
 }) => {
   return (
     <CustomLink to={to} isExternal={isExternal}>
-      <Card className={cn('group hover:shadow-md', className)}>{children}</Card>
+      <Card className={cn('group hover:shadow-md border-[1px]', className)}>
+        {children}
+      </Card>
     </CustomLink>
   );
 };

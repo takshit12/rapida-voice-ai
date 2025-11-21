@@ -89,7 +89,7 @@ export const AccountSetting = () => {
 
   return (
     <div className="w-full flex flex-col flex-1">
-      <div className="overflow-auto flex flex-col flex-1 pb-20 bg-light-background dark:bg-gray-900">
+      <div className="overflow-auto flex flex-col flex-1 pb-20">
         <InputGroup
           title="Account Information"
           className="bg-white dark:bg-gray-900"

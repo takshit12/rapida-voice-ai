@@ -12,10 +12,7 @@ const allTypes = [PromptRole.system, PromptRole.user, PromptRole.assistant];
 const MessageTypeSelector: FC<Props> = ({ value, onChange }) => {
   return (
     <Dropdown
-      className={cn(
-        'min-w-[140px] border-none',
-        'hover:bg-white dark:hover:bg-gray-950',
-      )}
+      className={cn('min-w-[140px] !border-none !outline-none')}
       allValue={allTypes}
       currentValue={value}
       setValue={onChange}

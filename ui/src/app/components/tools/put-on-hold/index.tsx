@@ -54,7 +54,7 @@ export const ConfigurePutOnHold: React.FC<{
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('p-6 pt-2 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
           <div className="grid grid-cols-2 w-full gap-4">
             <FieldSet className="flex justify-between">
               <FormLabel htmlFor="top_k">
@@ -95,7 +95,7 @@ export const ConfigurePutOnHold: React.FC<{
         </div>
       </InputGroup>
       <InputGroup title="Tool Definition">
-        <YellowNoticeBlock className="flex items-center">
+        <YellowNoticeBlock className="flex items-center -mx-6 -mt-6">
           <Info className="shrink-0 w-4 h-4" />
           <div className="ms-3 text-sm font-medium">
             Know more about knowledge tool definiation that can be supported by
@@ -114,7 +114,7 @@ export const ConfigurePutOnHold: React.FC<{
             />
           </a>
         </YellowNoticeBlock>
-        <div className={cn('p-6 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('flex flex-col gap-8 mt-4 max-w-6xl')}>
           <FieldSet className="relative w-full">
             <FormLabel>Name</FormLabel>
             <Input

@@ -68,10 +68,10 @@ export function Version(props: {
   };
   return (
     <div className="p-4 w-full">
-      <div className="px-0 py-0 divide-y shadow-sm max-w-4xl mx-auto bg-white dark:bg-gray-950">
+      <div className="px-0 py-0 divide-y border shadow-sm max-w-4xl mx-auto bg-white dark:bg-gray-950">
         {endpointProviderAction.endpointProviderModels.map((epm, idx) => {
           return (
-            <article className="px-4 py-3.5 dark:border-gray-800" key={idx}>
+            <article className="px-4 py-3.5 " key={idx}>
               <div className="flex items-center justify-between">
                 <div className="flex">
                   <div className="mr-3 truncate text-base font-semibold prose-a:hover:underline">

@@ -95,7 +95,7 @@ export const NotificationSetting = () => {
 
   return (
     <form
-      className="pb-20 bg-light-background dark:bg-gray-900 pt-4"
+      className="pb-20 pt-4"
       onSubmit={handleSubmit(onSubmit)} // Use the onSubmit handler
     >
       {RAPIDA_SYSTEM_NOTIFICATION.map(notificationCategory => (

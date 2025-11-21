@@ -1,10 +1,15 @@
 import { Fragment, useContext } from 'react';
 import React from 'react';
-import { Listbox, Transition } from '@headlessui/react';
+import {
+  Listbox,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from '@headlessui/react';
 import { cn } from '@/utils';
 import { Float } from '@headlessui-float/react';
 import { AuthContext } from '@/context/auth-context';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 
 /**
  *
@@ -35,7 +40,7 @@ export function MultipleProjectDropdown(props: {
       >
         <Listbox.Button
           className={cn(
-            'bg-white dark:bg-gray-950',
+            'bg-light-background dark:bg-gray-950',
             'w-full',
             'h-10 cursor-default',
             'py-2 pl-3 pr-10 text-left',
@@ -49,32 +54,19 @@ export function MultipleProjectDropdown(props: {
             'flex items-center',
           )}
         >
-          {props.projectIds ? (
+          {props?.projectIds?.length && props?.projectIds?.length > 0 ? (
             <>
               <span className="block truncate">
                 {props.projectIds.length} projects
               </span>
             </>
           ) : (
-            <span className="block truncate dark:text-gray-400">
+            <span className="block truncate text-muted">
               Select the projects
             </span>
           )}
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-5 w-5 dark:text-gray-400"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
-              />
-            </svg>
+            <ChevronDown className="h-5 w-5 dark:text-gray-400" />
           </span>
         </Listbox.Button>
         <Transition
@@ -83,7 +75,7 @@ export function MultipleProjectDropdown(props: {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <Listbox.Options
+          <ListboxOptions
             className={cn(
               'shadow-lg',
               'z-50 max-h-96 w-full border overflow-y-scroll p-0.5 rounded-[2px]',
@@ -95,7 +87,7 @@ export function MultipleProjectDropdown(props: {
           >
             {projectRoles &&
               projectRoles.map((project, idx) => (
-                <Listbox.Option
+                <ListboxOption
                   as="div"
                   key={idx}
                   value={project.projectid}
@@ -122,9 +114,9 @@ export function MultipleProjectDropdown(props: {
                       )}
                     </>
                   )}
-                </Listbox.Option>
+                </ListboxOption>
               ))}
-          </Listbox.Options>
+          </ListboxOptions>
         </Transition>
       </Float>
     </Listbox>

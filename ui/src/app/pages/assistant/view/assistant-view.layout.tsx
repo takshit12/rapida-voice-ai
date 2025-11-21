@@ -163,27 +163,21 @@ export const AssistantViewLayout: FC<HTMLAttributes<HTMLDivElement>> = () => {
               </IBlueButton>
               <Popover
                 align={'bottom-end'}
-                className="w-60 py-1.5 px-1.5"
+                className="w-60 pb-2"
                 open={createVersionPopover}
                 setOpen={setCreateVersionPopover}
               >
                 <div className="space-y-0.5 text-sm/6">
+                  <p className="px-2 py-1 text-xs/5 text-muted uppercase">
+                    New Version
+                  </p>
+                  <hr className="w-full h-[1px] bg-gray-800" />
                   <IButton
                     className="w-full justify-start"
                     onClick={() => goToCreateAssistantVersion(assistantId!)}
                   >
                     Create New version
                   </IButton>
-                  <hr className="w-full h-[1px] bg-gray-800" />
-                  <IButton
-                    className="w-full justify-start"
-                    onClick={() =>
-                      goToCreateAssistantWebsocketVersion(assistantId!)
-                    }
-                  >
-                    Connect new Websocket
-                  </IButton>
-                  <hr className="w-full h-[1px] bg-gray-800" />
                   <IButton
                     className="w-full justify-start"
                     onClick={() =>

@@ -73,6 +73,7 @@ export const EndpointDropdown: FC<EndpointDropdownProps> = props => {
           'flex relative',
           'bg-light-background dark:bg-gray-950',
           'pt-px pl-px',
+          'divide-x',
           props.className,
         )}
       >
@@ -127,6 +128,7 @@ export const EndpointDropdown: FC<EndpointDropdownProps> = props => {
           />
         </div>
         <IButton
+          className="h-10"
           onClick={() => {
             getEndpoints(projectId, token, userId);
           }}
@@ -134,6 +136,7 @@ export const EndpointDropdown: FC<EndpointDropdownProps> = props => {
           <RotateCcw className={cn('w-4 h-4')} strokeWidth={1.5} />
         </IButton>
         <ILinkBorderButton
+          className="h-10"
           href="/deployment/endpoint/create-endpoint"
           target="_blank"
         >

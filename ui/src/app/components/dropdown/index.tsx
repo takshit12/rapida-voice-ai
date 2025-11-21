@@ -107,7 +107,7 @@ export function Dropdown(props: DropdownProps<any>) {
                 className={cn(
                   'shadow-lg relative',
                   'z-50 max-h-96 w-full border overflow-y-scroll',
-                  'bg-light-background dark:bg-gray-900 dark:border-gray-700',
+                  'bg-light-background dark:bg-gray-900 dark:border-gray-800',
                   'dark:text-gray-300 text-gray-600',
                   'divide-y divide-gray-200 dark:divide-gray-800',
                   'outline-hidden',
@@ -116,6 +116,7 @@ export function Dropdown(props: DropdownProps<any>) {
                 {props.searchable && (
                   <div className="px-3 py-3 sticky top-0 bg-light-background dark:bg-gray-900 z-10  border-b">
                     <SearchIconInput
+                      className="bg-white dark:bg-gray-950"
                       wrapperClassName="w-full!"
                       onChange={props.onSearching}
                     />

@@ -6,7 +6,7 @@ import { FieldSet } from '@/app/components/form/fieldset';
 import { Popover } from '@/app/components/popover';
 import { OPENAI_TEXT_MODEL } from '@/app/components/providers/text/openai/constants';
 import { cn } from '@/utils';
-import { Bolt, Settings, X } from 'lucide-react';
+import { Bolt, X } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/app/components/form/input';
 import { Slider } from '@/app/components/form/slider';
@@ -48,9 +48,9 @@ export const ConfigureOpenaiTextProviderModel: React.FC<{
 
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex-1 flex ">
+    <div className="flex-1 flex items-center divide-x">
       <Dropdown
-        className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
+        className="max-w-full focus-within:border-none! focus-within:outline-hidden! border-none!"
         currentValue={OPENAI_TEXT_MODEL.find(
           x => x.id === getParamValue('model.id'),
         )}
@@ -90,7 +90,6 @@ export const ConfigureOpenaiTextProviderModel: React.FC<{
       />
       <div>
         <IButton
-          className="bg-white dark:bg-gray-950"
           onClick={() => {
             setOpen(!open);
           }}

@@ -179,12 +179,14 @@ export const TextProvider: React.FC<ProviderComponentProps> = props => {
             'dark:focus-within:border-blue-600 focus-within:border-blue-600',
             'transition-all duration-200 ease-in-out',
             'flex relative',
+            'bg-light-background dark:bg-gray-950',
+            'divide-x',
             'pt-px pl-px',
           )}
         >
           <div className="w-44 relative">
             <Dropdown
-              className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! outline-none! border-none! outline-hidden"
+              className="max-w-full focus-within:border-none! outline-none! border-none! outline-hidden"
               currentValue={TEXT_PROVIDERS.find(x => x.code === provider)}
               setValue={v => {
                 onChangeProvider(v.code);
@@ -229,7 +231,6 @@ export const TextProvider: React.FC<ProviderComponentProps> = props => {
       </FieldSet>
       {provider && (
         <CredentialDropdown
-          className="bg-white"
           onChangeCredential={(c: VaultCredential) => {
             updateParameter('rapida.credential_id', c.getId());
           }}

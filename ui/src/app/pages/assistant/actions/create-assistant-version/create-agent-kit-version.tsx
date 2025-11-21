@@ -13,6 +13,7 @@ import { useConfirmDialog } from '@/app/pages/assistant/actions/hooks/use-confir
 import { useGlobalNavigation } from '@/hooks/use-global-navigator';
 import {
   AssistantDefinition,
+  ConnectionConfig,
   CreateAssistantProvider,
   CreateAssistantProviderRequest,
   GetAssistantProviderResponse,
@@ -166,11 +167,15 @@ const CreateNewVersion: FC<{ assistantId: string }> = ({ assistantId }) => {
     const assistantDef = new AssistantDefinition();
     assistantDef.setAssistantid(assistantId);
     request.setAssistantdefinition(assistantDef);
-    GetAssistant(connectionConfig, request, {
-      authorization: token,
-      'x-auth-id': userId,
-      'x-project-id': projectId,
-    })
+    GetAssistant(
+      connectionConfig,
+      request,
+      ConnectionConfig.WithDebugger({
+        authorization: token,
+        userId: userId,
+        projectId: projectId,
+      }),
+    )
       .then(response => {
         hideLoader();
         if (response?.getSuccess()) {
@@ -299,7 +304,7 @@ const CreateNewVersion: FC<{ assistantId: string }> = ({ assistantId }) => {
                         setParameters(parameters);
                       }}
                       initialValues={parameters}
-                      inputClass="bg-white dark:bg-gray-950"
+                      inputClass="bg-light-background dark:bg-gray-950"
                     />
                   </FieldSet>
                 </div>

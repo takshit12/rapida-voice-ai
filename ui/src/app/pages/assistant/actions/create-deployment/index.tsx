@@ -216,7 +216,7 @@ export const ConfigureAssistantDeploymentPage = () => {
       <div className="flex flex-col gap-2 p-4">
         {/* debugger */}
         {assistant?.hasDebuggerdeployment() && (
-          <div className="bg-white dark:bg-gray-950 border">
+          <div className="border">
             <div className="flex items-center justify-between border-b">
               <div className="flex items-center gap-2 justify-between px-4">
                 <h3 className="font-semibold truncate">Debugger</h3>
@@ -251,7 +251,7 @@ export const ConfigureAssistantDeploymentPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4">
+            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4 text-muted">
               <FieldSet className="col-span-2">
                 <FormLabel>Public Url</FormLabel>
                 <div className="flex items-center gap-2">
@@ -312,7 +312,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                 initial={{ height: 0 }} // h-10 is 0px in most Tailwind configurations
                 animate={{ height: isExpanded ? 'auto' : 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 divide-x border-t overflow-hidden"
+                className="grid grid-cols-2 divide-x border-t overflow-hidden text-muted"
               >
                 <VoiceInput
                   deployment={assistant
@@ -357,7 +357,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                 </IButton>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4">
+            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4 text-muted">
               <div className="space-y-4">
                 <div>
                   <div className="text-muted-foreground">SDK</div>
@@ -424,7 +424,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                 initial={{ height: 0 }} // h-10 is 40px in most Tailwind configurations
                 animate={{ height: isApiExpanded ? 'auto' : 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 divide-x border-t overflow-hidden"
+                className="grid grid-cols-2 divide-x border-t overflow-hidden text-muted"
               >
                 <VoiceInput
                   deployment={assistant.getApideployment()?.getInputaudio()}
@@ -482,7 +482,7 @@ export const ConfigureAssistantDeploymentPage = () => {
               </div>
             </div>
             {/*  */}
-            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4">
+            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4 text-muted">
               <div className="space-y-4">
                 <div>
                   <div className="text-muted-foreground">Telephony</div>
@@ -547,7 +547,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                 }}
                 transition={{ duration: 0.3 }}
                 className={cn(
-                  'overflow-hidden',
+                  'overflow-hidden text-muted',
                   isPhoneInboundCodeExpanded && 'space-y-6 p-4 border-t',
                 )}
               >
@@ -626,7 +626,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                 </IButton>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4">
+            <div className="grid grid-cols-2 gap-6 text-sm px-4 py-4 text-muted">
               <div className="space-y-4">
                 <div>
                   <div className="text-muted-foreground">SDK</div>
@@ -694,7 +694,9 @@ export const ConfigureAssistantDeploymentPage = () => {
                   opacity: isWidgetCodeExpanded ? 1 : 0,
                 }}
                 transition={{ duration: 0.3 }}
-                className={cn(isWidgetCodeExpanded && 'space-y-6 p-4 border-t')}
+                className={cn(
+                  isWidgetCodeExpanded && 'space-y-6 p-4 border-t text-muted',
+                )}
               >
                 <FieldSet>
                   <div className="text-muted-foreground">

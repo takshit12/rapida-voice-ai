@@ -6,6 +6,7 @@ import { FC, HTMLAttributes, useState } from 'react';
 interface InputGroupProps extends HTMLAttributes<HTMLDivElement> {
   title?: any;
   initiallyExpanded?: boolean;
+  childClass?: string;
 }
 export const InputGroup: FC<InputGroupProps> = ({
   initiallyExpanded = true,
@@ -47,7 +48,7 @@ export const InputGroup: FC<InputGroupProps> = ({
       </div>
       <AnimatePresence>
         <motion.div
-          className="p-6"
+          className={cn('p-6', props.childClass)}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}

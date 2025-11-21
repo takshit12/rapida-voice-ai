@@ -11,7 +11,7 @@ export const ConfigureVoyageEmbeddingModel: React.FC<{
 
   return (
     <Dropdown
-      className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
+      className="bg-light-background max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
       currentValue={VOYAGE_EMBEDDING_MODEL.find(
         x =>
           x.id === getParamValue('model.id') &&

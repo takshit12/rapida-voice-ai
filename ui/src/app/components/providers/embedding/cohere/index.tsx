@@ -11,7 +11,7 @@ export const ConfigureCohereEmbeddingModel: React.FC<{
 
   return (
     <Dropdown
-      className="bg-white max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
+      className="bg-light-background max-w-full dark:bg-gray-950 focus-within:border-none! focus-within:outline-hidden! border-none!"
       currentValue={COHERE_EMBEDDING_MODEL.find(
         x =>
           x.id === getParamValue('model.id') &&

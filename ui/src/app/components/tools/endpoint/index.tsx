@@ -56,7 +56,7 @@ export const ConfigureEndpoint: React.FC<{
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('p-6 pt-2 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
           <EndpointDropdown
             className={cn('bg-light-background', inputClass)}
             currentEndpoint={getParamValue('tool.endpoint_id')}
@@ -71,7 +71,7 @@ export const ConfigureEndpoint: React.FC<{
         </div>
       </InputGroup>
       <InputGroup title="Tool Definition">
-        <YellowNoticeBlock className="flex items-center">
+        <YellowNoticeBlock className="flex items-center -mx-6 -mt-6">
           <Info className="shrink-0 w-4 h-4" />
           <div className="ms-3 text-sm font-medium">
             Know more about knowledge tool definiation that can be supported by
@@ -90,7 +90,7 @@ export const ConfigureEndpoint: React.FC<{
             />
           </a>
         </YellowNoticeBlock>
-        <div className={cn('p-6 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('mt-4 flex flex-col gap-8 max-w-6xl')}>
           <FieldSet className="relative w-full">
             <FormLabel>Name</FormLabel>
             <Input

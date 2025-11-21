@@ -67,7 +67,7 @@ const AdvancedPromptInput: FC<PromptEditorProps> = ({
           'dark:focus:border-blue-600 focus:border-blue-600',
           'transition-all duration-200 ease-in-out',
           'relative',
-          'bg-white dark:bg-gray-950',
+          'bg-light-background dark:bg-gray-950',
           isFocus && 'border-blue-600! outline-blue-600! ',
           isExpand ? 'h-full  z-50' : '',
           className,
@@ -76,7 +76,7 @@ const AdvancedPromptInput: FC<PromptEditorProps> = ({
         <div
           className={cn(
             'flex justify-between items-center rounded-t-lg',
-            'border-b dark:border-gray-800',
+            'border-b border-gray-300 dark:border-gray-800',
           )}
         >
           <MessageTypeSelector value={type} onChange={onTypeChange} />
@@ -84,7 +84,7 @@ const AdvancedPromptInput: FC<PromptEditorProps> = ({
             <IButton
               onClick={onDelete}
               tabIndex={-1}
-              className="hover:border-red-600  dark:hover:border-red-600 transition-colors border border-transparent border-l-gray-200 dark:border-l-gray-800"
+              className="hover:border-red-600  dark:hover:border-red-600 transition-colors border border-transparent border-l-gray-300 dark:border-l-gray-800"
             >
               <DeleteIcon className="w-4 h-4 text-red-600" />
             </IButton>
@@ -94,7 +94,7 @@ const AdvancedPromptInput: FC<PromptEditorProps> = ({
             onClick={() => {
               copyItem(value);
             }}
-            className="hover:border-blue-600  dark:hover:border-blue-600  transition-colors border border-transparent border-l-gray-200 dark:border-l-gray-800"
+            className="hover:border-blue-600  dark:hover:border-blue-600  transition-colors border border-transparent border-l-gray-300 dark:border-l-gray-800"
           >
             {isChecked ? (
               <TickIcon className="h-4 w-4 text-green-600" />
@@ -107,7 +107,7 @@ const AdvancedPromptInput: FC<PromptEditorProps> = ({
             onClick={() => {
               setIsExpand(!isExpand);
             }}
-            className="hover:border-blue-600 dark:hover:border-blue-600  transition-colors border border-transparent border-l-gray-200 dark:border-l-gray-800"
+            className="hover:border-blue-600 dark:hover:border-blue-600  transition-colors border border-transparent border-l-gray-300 dark:border-l-gray-800"
           >
             {isExpand ? (
               <Minimize2 className="h-4 w-4" strokeWidth={1.5} />

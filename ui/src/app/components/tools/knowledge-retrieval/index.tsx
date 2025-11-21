@@ -60,7 +60,7 @@ export const ConfigureKnowledgeRetrieval: React.FC<{
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('p-6 pt-2 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
           <KnowledgeDropdown
             className={inputClass}
             currentKnowledge={getParamValue('tool.knowledge_id')}
@@ -255,7 +255,7 @@ export const ConfigureKnowledgeRetrieval: React.FC<{
         </div>
       </InputGroup>
       <InputGroup title="Tool Definition">
-        <YellowNoticeBlock className="flex items-center">
+        <YellowNoticeBlock className="flex items-center -mx-6 -mt-6">
           <Info className="shrink-0 w-4 h-4" />
           <div className="ms-3 text-sm font-medium">
             Know more about knowledge tool definiation that can be supported by
@@ -263,7 +263,7 @@ export const ConfigureKnowledgeRetrieval: React.FC<{
           </div>
           <a
             target="_blank"
-            href="https://doc.rapida.ai/assistants/overview"
+            href="https://doc.rapida.ai/assistants/tools/add-knowledge-tool"
             className="h-7 flex items-center font-medium hover:underline ml-auto text-yellow-600"
             rel="noreferrer"
           >
@@ -274,7 +274,7 @@ export const ConfigureKnowledgeRetrieval: React.FC<{
             />
           </a>
         </YellowNoticeBlock>
-        <div className={cn('p-6 flex flex-col gap-8 max-w-6xl')}>
+        <div className={cn('flex flex-col gap-8 mt-4 max-w-6xl')}>
           <FieldSet className="relative w-full">
             <FormLabel>Name</FormLabel>
             <Input

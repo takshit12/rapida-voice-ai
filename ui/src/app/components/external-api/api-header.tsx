@@ -1,4 +1,8 @@
-import { IBlueBorderButton, ICancelButton } from '@/app/components/form/button';
+import {
+  IBlueBorderButton,
+  ICancelButton,
+  IRedBorderButton,
+} from '@/app/components/form/button';
 import { Input } from '@/app/components/form/input';
 import { cn } from '@/utils';
 import { Plus, Trash2 } from 'lucide-react';
@@ -53,9 +57,9 @@ export const APiHeader: FC<{
                   inputClass,
                 )}
               />
-              <ICancelButton
+              <IRedBorderButton
                 className={cn(
-                  'border-transparent hover:!border-red-600 outline-hidden cursor-pointer hover:!text-red-600',
+                  'border-transparent hover:!border-red-600 outline-hidden cursor-pointer hover:!text-red-600 h-10',
                   inputClass,
                 )}
                 onClick={() => {
@@ -65,7 +69,7 @@ export const APiHeader: FC<{
                 type="button"
               >
                 <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-              </ICancelButton>
+              </IRedBorderButton>
             </div>
           </div>
         ))}
@@ -89,7 +93,6 @@ export const APiStringHeader: FC<{
   setHeaderValue: (s: string) => void;
 }> = ({ headerValue = '{}', setHeaderValue, inputClass }) => {
   const [headers, setHeaders] = useState<Header[]>([{ key: '', value: '' }]);
-
   // Sync headers when headerValue prop changes
   useEffect(() => {
     try {

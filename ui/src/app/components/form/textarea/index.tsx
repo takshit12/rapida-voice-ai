@@ -33,7 +33,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           'dark:focus:border-blue-600 focus:border-blue-600',
           'transition-all duration-200 ease-in-out',
           'dark:text-gray-300 text-gray-600',
-          'bg-white dark:bg-gray-950',
+          'bg-light-background dark:bg-gray-950',
           props.className,
         )}
         placeholder={props.placeholder}
@@ -81,7 +81,7 @@ export const ScalableTextarea = React.forwardRef<
         'dark:focus:border-blue-600 focus:border-blue-600',
         'transition-all duration-200 ease-in-out',
         'dark:text-gray-300 text-gray-600',
-        'bg-white dark:bg-gray-950',
+        'bg-light-background dark:bg-gray-950',
         wrapperClassName,
       )}
     >
@@ -98,7 +98,7 @@ export const ScalableTextarea = React.forwardRef<
           'block resize-none w-full min-h-12 max-h-80',
           'dark:placeholder-gray-600 placeholder-gray-400',
           'focus:ring-0 focus:outline-hidden',
-          'bg-white dark:bg-gray-950',
+          'bg-light-background dark:bg-gray-950',
           'focus:bg-white',
           props.className,
         )}

@@ -17,7 +17,7 @@ export function ProjectSelectorDropdown(props: {
     <Dropdown
       className={cn(
         'border-none pl-6 h-12 min-w-[200px]',
-        'hover:bg-gray-100 dark:hover:bg-gray-950',
+        'hover:bg-gray-100 dark:hover:bg-gray-950 bg-white dark:bg-gray-900',
       )}
       placement={props.placement}
       allValue={props.projects}

@@ -26,7 +26,7 @@ export const ConfigureEndOfConversation: React.FC<{
 }> = ({ inputClass, toolDefinition, onChangeToolDefinition }) => {
   return (
     <InputGroup title="Tool Definition">
-      <YellowNoticeBlock className="flex items-center">
+      <YellowNoticeBlock className="flex items-center -mx-6 -mt-6">
         <Info className="shrink-0 w-4 h-4" />
         <div className="ms-3 text-sm font-medium">
           Know more about <b>End of Conversation</b> that can be supported by
@@ -42,7 +42,7 @@ export const ConfigureEndOfConversation: React.FC<{
           <ExternalLink className="shrink-0 w-4 h-4 ml-1.5" strokeWidth={1.5} />
         </a>
       </YellowNoticeBlock>
-      <div className={cn('p-6 flex flex-col gap-8 max-w-6xl')}>
+      <div className={cn('mt-4 flex flex-col gap-8 max-w-6xl')}>
         <FieldSet className="relative w-full">
           <FormLabel>Name</FormLabel>
           <Input

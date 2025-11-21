@@ -89,7 +89,7 @@ export function WebhookLogDialog(props: WebhookLogModalProps) {
         <ChevronRight size={18} className="mx-2" />
         <div className="font-medium text-base">{props.currentWebhookId}</div>
       </div>
-      <div className="relative overflow-auto h-[calc(100vh-50px)]">
+      <div className="relative overflow-auto h-[calc(100vh-50px)] flex-1 flex flex-col">
         <Tab
           active="Request"
           className={cn(

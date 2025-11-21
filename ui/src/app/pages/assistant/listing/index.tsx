@@ -14,7 +14,7 @@ import { Spinner } from '@/app/components/loader/spinner';
 import { ActionableEmptyMessage } from '@/app/components/container/message/actionable-empty-message';
 import { HowAssistantWorksDialog } from '@/app/components/base/modal/how-it-works-modal/how-assistant-works';
 import { IBlueButton, IButton } from '@/app/components/form/button';
-import { ChevronsLeftRightEllipsis, Code, Plus, RotateCw } from 'lucide-react';
+import { Plus, RotateCw } from 'lucide-react';
 import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 import { PageTitleBlock } from '@/app/components/blocks/page-title-block';
 import { PaginationButtonBlock } from '@/app/components/blocks/pagination-button-block';
@@ -122,11 +122,15 @@ export function AssistantPage() {
             </IBlueButton>
             <Popover
               align={'bottom-end'}
-              className="w-60 py-1.5 px-1.5"
+              className="w-60 pb-2"
               open={createAssistantPopover}
               setOpen={setCreateAssistantPopover}
             >
               <div className="space-y-0.5 text-sm/6">
+                <p className="px-2 py-1 text-xs/5 text-muted uppercase">
+                  New Assistant
+                </p>
+                <hr className="w-full h-[1px] bg-gray-800" />
                 <IButton
                   className="w-full justify-start"
                   onClick={() =>
@@ -135,16 +139,14 @@ export function AssistantPage() {
                 >
                   <span>Create new Assistant</span>
                 </IButton>
-                <hr className="w-full h-[1px] bg-gray-800" />
-                <IButton
+                {/* <IButton
                   className="w-full justify-start"
                   onClick={() =>
                     navigate('/deployment/assistant/connect-websocket')
                   }
                 >
                   <span>Connect new Websocket</span>
-                </IButton>
-                <hr className="w-full h-[1px] bg-gray-800" />
+                </IButton> */}
                 <IButton
                   className="w-full justify-start"
                   onClick={() =>
@@ -156,14 +158,6 @@ export function AssistantPage() {
               </div>
             </Popover>
           </div>
-          {/* <IBlueButton
-            onClick={() => {
-              navigate('/deployment/assistant/create-assistant');
-            }}
-          >
-            Add new assistant
-            <Plus strokeWidth={1.5} className="ml-1.5 h-4 w-4" />
-          </IBlueButton> */}
         </div>
       </PageHeaderBlock>
       <BluredWrapper className="sticky top-0 bg-white dark:bg-gray-900 z-11 p-0">
