@@ -13,10 +13,6 @@
     "workspace": {
         "domain": "rapida.ai",
         "title": "RapidaAi",
-        "logo": {
-            "light": "<div className=\"flex items-center shrink-0 space-x-1.5 ml-1 text-blue-600 dark:text-blue-500\"><RapidaIcon className=\"h-8 w-8\" /><RapidaTextIcon className=\"h-6\" /></div>",
-            "dark": ""
-        },
         "authentication": {
             "signIn": {
                 "enable": true,
