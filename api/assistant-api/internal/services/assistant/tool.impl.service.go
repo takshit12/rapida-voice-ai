@@ -16,7 +16,7 @@ import (
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -29,7 +29,7 @@ type assistantToolService struct {
 
 // CreateAssistantTool implements internal_services.AssistantToolService.
 func (eService *assistantToolService) Create(ctx context.Context, auth types.SimplePrinciple, assistantId uint64,
-	name string, description string, fields map[string]interface{}, executionMethod string, options []*lexatic_backend.Metadata) (*internal_assistant_entity.AssistantTool, error) {
+	name string, description string, fields map[string]interface{}, executionMethod string, options []*protos.Metadata) (*internal_assistant_entity.AssistantTool, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 
@@ -96,7 +96,7 @@ func (eService *assistantToolService) Delete(ctx context.Context, auth types.Sim
 }
 
 // GetAllAssistantTool implements internal_services.AssistantToolService.
-func (eService *assistantToolService) GetAll(ctx context.Context, auth types.SimplePrinciple, assistantId uint64, criterias []*lexatic_backend.Criteria, paginate *lexatic_backend.Paginate) (int64, []*internal_assistant_entity.AssistantTool, error) {
+func (eService *assistantToolService) GetAll(ctx context.Context, auth types.SimplePrinciple, assistantId uint64, criterias []*protos.Criteria, paginate *protos.Paginate) (int64, []*internal_assistant_entity.AssistantTool, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 	var (
@@ -152,7 +152,7 @@ func (eService *assistantToolService) Get(ctx context.Context, auth types.Simple
 // UpdateAssistantTool implements internal_services.AssistantToolService.
 func (eService *assistantToolService) Update(ctx context.Context, auth types.SimplePrinciple,
 	toolId uint64,
-	assistantId uint64, name string, description string, fields map[string]interface{}, executionMethod string, options []*lexatic_backend.Metadata) (*internal_assistant_entity.AssistantTool, error) {
+	assistantId uint64, name string, description string, fields map[string]interface{}, executionMethod string, options []*protos.Metadata) (*internal_assistant_entity.AssistantTool, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 
@@ -235,7 +235,7 @@ func (eService *assistantToolService) CreateOrUpdateExecutionOption(
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantToolId uint64,
-	metadata []*lexatic_backend.Metadata,
+	metadata []*protos.Metadata,
 ) ([]*internal_assistant_entity.AssistantToolOption, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
@@ -363,9 +363,9 @@ func (eService *assistantToolService) GetAllLog(
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	projectId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate,
-	order *lexatic_backend.Ordering) (int64, []*internal_assistant_entity.AssistantToolLog, error) {
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate,
+	order *protos.Ordering) (int64, []*internal_assistant_entity.AssistantToolLog, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 	var (

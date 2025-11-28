@@ -15,8 +15,8 @@ import (
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
+	"github.com/rapidaai/protos"
 	assistant_grpc_api "github.com/rapidaai/protos"
-	lexatic_backend "github.com/rapidaai/protos"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -740,7 +740,7 @@ func (eService *assistantService) CreateAssistantProviderModel(
 	description string,
 	promptRequest string,
 	modelProviderName string,
-	options []*lexatic_backend.Metadata,
+	options []*protos.Metadata,
 ) (*internal_assistant_entity.AssistantProviderModel, error) {
 	start := time.Now()
 

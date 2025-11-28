@@ -8,8 +8,8 @@ import (
 	internal_adapter_request_talking_debugger "github.com/rapidaai/api/assistant-api/internal/adapters/requests/debugger/talking"
 	internal_adapter_request_talking_phone "github.com/rapidaai/api/assistant-api/internal/adapters/requests/phone/talking"
 	internal_adapter_request_talking_sdk "github.com/rapidaai/api/assistant-api/internal/adapters/requests/sdk/talking"
-	internal_adapter_request_streamers "github.com/rapidaai/api/assistant-api/internal/adapters/requests/streamers"
 	internal_adapter_request_talking_web_plugin "github.com/rapidaai/api/assistant-api/internal/adapters/requests/web-plugin/talking"
+	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/storages"
@@ -25,7 +25,7 @@ func GetTalker(source utils.RapidaSource,
 	opensearch connectors.OpenSearchConnector,
 	redis connectors.RedisConnector,
 	storage storages.Storage,
-	streamer internal_adapter_request_streamers.Streamer,
+	streamer internal_streamers.Streamer,
 ) (internal_adapter_requests.Talking, error) {
 	switch source {
 	case utils.SDK:

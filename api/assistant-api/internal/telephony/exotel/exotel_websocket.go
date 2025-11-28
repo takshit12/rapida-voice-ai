@@ -1,4 +1,4 @@
-package internal_adapter_request_streamers
+package internal_exotel_telephony
 
 import (
 	"context"
@@ -8,8 +8,10 @@ import (
 
 	"github.com/gorilla/websocket"
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
+	internal_text "github.com/rapidaai/api/assistant-api/internal/text"
 	"github.com/rapidaai/pkg/commons"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 )
 
 type exotelWebsocketStreamer struct {
@@ -18,7 +20,7 @@ type exotelWebsocketStreamer struct {
 	ctx        context.Context
 	cancelFunc context.CancelFunc
 
-	assistant               *lexatic_backend.AssistantDefinition
+	assistant               *protos.AssistantDefinition
 	version                 string
 	assistantConversationId uint64
 	streamSid               string
@@ -39,14 +41,14 @@ func NewExotelWebsocketStreamer(
 	assistantId uint64,
 	version string,
 	conversationId uint64,
-) Streamer {
+) internal_streamers.Streamer {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &exotelWebsocketStreamer{
 		logger:     logger,
 		conn:       connection,
 		ctx:        ctx,
 		cancelFunc: cancel,
-		assistant: &lexatic_backend.AssistantDefinition{
+		assistant: &protos.AssistantDefinition{
 			AssistantId: assistantId,
 			Version:     version,
 		},
@@ -59,7 +61,7 @@ func (exotel *exotelWebsocketStreamer) Context() context.Context {
 	return exotel.ctx
 }
 
-func (exotel *exotelWebsocketStreamer) Recv() (*lexatic_backend.AssistantMessagingRequest, error) {
+func (exotel *exotelWebsocketStreamer) Recv() (*protos.AssistantMessagingRequest, error) {
 	if exotel.conn == nil {
 		exotel.logger.Error("WebSocket connection is nil")
 		return nil, io.EOF
@@ -98,11 +100,11 @@ func (exotel *exotelWebsocketStreamer) Recv() (*lexatic_backend.AssistantMessagi
 			return nil, nil
 		}
 
-		request := &lexatic_backend.AssistantMessagingRequest{
-			Request: &lexatic_backend.AssistantMessagingRequest_Message{
-				Message: &lexatic_backend.AssistantConversationUserMessage{
-					Message: &lexatic_backend.AssistantConversationUserMessage_Audio{
-						Audio: &lexatic_backend.AssistantConversationMessageAudioContent{
+		request := &protos.AssistantMessagingRequest{
+			Request: &protos.AssistantMessagingRequest_Message{
+				Message: &protos.AssistantConversationUserMessage{
+					Message: &protos.AssistantConversationUserMessage_Audio{
+						Audio: &protos.AssistantConversationMessageAudioContent{
 							Content: payloadBytes,
 						},
 					},
@@ -126,7 +128,7 @@ func (exotel *exotelWebsocketStreamer) Recv() (*lexatic_backend.AssistantMessagi
 	}
 }
 
-func (exotel *exotelWebsocketStreamer) Send(response *lexatic_backend.AssistantMessagingResponse) error {
+func (exotel *exotelWebsocketStreamer) Send(response *protos.AssistantMessagingResponse) error {
 	if response.GetMessage() == nil || exotel.conn == nil {
 		return nil
 	}
@@ -136,7 +138,7 @@ func (exotel *exotelWebsocketStreamer) Send(response *lexatic_backend.AssistantM
 	}
 
 	switch response.GetData().(type) {
-	case *lexatic_backend.AssistantMessagingResponse_Message:
+	case *protos.AssistantMessagingResponse_Message:
 		for _, content := range response.GetMessage().GetResponse().GetContents() {
 			twilioMessageJSON, err := json.Marshal(map[string]interface{}{
 				"event":      "media",
@@ -156,7 +158,7 @@ func (exotel *exotelWebsocketStreamer) Send(response *lexatic_backend.AssistantM
 				return err
 			}
 		}
-	case *lexatic_backend.AssistantMessagingResponse_Interruption:
+	case *protos.AssistantMessagingResponse_Interruption:
 		exotelClearJson, err := json.Marshal(map[string]interface{}{
 			"event":     "clear",
 			"streamSid": exotel.streamSid,
@@ -175,23 +177,15 @@ func (exotel *exotelWebsocketStreamer) Send(response *lexatic_backend.AssistantM
 	return nil
 }
 
-func (extl *exotelWebsocketStreamer) Config() *StreamAttribute {
-	return &StreamAttribute{
-		inputConfig: &StreamConfig{
-			audio: internal_audio.NewMulaw8khzMonoAudioConfig(),
-			text: &struct {
-				Charset string `json:"charset"`
-			}{
+func (extl *exotelWebsocketStreamer) Config() *internal_streamers.StreamAttribute {
+	return internal_streamers.NewStreamAttribute(
+		internal_streamers.NewStreamConfig(internal_audio.NewMulaw8khzMonoAudioConfig(),
+			&internal_text.TextConfig{
 				Charset: "UTF-8",
 			},
-		},
-		outputConfig: &StreamConfig{
-			audio: internal_audio.NewMulaw8khzMonoAudioConfig(),
-			text: &struct {
-				Charset string `json:"charset"`
-			}{
+		), internal_streamers.NewStreamConfig(internal_audio.NewMulaw8khzMonoAudioConfig(),
+			&internal_text.TextConfig{
 				Charset: "UTF-8",
 			},
-		},
-	}
+		))
 }

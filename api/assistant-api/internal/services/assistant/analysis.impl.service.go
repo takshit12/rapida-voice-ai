@@ -12,7 +12,7 @@ import (
 	gorm_models "github.com/rapidaai/pkg/models/gorm"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm/clause"
 )
 
@@ -144,8 +144,8 @@ func (eService *assistantAnalysisService) Delete(ctx context.Context,
 func (eService *assistantAnalysisService) GetAll(ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate) (int64, []*internal_assistant_entity.AssistantAnalysis, error) {
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate) (int64, []*internal_assistant_entity.AssistantAnalysis, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 	var (

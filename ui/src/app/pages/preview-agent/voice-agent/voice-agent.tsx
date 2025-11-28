@@ -82,7 +82,7 @@ export const VoiceAgent: FC<{
           </div>
         </div>
       </div>
-      <div className="w-1/4 shrink-0 flex flex-col overflow-auto border">
+      <div className="w-[500px] shrink-0 flex flex-col overflow-auto border border-l-0">
         <VoiceAgentDebugger voiceAgent={voiceAgentContextValue} />
       </div>
     </div>

@@ -141,24 +141,24 @@ func (ms *messaging) Transition(newState InteractionState) error {
 
 	switch newState {
 	case Unknown:
-		ms.logger.Debugf("Transition error: invalid transition: cannot transition to Unknown state")
+		// ms.logger.Debugf("Transition error: invalid transition: cannot transition to Unknown state")
 		return fmt.Errorf("Transition: invalid transition: cannot transition to Unknown state")
 
 	case UserSpeaking:
 		if ms.state == AgentSpeaking {
-			ms.logger.Debugf("Transition error: invalid transition: user can't speak when agent is speaking")
+			// ms.logger.Debugf("Transition error: invalid transition: user can't speak when agent is speaking")
 			return fmt.Errorf("Transition: invalid transition: user can't speak when agent is speaking")
 		}
 
 	case AgentSpeaking:
 		if ms.state == UserSpeaking || ms.state == Interrupted || ms.state == Interrupt {
-			ms.logger.Debugf("Transition error: invalid transition: agent can't speak when user is speaking")
+			// ms.logger.Debugf("Transition error: invalid transition: agent can't speak when user is speaking")
 			return fmt.Errorf("Transition: invalid transition: agent can't speak when user is speaking")
 		}
 
 	case UserCompleted:
 		if ms.state == UserCompleted {
-			ms.logger.Debugf("Transition error: invalid transition: already completed by the user")
+			// ms.logger.Debugf("Transition error: invalid transition: already completed by the user")
 			return fmt.Errorf("Transition: invalid transition: already completed by the user")
 		}
 	case LLMGenerating:
@@ -171,7 +171,7 @@ func (ms *messaging) Transition(newState InteractionState) error {
 
 	case Interrupt:
 		if ms.state == Interrupted || ms.state == Interrupt {
-			ms.logger.Debugf("Transition error: invalid transition: user can't interrupt multiple times")
+			// ms.logger.Debugf("Transition error: invalid transition: user can't interrupt multiple times")
 			return fmt.Errorf("Transition: invalid transition: agent can't interrupt multiple times")
 		}
 
@@ -181,7 +181,7 @@ func (ms *messaging) Transition(newState InteractionState) error {
 
 	case Interrupted:
 		if ms.state == Interrupted {
-			ms.logger.Debugf("Transition error: invalid transition: user can't interrupted multiple times")
+			// ms.logger.Debugf("Transition error: invalid transition: user can't interrupted multiple times")
 			return fmt.Errorf("Transition: invalid transition: agent can't interrupted multiple times")
 		}
 		if ms.state == AgentCompleted || ms.state == AgentSpeaking {
@@ -189,7 +189,7 @@ func (ms *messaging) Transition(newState InteractionState) error {
 		}
 
 	default:
-		ms.logger.Debugf("Transition error: invalid transition: unknown state %v", newState)
+		// ms.logger.Debugf("Transition error: invalid transition: unknown state %v", newState)
 		return fmt.Errorf("Transition: invalid transition: unknown state %v", newState)
 	}
 

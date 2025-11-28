@@ -15,7 +15,7 @@ import (
 	"github.com/rapidaai/pkg/storages"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -31,7 +31,7 @@ func (eService *assistantKnowledgeService) Create(ctx context.Context, auth type
 	retrievalMethod gorm_types.RetrievalMethod,
 	rerankEnabled bool, scoreThreshold float32, topK uint32, rerankerProviderModelId *uint64,
 	rerankerProviderModelName *string,
-	rerankerProviderModelOptions []*lexatic_backend.Metadata) (*internal_assistant_entity.AssistantKnowledge, error) {
+	rerankerProviderModelOptions []*protos.Metadata) (*internal_assistant_entity.AssistantKnowledge, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 
@@ -128,7 +128,7 @@ func (eService *assistantKnowledgeService) Delete(ctx context.Context, auth type
 }
 
 // GetAllAssistantKnowledge implements internal_services.AssistantKnowledgeService.
-func (eService *assistantKnowledgeService) GetAll(ctx context.Context, auth types.SimplePrinciple, assistantId uint64, criterias []*lexatic_backend.Criteria, paginate *lexatic_backend.Paginate) (int64, []*internal_assistant_entity.AssistantKnowledge, error) {
+func (eService *assistantKnowledgeService) GetAll(ctx context.Context, auth types.SimplePrinciple, assistantId uint64, criterias []*protos.Criteria, paginate *protos.Paginate) (int64, []*internal_assistant_entity.AssistantKnowledge, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 	var (
@@ -184,7 +184,7 @@ func (eService *assistantKnowledgeService) Get(ctx context.Context, auth types.S
 }
 
 // UpdateAssistantKnowledge implements internal_services.AssistantKnowledgeService.
-func (eService *assistantKnowledgeService) Update(ctx context.Context, auth types.SimplePrinciple, akId uint64, assistantId uint64, knowledgeId uint64, retrievalMethod gorm_types.RetrievalMethod, rerankEnabled bool, scoreThreshold float32, topK uint32, rerankerProviderModelId *uint64, rerankerProviderModelName *string, rerankerProviderModelOptions []*lexatic_backend.Metadata) (*internal_assistant_entity.AssistantKnowledge, error) {
+func (eService *assistantKnowledgeService) Update(ctx context.Context, auth types.SimplePrinciple, akId uint64, assistantId uint64, knowledgeId uint64, retrievalMethod gorm_types.RetrievalMethod, rerankEnabled bool, scoreThreshold float32, topK uint32, rerankerProviderModelId *uint64, rerankerProviderModelName *string, rerankerProviderModelOptions []*protos.Metadata) (*internal_assistant_entity.AssistantKnowledge, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 

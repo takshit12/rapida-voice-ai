@@ -1,20 +1,25 @@
-package internal_adapter_request_streamers
+package internal_streamers
 
 import (
 	"context"
 	"fmt"
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	internal_text "github.com/rapidaai/api/assistant-api/internal/text"
 	lexatic_backend "github.com/rapidaai/protos"
 )
 
 type StreamConfig struct {
 	audio *internal_audio.AudioConfig `json:"audio,omitempty"`
-	text  *struct {
-		Charset string `json:"charset"` // Character set (e.g., UTF-8)
-	} `json:"text,omitempty"`
+	text  *internal_text.TextConfig   `json:"text,omitempty"`
 }
 
+func NewStreamConfig(audio *internal_audio.AudioConfig, text *internal_text.TextConfig) *StreamConfig {
+	return &StreamConfig{
+		audio: audio,
+		text:  text,
+	}
+}
 func (sa *StreamConfig) GetAudioConfig() (*internal_audio.AudioConfig, error) {
 	if sa.audio != nil {
 		return sa.audio, nil
@@ -29,6 +34,12 @@ type StreamAttribute struct {
 
 	// Output audio configuration
 	outputConfig *StreamConfig `json:"output_config,omitempty"`
+}
+
+func NewStreamAttribute(in, out *StreamConfig) *StreamAttribute {
+	return &StreamAttribute{
+		inputConfig: in, outputConfig: out,
+	}
 }
 
 func (sa *StreamAttribute) GetInputConfig() (*StreamConfig, error) {

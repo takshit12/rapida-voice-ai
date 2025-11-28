@@ -16,36 +16,6 @@ type AssistantProvider struct {
 	Description string `json:"description" gorm:"type:string"`
 }
 
-// CREATE TABLE assistant_provider_agentkits (
-// 	    id bigint NOT NULL,
-// 	    created_date timestamp without time zone NOT NULL DEFAULT now(),
-// 	    updated_date timestamp without time zone DEFAULT NULL,
-// 	    status character varying(50) NOT NULL DEFAULT 'ACTIVE'::character varying,
-// 	    created_by bigint NOT NULL,
-// 	    assistant_id bigint NOT NULL,
-// 		description character varying(400) NOT NULL,
-// 		url character varying(200) NOT NULL,
-// 		certificate TEXT DEFAULT NULL,
-// 		metadata TEXT DEFAULT NULL,
-// 	    CONSTRAINT assistant_provider_agentkits_pkey PRIMARY KEY (id)
-// );
-
-// CREATE TABLE assistant_provider_websockets (
-//
-//	    id bigint NOT NULL,
-//	    created_date timestamp without time zone NOT NULL DEFAULT now(),
-//	    updated_date timestamp without time zone DEFAULT NULL,
-//	    status character varying(50) NOT NULL DEFAULT 'ACTIVE'::character varying,
-//	    created_by bigint NOT NULL,
-//	    assistant_id bigint NOT NULL,
-//		description character varying(400) NOT NULL,
-//		url character varying(200) NOT NULL,
-//		headers TEXT DEFAULT NULL,
-//		parameters TEXT DEFAULT NULL,
-//	    CONSTRAINT assistant_provider_websockets_pkey PRIMARY KEY (id)
-//
-// );
-
 type AssistantProviderAgentkit struct {
 	AssistantProvider
 	//

@@ -132,10 +132,6 @@ func (cApi *ConversationGrpcApi) CreatePhoneCall(ctx context.Context, ir *protos
 				TelephonyProvider),
 		cApi.cfg,
 		cApi.logger,
-		vltC,
-		assistant.
-			AssistantPhoneDeployment.
-			GetOptions(),
 	)
 	if err != nil {
 		cApi.
@@ -166,12 +162,16 @@ func (cApi *ConversationGrpcApi) CreatePhoneCall(ctx context.Context, ir *protos
 		"from_phone": fromPhone,
 	}
 
-	outcome, err := telephony.CreateCall(
+	outcome, err := telephony.MakeCall(
 		auth,
 		toNumber,
 		fromPhone,
 		ir.GetAssistant().GetAssistantId(),
 		conversation.Id,
+		vltC,
+		assistant.
+			AssistantPhoneDeployment.
+			GetOptions(),
 	)
 	if err != nil {
 		metrics, mErr := cApi.assistantConversationService.

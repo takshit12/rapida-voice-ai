@@ -1,4 +1,4 @@
-package internal_adapter_request_streamers
+package internal_vonage_telephony
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
+	internal_text "github.com/rapidaai/api/assistant-api/internal/text"
 	"github.com/rapidaai/pkg/commons"
 	lexatic_backend "github.com/rapidaai/protos"
 )
@@ -51,7 +53,7 @@ func NewVonageWebsocketStreamer(
 	assistantId uint64,
 	version string,
 	conversationId uint64,
-) Streamer {
+) internal_streamers.Streamer {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &vonageWebsocketStreamer{
 		logger:     logger,
@@ -213,23 +215,15 @@ func (vng *vonageWebsocketStreamer) handleWebSocketError(err error) error {
 	return io.EOF
 }
 
-func (uds *vonageWebsocketStreamer) Config() *StreamAttribute {
-	return &StreamAttribute{
-		inputConfig: &StreamConfig{
-			audio: internal_audio.NewLinear16khzMonoAudioConfig(),
-			text: &struct {
-				Charset string `json:"charset"`
-			}{
+func (extl *vonageWebsocketStreamer) Config() *internal_streamers.StreamAttribute {
+	return internal_streamers.NewStreamAttribute(
+		internal_streamers.NewStreamConfig(internal_audio.NewLinear16khzMonoAudioConfig(),
+			&internal_text.TextConfig{
 				Charset: "UTF-8",
 			},
-		},
-		outputConfig: &StreamConfig{
-			audio: internal_audio.NewLinear16khzMonoAudioConfig(),
-			text: &struct {
-				Charset string `json:"charset"`
-			}{
+		), internal_streamers.NewStreamConfig(internal_audio.NewLinear16khzMonoAudioConfig(),
+			&internal_text.TextConfig{
 				Charset: "UTF-8",
 			},
-		},
-	}
+		))
 }

@@ -301,4 +301,13 @@ type AssistantConversationService interface {
 		assistantConversationId uint64,
 		body []byte,
 	) (*internal_conversation_gorm.AssistantConversationRecording, error)
+
+	CreateConversationTelephonyEvent(
+		ctx context.Context,
+		auth types.SimplePrinciple,
+		telephony string,
+		assistantConversationId uint64,
+		eventType string,
+		payload map[string]interface{},
+	) (*internal_conversation_gorm.AssistantConverstaionTelephonyEvent, error)
 }

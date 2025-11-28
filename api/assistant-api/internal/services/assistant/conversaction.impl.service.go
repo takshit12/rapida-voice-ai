@@ -16,7 +16,7 @@ import (
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm/clause"
 )
 
@@ -40,8 +40,8 @@ func NewAssistantConversationService(
 func (conversationService *assistantConversationService) GetAll(ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate, opts *internal_services.GetConversationOption) (int64, []*internal_conversation_gorm.AssistantConversation, error) {
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate, opts *internal_services.GetConversationOption) (int64, []*internal_conversation_gorm.AssistantConversation, error) {
 	start := time.Now()
 	db := conversationService.postgres.DB(ctx)
 	var (
@@ -473,7 +473,7 @@ func (conversationService *assistantConversationService) CreateCustomConversatio
 	auth types.SimplePrinciple,
 	assistantId uint64,
 	assistantConversationId uint64,
-	metrics []*lexatic_backend.Metric,
+	metrics []*protos.Metric,
 ) ([]*internal_conversation_gorm.AssistantConversationMetric, error) {
 	start := time.Now()
 	db := conversationService.postgres.DB(ctx)
@@ -563,4 +563,30 @@ func (eService *assistantConversationService) GetRecordingPublicUrl(ctx context.
 		return nil, output.Error
 	}
 	return utils.Ptr(output.CompletePath), nil
+}
+
+func (eService *assistantConversationService) CreateConversationTelephonyEvent(
+	ctx context.Context,
+	auth types.SimplePrinciple,
+	telephony string,
+	assistantConversationId uint64,
+	eventType string,
+	payload map[string]interface{},
+) (*internal_conversation_gorm.AssistantConverstaionTelephonyEvent, error) {
+	start := time.Now()
+	db := eService.postgres.DB(ctx)
+	telephonyEvent := &internal_conversation_gorm.AssistantConverstaionTelephonyEvent{
+		AssistantConversationId: assistantConversationId,
+		EventType:               eventType,
+		Payload:                 payload,
+	}
+
+	tx := db.Create(&telephonyEvent)
+	if tx.Error != nil {
+		eService.logger.Benchmark("eService.CreateConversationTelephonyEvent", time.Since(start))
+		eService.logger.Errorf("error while updating conversation %v", tx.Error)
+		return nil, tx.Error
+	}
+	eService.logger.Benchmark("eService.CreateConversationTelephonyEvent", time.Since(start))
+	return telephonyEvent, nil
 }

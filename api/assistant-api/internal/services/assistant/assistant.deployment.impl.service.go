@@ -12,7 +12,7 @@ import (
 	gorm_models "github.com/rapidaai/pkg/models/gorm"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -42,7 +42,7 @@ func (eService assistantDeploymentService) CreateWebPluginDeployment(
 	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 	suggestion []string,
 	helpCenterEnabled, productCatalogEnabled, articleCatalogEnabled bool,
-	inputAudio, outputAudio *lexatic_backend.DeploymentAudioProvider,
+	inputAudio, outputAudio *protos.DeploymentAudioProvider,
 ) (*internal_assistant_entity.AssistantWebPluginDeployment, error) {
 	db := eService.postgres.DB(ctx)
 	deployment := &internal_assistant_entity.AssistantWebPluginDeployment{
@@ -87,7 +87,7 @@ func (eService assistantDeploymentService) createAssistantDeploymentAudio(
 	ctx context.Context,
 	auth types.SimplePrinciple, deploymentId uint64,
 	audioType string,
-	audioConfig *lexatic_backend.DeploymentAudioProvider) (*internal_assistant_entity.AssistantDeploymentAudio, error) {
+	audioConfig *protos.DeploymentAudioProvider) (*internal_assistant_entity.AssistantDeploymentAudio, error) {
 	db := eService.postgres.DB(ctx)
 	deployment := &internal_assistant_entity.AssistantDeploymentAudio{
 		Mutable: gorm_models.Mutable{
@@ -142,7 +142,7 @@ func (eService assistantDeploymentService) CreateDebuggerDeployment(
 	assistantId uint64,
 	greeting, mistake *string,
 	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
-	inputAudio, outputAudio *lexatic_backend.DeploymentAudioProvider,
+	inputAudio, outputAudio *protos.DeploymentAudioProvider,
 ) (*internal_assistant_entity.AssistantDebuggerDeployment, error) {
 	db := eService.postgres.DB(ctx)
 	deployment := &internal_assistant_entity.AssistantDebuggerDeployment{
@@ -183,7 +183,7 @@ func (eService assistantDeploymentService) CreateApiDeployment(
 	assistantId uint64,
 	greeting, mistake *string,
 	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
-	inputAudio, outputAudio *lexatic_backend.DeploymentAudioProvider,
+	inputAudio, outputAudio *protos.DeploymentAudioProvider,
 ) (*internal_assistant_entity.AssistantApiDeployment, error) {
 	db := eService.postgres.DB(ctx)
 	deployment := &internal_assistant_entity.AssistantApiDeployment{
@@ -225,7 +225,7 @@ func (eService assistantDeploymentService) CreateWhatsappDeployment(
 	greeting, mistake *string,
 	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 	whatsappProvider string,
-	whatsappOptions []*lexatic_backend.Metadata,
+	whatsappOptions []*protos.Metadata,
 ) (*internal_assistant_entity.AssistantWhatsappDeployment, error) {
 	db := eService.postgres.DB(ctx)
 	deployment := &internal_assistant_entity.AssistantWhatsappDeployment{
@@ -294,8 +294,8 @@ func (eService assistantDeploymentService) CreatePhoneDeployment(
 	greeting, mistake *string,
 	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 	phoneProvider string,
-	inputAudio, outputAudio *lexatic_backend.DeploymentAudioProvider,
-	opts []*lexatic_backend.Metadata,
+	inputAudio, outputAudio *protos.DeploymentAudioProvider,
+	opts []*protos.Metadata,
 ) (*internal_assistant_entity.AssistantPhoneDeployment, error) {
 	db := eService.postgres.DB(ctx)
 	deployment := &internal_assistant_entity.AssistantPhoneDeployment{

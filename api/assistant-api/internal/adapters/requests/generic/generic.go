@@ -6,7 +6,8 @@ import (
 
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/requests/customizers"
-	internal_adapter_request_streamers "github.com/rapidaai/api/assistant-api/internal/adapters/requests/streamers"
+	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
+
 	internal_agent_embeddings "github.com/rapidaai/api/assistant-api/internal/agents/embeddings"
 	internal_agent_rerankers "github.com/rapidaai/api/assistant-api/internal/agents/rerankers"
 	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
@@ -46,7 +47,7 @@ type GenericRequestor struct {
 	ctx      context.Context
 	source   utils.RapidaSource
 	auth     types.SimplePrinciple
-	streamer internal_adapter_request_streamers.Streamer
+	streamer internal_streamers.Streamer
 
 	// service
 	assistantService     internal_services.AssistantService
@@ -111,7 +112,7 @@ func NewGenericRequestor(
 	opensearch connectors.OpenSearchConnector,
 	redis connectors.RedisConnector,
 	storage storages.Storage,
-	streamer internal_adapter_request_streamers.Streamer,
+	streamer internal_streamers.Streamer,
 ) GenericRequestor {
 
 	return GenericRequestor{
@@ -172,7 +173,7 @@ func (dm *GenericRequestor) Source() utils.RapidaSource {
 	return dm.source
 }
 
-func (dm *GenericRequestor) Streamer() internal_adapter_request_streamers.Streamer {
+func (dm *GenericRequestor) Streamer() internal_streamers.Streamer {
 	return dm.streamer
 }
 

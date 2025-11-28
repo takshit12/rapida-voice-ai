@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/rapidaai/api/assistant-api/config"
-	internal_adapter_request_streamers "github.com/rapidaai/api/assistant-api/internal/adapters/requests/streamers"
 	internal_factory "github.com/rapidaai/api/assistant-api/internal/factory"
+	internal_grpc "github.com/rapidaai/api/assistant-api/internal/grpc"
 	internal_services "github.com/rapidaai/api/assistant-api/internal/services"
 	internal_assistant_service "github.com/rapidaai/api/assistant-api/internal/services/assistant"
 	web_client "github.com/rapidaai/pkg/clients/web"
@@ -103,7 +103,7 @@ func (cApi *ConversationGrpcApi) AssistantTalk(stream assistant_api.TalkService_
 		cApi.opensearch,
 		cApi.redis,
 		cApi.storage,
-		internal_adapter_request_streamers.NewGrpcUnidirectionalStreamer(stream),
+		internal_grpc.NewGrpcUnidirectionalStreamer(stream),
 	)
 	if err != nil {
 		return err

@@ -9,7 +9,7 @@ import (
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters/requests"
 	internal_adapter_request_generic "github.com/rapidaai/api/assistant-api/internal/adapters/requests/generic"
-	internal_adapter_request_streamers "github.com/rapidaai/api/assistant-api/internal/adapters/requests/streamers"
+	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/storages"
@@ -34,7 +34,7 @@ func NewSDKTalking(
 	opensearch connectors.OpenSearchConnector,
 	redis connectors.RedisConnector,
 	storage storages.Storage,
-	streamer internal_adapter_request_streamers.Streamer,
+	streamer internal_streamers.Streamer,
 ) (internal_adapter_requests.Talking, error) {
 
 	return &sdkTalking{

@@ -32,7 +32,7 @@ func NewPostgresConnector(
 
 func (psql *postgresConnector) DB(ctx context.Context) *gorm.DB {
 	// need to remove in prod
-	return psql.db.WithContext(ctx).Debug()
+	return psql.db.WithContext(ctx)
 }
 
 // generating connection string from configuration

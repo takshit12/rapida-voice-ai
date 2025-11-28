@@ -1,4 +1,4 @@
-package internal_adapter_request_streamers
+package internal_twilio_telephony
 
 import (
 	"bytes"
@@ -8,8 +8,11 @@ import (
 	"io"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
+	internal_text "github.com/rapidaai/api/assistant-api/internal/text"
 	"github.com/rapidaai/pkg/commons"
 	lexatic_backend "github.com/rapidaai/protos"
 )
@@ -52,7 +55,7 @@ func NewTwilioWebsocketStreamer(
 	assistantId uint64,
 	version string,
 	conversationId uint64,
-) Streamer {
+) internal_streamers.Streamer {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &twilioWebsocketStreamer{
 		logger:     logger,
@@ -251,24 +254,21 @@ func (tws *twilioWebsocketStreamer) captureStreamSid(streamSid string) {
 		tws.logger.Debug("Captured Twilio streamSid", "streamSid", tws.streamSid)
 	}
 }
+func (extl *twilioWebsocketStreamer) Config() *internal_streamers.StreamAttribute {
+	return internal_streamers.NewStreamAttribute(
+		internal_streamers.NewStreamConfig(internal_audio.NewMulaw8khzMonoAudioConfig(),
+			&internal_text.TextConfig{
+				Charset: "UTF-8",
+			},
+		), internal_streamers.NewStreamConfig(internal_audio.NewMulaw8khzMonoAudioConfig(),
+			&internal_text.TextConfig{
+				Charset: "UTF-8",
+			},
+		))
+}
 
-func (uds *twilioWebsocketStreamer) Config() *StreamAttribute {
-	return &StreamAttribute{
-		inputConfig: &StreamConfig{
-			audio: internal_audio.NewMulaw8khzMonoAudioConfig(),
-			text: &struct {
-				Charset string `json:"charset"`
-			}{
-				Charset: "UTF-8",
-			},
-		},
-		outputConfig: &StreamConfig{
-			audio: internal_audio.NewMulaw8khzMonoAudioConfig(),
-			text: &struct {
-				Charset string `json:"charset"`
-			}{
-				Charset: "UTF-8",
-			},
-		},
-	}
+func (tpc *twilioWebsocketStreamer) Streamer(c *gin.Context, connection *websocket.Conn, assistantID uint64, assistantVersion string, assistantConversationID uint64) internal_streamers.Streamer {
+	return NewTwilioWebsocketStreamer(tpc.logger, connection, assistantID,
+		assistantVersion,
+		assistantConversationID)
 }

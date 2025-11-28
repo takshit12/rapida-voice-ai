@@ -15,7 +15,7 @@ import (
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm/clause"
 )
 
@@ -166,8 +166,8 @@ func (eService *assistantWebhookService) Delete(ctx context.Context,
 func (eService *assistantWebhookService) GetAll(ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate) (int64, []*internal_assistant_entity.AssistantWebhook, error) {
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate) (int64, []*internal_assistant_entity.AssistantWebhook, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 	var (
@@ -283,9 +283,9 @@ func (eService *assistantWebhookService) GetAllLog(
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	projectId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate,
-	order *lexatic_backend.Ordering) (int64, []*internal_assistant_entity.AssistantWebhookLog, error) {
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate,
+	order *protos.Ordering) (int64, []*internal_assistant_entity.AssistantWebhookLog, error) {
 	start := time.Now()
 	db := eService.postgres.DB(ctx)
 	var (

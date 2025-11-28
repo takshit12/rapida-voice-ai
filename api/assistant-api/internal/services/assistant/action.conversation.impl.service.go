@@ -8,7 +8,7 @@ import (
 	internal_conversation_gorm "github.com/rapidaai/api/assistant-api/internal/entity/conversations"
 	gorm_models "github.com/rapidaai/pkg/models/gorm"
 	"github.com/rapidaai/pkg/types"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm/clause"
 )
 
@@ -16,9 +16,9 @@ func (conversationService *assistantConversationService) GetAllMessageActions(
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantConversationId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate,
-	ordering *lexatic_backend.Ordering,
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate,
+	ordering *protos.Ordering,
 ) (int64, []*internal_conversation_gorm.AssistantConversationAction, error) {
 	start := time.Now()
 	db := conversationService.postgres.DB(ctx)

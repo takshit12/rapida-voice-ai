@@ -1,4 +1,7 @@
-import { GreenNoticeBlock } from '@/app/components/container/message/notice-block';
+import {
+  GreenNoticeBlock,
+  YellowNoticeBlock,
+} from '@/app/components/container/message/notice-block';
 import { Dropdown } from '@/app/components/dropdown';
 import { IBlueBGArrowButton } from '@/app/components/form/button';
 import { ErrorMessage } from '@/app/components/form/error-message';
@@ -393,7 +396,7 @@ export const PreviewPhoneAgent = () => {
         </div>
       </div>
       {assistant && (
-        <div className="w-96 border-l h-dvh overflow-auto">
+        <div className="w-[500px] border-l h-dvh overflow-auto">
           <div className="px-4 py-4 text-sm leading-normal ">
             <div className="flex flex-row justify-between items-center text-sm tracking-wider">
               <h3>Name</h3>
@@ -408,76 +411,93 @@ export const PreviewPhoneAgent = () => {
               {assistant.getDescription()}
             </div>
           </div>
-          <InputGroup title="Arguments">
-            <div className="text-sm leading-normal ">
-              {variables.map((x, idx) => {
-                return (
-                  <InputVarForm
-                    key={idx}
-                    var={x}
-                    className="bg-light-background"
-                  >
-                    {x.getType() === InputVarType.textInput && (
-                      <TextTextarea
-                        id={x.getName()}
-                        defaultValue={x.getDefaultvalue()}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                          onChangeArgument(x.getName(), e.target.value)
-                        }
-                      />
-                    )}
-                    {x.getType() === InputVarType.paragraph && (
-                      <ParagraphTextarea
-                        id={x.getName()}
-                        defaultValue={x.getDefaultvalue()}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                          onChangeArgument(x.getName(), e.target.value)
-                        }
-                      />
-                    )}
-                    {x.getType() === InputVarType.number && (
-                      <NumberTextarea
-                        id={x.getName()}
-                        defaultValue={x.getDefaultvalue()}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                          onChangeArgument(x.getName(), e.target.value)
-                        }
-                      />
-                    )}
-                    {x.getType() === InputVarType.json && (
-                      <JsonTextarea
-                        id={x.getName()}
-                        defaultValue={x.getDefaultvalue()}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                          onChangeArgument(x.getName(), e.target.value)
-                        }
-                      />
-                    )}
-                    {x.getType() === InputVarType.url && (
-                      <UrlTextarea
-                        id={x.getName()}
-                        defaultValue={x.getDefaultvalue()}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                          onChangeArgument(x.getName(), e.target.value)
-                        }
-                      />
-                    )}
-                  </InputVarForm>
-                );
-              })}
-            </div>
+          <InputGroup title="Arguments" childClass="!p-0">
+            {variables.length > 0 ? (
+              <div className="text-sm leading-normal">
+                {variables.map((x, idx) => {
+                  return (
+                    <InputVarForm
+                      key={idx}
+                      var={x}
+                      className="bg-light-background"
+                    >
+                      {x.getType() === InputVarType.textInput && (
+                        <TextTextarea
+                          id={x.getName()}
+                          defaultValue={x.getDefaultvalue()}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>,
+                          ) => onChangeArgument(x.getName(), e.target.value)}
+                        />
+                      )}
+                      {x.getType() === InputVarType.paragraph && (
+                        <ParagraphTextarea
+                          id={x.getName()}
+                          defaultValue={x.getDefaultvalue()}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>,
+                          ) => onChangeArgument(x.getName(), e.target.value)}
+                        />
+                      )}
+                      {x.getType() === InputVarType.number && (
+                        <NumberTextarea
+                          id={x.getName()}
+                          defaultValue={x.getDefaultvalue()}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>,
+                          ) => onChangeArgument(x.getName(), e.target.value)}
+                        />
+                      )}
+                      {x.getType() === InputVarType.json && (
+                        <JsonTextarea
+                          id={x.getName()}
+                          defaultValue={x.getDefaultvalue()}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>,
+                          ) => onChangeArgument(x.getName(), e.target.value)}
+                        />
+                      )}
+                      {x.getType() === InputVarType.url && (
+                        <UrlTextarea
+                          id={x.getName()}
+                          defaultValue={x.getDefaultvalue()}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLTextAreaElement>,
+                          ) => onChangeArgument(x.getName(), e.target.value)}
+                        />
+                      )}
+                    </InputVarForm>
+                  );
+                })}
+              </div>
+            ) : (
+              <YellowNoticeBlock>
+                Assistant do not accept any arguments.
+              </YellowNoticeBlock>
+            )}
           </InputGroup>
-          <InputGroup title="Deployment">
+          <InputGroup title="Deployment" childClass="p-3 text-muted">
             <div className="space-y-4">
               <div className="flex justify-between">
-                <div className="-foreground">Input Mode</div>
+                <div className="text-sm uppercase tracking-wider">
+                  Input Mode
+                </div>
                 <div className="font-medium">
                   Text
                   {assistant?.getPhonedeployment()?.getInputaudio() &&
                     ', Audio'}
                 </div>
               </div>
-
+              <div className="flex justify-between">
+                <div className="text-sm uppercase tracking-wider">
+                  Output Mode
+                </div>
+                <div className="font-medium">
+                  Text
+                  {assistant?.getPhonedeployment()?.getOutputaudio() &&
+                    ', Audio'}
+                </div>
+              </div>
               {/*  */}
               {assistant
                 .getPhonedeployment()
@@ -489,8 +509,10 @@ export const PreviewPhoneAgent = () => {
                   ?.getAudiooptionsList().length! > 0 && (
                   <div className="space-y-4">
                     <div className="flex justify-between">
-                      <div className="-foreground">Listen.Provider</div>
-                      <div className="font-medium mt-1 ">
+                      <div className="text-muted uppercase">
+                        Listen.Provider
+                      </div>
+                      <div className="font-medium mt-1 underline underline-offset-4">
                         {assistant
                           .getPhonedeployment()
                           ?.getInputaudio()
@@ -505,7 +527,7 @@ export const PreviewPhoneAgent = () => {
                       .filter(d => d.getKey().startsWith('listen.'))
                       .map((detail, index) => (
                         <div className="flex justify-between" key={index}>
-                          <div className="-foreground capitalize">
+                          <div className="text-sm uppercase tracking-wider">
                             {detail.getKey()}
                           </div>
                           <div className="font-medium">{detail.getValue()}</div>
@@ -513,17 +535,9 @@ export const PreviewPhoneAgent = () => {
                       ))}
                   </div>
                 )}
-              <div className="flex justify-between">
-                <div className="-foreground">Output Mode</div>
-                <div className="font-medium">
-                  Text
-                  {assistant?.getPhonedeployment()?.getOutputaudio() &&
-                    ', Audio'}
-                </div>
-              </div>
               {assistant
                 .getPhonedeployment()
-                ?.getOutputaudio()
+                ?.getInputaudio()
                 ?.getAudiooptionsList() &&
                 assistant
                   .getPhonedeployment()
@@ -531,8 +545,10 @@ export const PreviewPhoneAgent = () => {
                   ?.getAudiooptionsList().length! > 0 && (
                   <div className="space-y-4">
                     <div className="flex justify-between">
-                      <div className="-foreground">Speak.Provider</div>
-                      <div className="font-medium mt-1 ">
+                      <div className="text-sm uppercase tracking-wider">
+                        Listen.Provider
+                      </div>
+                      <div className="font-medium mt-1 underline underline-offset-4">
                         {assistant
                           .getPhonedeployment()
                           ?.getOutputaudio()
@@ -546,20 +562,19 @@ export const PreviewPhoneAgent = () => {
                       .filter(d => d.getValue())
                       .filter(d => d.getKey().startsWith('speak.'))
                       .map((detail, index) => (
-                        <div key={index} className="flex justify-between gap-8">
-                          <div className="-foreground capitalize">
+                        <div key={index} className="flex justify-between">
+                          <div className="text-sm uppercase tracking-wider">
                             {detail.getKey()}
                           </div>
-                          <div className="font-medium truncate">
-                            {detail.getValue()}
-                          </div>
+                          <div className="font-medium">{detail.getValue()}</div>
                         </div>
                       ))}
                   </div>
                 )}
-
               <div className="flex justify-between">
-                <div className="-foreground">Telephony</div>
+                <div className="text-sm uppercase tracking-wider">
+                  Telephony
+                </div>
                 <div className="font-medium">
                   {assistant?.getPhonedeployment()?.getPhoneprovidername()}
                 </div>

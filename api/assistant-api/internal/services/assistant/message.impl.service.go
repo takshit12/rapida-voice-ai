@@ -11,7 +11,7 @@ import (
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
-	lexatic_backend "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 	"gorm.io/gorm/clause"
 )
 
@@ -19,9 +19,9 @@ func (conversationService *assistantConversationService) GetAllConversationMessa
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantConversationId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate,
-	ordering *lexatic_backend.Ordering, opts *internal_services.GetMessageOption) (int64, []*internal_message_gorm.AssistantConversationMessage, error) {
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate,
+	ordering *protos.Ordering, opts *internal_services.GetMessageOption) (int64, []*internal_message_gorm.AssistantConversationMessage, error) {
 	start := time.Now()
 	db := conversationService.postgres.DB(ctx)
 	var (
@@ -78,9 +78,9 @@ func (conversationService *assistantConversationService) GetAllAssistantMessage(
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	assistantId uint64,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate,
-	ordering *lexatic_backend.Ordering,
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate,
+	ordering *protos.Ordering,
 	opts *internal_services.GetMessageOption,
 ) (int64, []*internal_message_gorm.AssistantConversationMessage, error) {
 	start := time.Now()
@@ -173,9 +173,9 @@ func (conversationService *assistantConversationService) GetAllAssistantMessage(
 func (conversationService *assistantConversationService) GetAllMessage(
 	ctx context.Context,
 	auth types.SimplePrinciple,
-	criterias []*lexatic_backend.Criteria,
-	paginate *lexatic_backend.Paginate,
-	ordering *lexatic_backend.Ordering,
+	criterias []*protos.Criteria,
+	paginate *protos.Paginate,
+	ordering *protos.Ordering,
 	opts *internal_services.GetMessageOption,
 ) (int64, []*internal_message_gorm.AssistantConversationMessage, error) {
 	start := time.Now()
@@ -438,7 +438,7 @@ func (conversationService *assistantConversationService) ApplyMessageMetrics(
 // 	auth types.SimplePrinciple,
 // 	assistantConversationId uint64,
 // 	assistantConversationMessageId string,
-// 	stages []*lexatic_backend.AssistantMessageStage,
+// 	stages []*protos.AssistantMessageStage,
 // ) ([]*internal_message_gorm.AssistantConversationMessageStage, error) {
 // 	start := time.Now()
 // 	db := conversationService.postgres.DB(ctx)
