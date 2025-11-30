@@ -890,7 +890,7 @@ ADD COLUMN max_session_duration BIGINT;
 ALTER TABLE assistant_phone_deployments  DROP COLUMN telephony_provider_id;
 ALTER TABLE assistant_phone_deployments DROP COLUMN name;
 
-ALTER TABLE public.assistant_deployment_audios  DROP COLUMN audio_provider_id;
+ALTER TABLE public.assistant_deployment_audios DROP COLUMN audio_provider_id;
 
 ALTER TABLE assistant_phone_deployments
 ALTER COLUMN mistake DROP NOT NULL;
