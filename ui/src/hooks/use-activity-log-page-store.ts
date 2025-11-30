@@ -152,6 +152,7 @@ export const useActivityLogPage = create<ActivityLogType>((set, get) => ({
     { name: 'Provider Name', key: 'Provider Name', visible: true },
     { name: 'Model Name', key: 'Model Name', visible: true },
     { name: 'Created Date', key: 'Created Date', visible: true },
+    { name: 'Action', key: 'Action', visible: true },
     { name: 'Status', key: 'Status', visible: true },
     { name: 'Time Taken', key: 'Time_Taken', visible: true },
     { name: 'Http status', key: 'Http_status', visible: true },

@@ -3,6 +3,7 @@ package internal_exotel_telephony
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -102,6 +103,13 @@ func (tpc *exotelTelephony) MakeCall(
 		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
 	}
 	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+	}
+
+	// Print the response body
+	fmt.Println("Response Body:", string(bodyBytes))
 	var jsonResponse struct {
 		Call struct {
 			Sid              string `json:"Sid"`
@@ -114,8 +122,8 @@ func (tpc *exotelTelephony) MakeCall(
 		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
 	}
 
-	mtds = append(mtds, types.NewMetadata("telephony.status", jsonResponse.Call.Status))
 	mtds = append(mtds, types.NewMetadata("telephony.conversation_reference", jsonResponse.Call.Sid))
+	event = append(event, types.NewEvent(jsonResponse.Call.Status, jsonResponse))
 	return mtds, []*types.Metric{types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))}, event, nil
 }
 

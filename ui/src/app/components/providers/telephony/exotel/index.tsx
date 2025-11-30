@@ -23,10 +23,6 @@ export const ValidateExotelTelephonyOptions = (
     if (!phone.getValue() || phone.getValue().length === 0) {
       return false;
     }
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(phone.getValue())) {
-      return false;
-    }
   }
   return true;
 };

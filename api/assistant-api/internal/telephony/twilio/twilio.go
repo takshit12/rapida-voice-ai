@@ -142,7 +142,6 @@ func (tpc *twilioTelephony) MakeCall(
 	}
 
 	event = append(event, types.NewEvent(*resp.Status, resp))
-	mtds = append(mtds, types.NewMetadata("telephony.status", *resp.Status))
 	mtds = append(mtds, types.NewMetadata("telephony.conversation_reference", *resp.Sid))
 	return mtds, []*types.Metric{types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))}, event, nil
 }

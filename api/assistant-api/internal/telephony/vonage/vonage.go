@@ -128,7 +128,6 @@ func (vt *vonageTelephony) MakeCall(
 		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
 	}
 
-	mtds = append(mtds, types.NewMetadata("telephony.status", result.Status))
 	mtds = append(mtds, types.NewMetadata("telephony.conversation_reference", result.ConversationUuid))
 	event = append(event, types.NewEvent(result.Status, result))
 	return mtds, []*types.Metric{types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))}, event, nil

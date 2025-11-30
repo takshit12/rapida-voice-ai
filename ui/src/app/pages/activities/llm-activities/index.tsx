@@ -14,8 +14,12 @@ import { formatNanoToReadableMilli, toDateString } from '@/utils/date';
 import { getMetadataValue } from '@/utils/metadata';
 import { Spinner } from '@/app/components/loader/spinner';
 import { ScrollableResizableTable } from '@/app/components/data-table';
-import { IButton } from '@/app/components/form/button';
-import { ExternalLink, RotateCw } from 'lucide-react';
+import {
+  IButton,
+  ILinkBorderButton,
+  ILinkButton,
+} from '@/app/components/form/button';
+import { ExternalLink, Eye, RotateCw } from 'lucide-react';
 import { TableCell } from '@/app/components/base/tables/table-cell';
 import { TableRow } from '@/app/components/base/tables/table-row';
 import { StatusIndicator } from '@/app/components/indicators/status';
@@ -27,6 +31,7 @@ import { ProviderPill } from '@/app/components/pill/provider-model-pill';
 import { PaginationButtonBlock } from '@/app/components/blocks/pagination-button-block';
 import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 import { DateCell } from '@/app/components/base/tables/date-cell';
+import TooltipPlus from '@/app/components/base/tooltip-plus';
 
 /**
  * Listing all the audit log for the user organization and selected project
@@ -169,15 +174,7 @@ export function ListingPage() {
         >
           {activities.map((at, idx) => {
             return (
-              <TableRow
-                key={idx}
-                data-id={at.getId()}
-                onClick={event => {
-                  event.stopPropagation();
-                  setCurrentActivityId(at.getId());
-                  setShowLogModal(true);
-                }}
-              >
+              <TableRow key={idx} data-id={at.getId()}>
                 <td className="px-2 pl-2 text-left text-sm font-medium tracking-wider relative w-1">
                   {selectedIds.indexOf(at.getId()) > 0 && (
                     <div className="absolute top-0 bottom-0 left-0 bg-blue-500 w-[2px]"></div>
@@ -225,11 +222,53 @@ export function ListingPage() {
                 {visibleColumn('Created Date') && (
                   <DateCell date={at.getCreateddate()} />
                 )}
+
+                <TableCell>
+                  <div className="divide-x dark:divide-gray-800 flex border w-fit">
+                    <IButton
+                      className="rounded-none"
+                      onClick={event => {
+                        event.stopPropagation();
+                        setCurrentActivityId(at.getId());
+                        setShowLogModal(true);
+                      }}
+                    >
+                      <TooltipPlus
+                        className="bg-white dark:bg-gray-950 border-[0.5px] rounded-[2px] px-0 py-0"
+                        popupContent={
+                          <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-500">
+                            View detail
+                          </div>
+                        }
+                      >
+                        <Eye strokeWidth={1.5} className="h-4 w-4" />
+                      </TooltipPlus>
+                    </IButton>
+                    <ILinkBorderButton
+                      className="rounded-none"
+                      href={
+                        getActivityLink(at.getExternalauditmetadatasList()).link
+                      }
+                    >
+                      <TooltipPlus
+                        className="bg-white dark:bg-gray-950 border-[0.5px] rounded-[2px] px-0 py-0"
+                        popupContent={
+                          <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-500">
+                            View conversation
+                          </div>
+                        }
+                      >
+                        <ExternalLink strokeWidth={1.5} className="h-4 w-4" />
+                      </TooltipPlus>
+                    </ILinkBorderButton>
+                  </div>
+                </TableCell>
                 {visibleColumn('Status') && (
                   <TableCell>
                     <StatusIndicator state={at.getStatus()} />
                   </TableCell>
                 )}
+                {/*  */}
                 {visibleColumn('Time_Taken') && (
                   <TableCell>
                     {formatNanoToReadableMilli(at.getTimetaken())}
@@ -264,51 +303,50 @@ export function ListingPage() {
     </>
   );
 }
-
 function ActivitySource(props: { metadatas: Metadata[] }) {
-  const [acivitySource, setActivitySource] = useState('');
+  const [activitySource, setActivitySource] = useState('');
   const [activityLink, setActivityLink] = useState('');
-  const [external, setExternal] = useState(true);
+
   useEffect(() => {
-    const endpoint = getMetadataValue(props.metadatas, 'endpoint_id');
-    if (endpoint) {
-      setActivitySource(endpoint);
-      setActivityLink(`/deployment/endpoint/${endpoint}`);
-      setExternal(false);
-      return;
-    }
-
-    const assistant = getMetadataValue(props.metadatas, 'assistant_id');
-    if (assistant) {
-      setActivitySource(assistant);
-      setActivityLink(`/deployment/assistant/${assistant}`);
-      setExternal(false);
-      return;
-    }
-
-    const knowledge = getMetadataValue(props.metadatas, 'knowledge_id');
-    if (knowledge) {
-      setActivitySource(knowledge);
-      setActivityLink(`/knowledge/${knowledge}`);
-      setExternal(false);
-      return;
-    }
-
-    const source = getMetadataValue(props.metadatas, 'source');
-    if (source) {
-      setActivitySource(source);
-      setActivityLink('');
-      setExternal(false);
-      return;
-    }
+    const { source, link } = getActivityLink(props.metadatas);
+    setActivitySource(source);
+    setActivityLink(link);
   }, [props.metadatas]);
+
   return (
     <CustomLink
       to={activityLink}
       className="font-normal dark:text-blue-500 text-blue-600 hover:underline cursor-pointer text-left flex items-center space-x-1"
     >
-      <span>{acivitySource}</span>
+      <span>{activitySource}</span>
       <ExternalLink className="w-3 h-3" />
     </CustomLink>
   );
+}
+
+function getActivityLink(metadatas: Metadata[]): {
+  source: string;
+  link: string;
+} {
+  const endpoint = getMetadataValue(metadatas, 'endpoint_id');
+  if (endpoint) {
+    return { source: endpoint, link: `/deployment/endpoint/${endpoint}` };
+  }
+
+  const assistant = getMetadataValue(metadatas, 'assistant_id');
+  if (assistant) {
+    return { source: assistant, link: `/deployment/assistant/${assistant}` };
+  }
+
+  const knowledge = getMetadataValue(metadatas, 'knowledge_id');
+  if (knowledge) {
+    return { source: knowledge, link: `/knowledge/${knowledge}` };
+  }
+
+  const source = getMetadataValue(metadatas, 'source');
+  if (source) {
+    return { source, link: '' };
+  }
+
+  return { source: '', link: '' };
 }

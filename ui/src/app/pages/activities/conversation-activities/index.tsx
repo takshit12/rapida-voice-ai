@@ -8,15 +8,29 @@ import { TablePagination } from '@/app/components/base/tables/table-pagination';
 import { AssistantConversationMessage, Criteria } from '@rapidaai/react';
 import { SectionLoader } from '@/app/components/loader/section-loader';
 import { YellowNoticeBlock } from '@/app/components/container/message/notice-block';
-import { SingleTrace } from './single-trace';
-import { IButton } from '@/app/components/form/button';
-import { Download, ListFilterPlus, RotateCw } from 'lucide-react';
+import { IButton, ILinkBorderButton } from '@/app/components/form/button';
+import {
+  Download,
+  ExternalLink,
+  Eye,
+  ListFilterPlus,
+  RotateCw,
+  Telescope,
+} from 'lucide-react';
 import TooltipPlus from '@/app/components/base/tooltip-plus';
 import { AssistantTraceFilterDialog } from '@/app/components/base/modal/assistant-trace-filter-modal';
 import { useBoolean } from 'ahooks';
 import { toContentText } from '@rapidaai/react';
-import { toDate } from '@/utils/date';
-import { getTimeTakenMetric } from '@/utils/metadata';
+import {
+  formatNanoToReadableMilli,
+  toDate,
+  toHumanReadableDateTime,
+} from '@/utils/date';
+import {
+  getMetricValueOrDefault,
+  getTimeTakenMetric,
+  getTotalTokenMetric,
+} from '@/utils/metadata';
 import { Spinner } from '@/app/components/loader/spinner';
 import { PaginationButtonBlock } from '@/app/components/blocks/pagination-button-block';
 import { useConversationLogPageStore } from '@/hooks/use-conversation-log-page-store';
@@ -24,6 +38,13 @@ import { Helmet } from '@/app/components/helmet';
 import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 import { PageTitleBlock } from '@/app/components/blocks/page-title-block';
 import { ConversationTelemetryDialog } from '@/app/components/base/modal/conversation-telemetry-modal';
+import { TableCell } from '@/app/components/base/tables/table-cell';
+import { CustomLink } from '@/app/components/custom-link';
+import { cn } from '@/utils';
+import { TableRow } from '@/app/components/base/tables/table-row';
+import { StatusIndicator } from '@/app/components/indicators/status';
+import SourceIndicator from '@/app/components/indicators/source';
+import { ConversationLogDialog } from '@/app/components/base/modal/conversation-log-modal';
 
 export const ListingPage: FC<{}> = ({}) => {
   const [userId, token, projectId] = useCredential();
@@ -33,6 +54,9 @@ export const ListingPage: FC<{}> = ({}) => {
   const [isFilterOpen, { setTrue: setFilterOpen, setFalse: setFilterClose }] =
     useBoolean(false);
 
+  const [currentActivity, setCurrentActivity] =
+    useState<AssistantConversationMessage | null>(null);
+  const [showLogModal, setShowLogModal] = useState(false);
   const [criterias, setCriterias] = useState<Criteria[]>([]);
   const [isTelemetryDialogOpen, setTelemetryDialogOpen] = useState(false);
 
@@ -235,6 +259,14 @@ export const ListingPage: FC<{}> = ({}) => {
           criterias={criterias}
         />
       )}
+
+      {currentActivity && (
+        <ConversationLogDialog
+          modalOpen={showLogModal}
+          setModalOpen={setShowLogModal}
+          currentAssistantMessage={currentActivity}
+        />
+      )}
       <Helmet title="Conversation Logs" />
       <AssistantTraceFilterDialog
         modalOpen={isFilterOpen}
@@ -351,17 +383,163 @@ export const ListingPage: FC<{}> = ({}) => {
       </BluredWrapper>
       {conversationLogAction.assistantMessages.length > 0 ? (
         <ScrollableResizableTable
-          isExpandable={true}
+          isExpandable={false}
           isActionable={false}
           clms={conversationLogAction.columns.filter(x => x.visible)}
         >
           {conversationLogAction.assistantMessages.map((row, idx) => (
-            <SingleTrace
-              key={idx}
-              row={row}
-              idx={idx}
-              onClick={() => handleTraceClick(row)}
-            />
+            <TableRow key={idx} data-id={row.getId()}>
+              {conversationLogAction.visibleColumn('id') && (
+                <TableCell>{row.getMessageid().split('-')[0]}</TableCell>
+              )}
+              {conversationLogAction.visibleColumn('version') && (
+                <TableCell>vrsn_{row.getAssistantprovidermodelid()}</TableCell>
+              )}
+              {conversationLogAction.visibleColumn(
+                'assistant_conversation_id',
+              ) && (
+                <TableCell>
+                  <CustomLink
+                    to={`/deployment/assistant/${row.getAssistantid()}/sessions/${row.getAssistantconversationid()}`}
+                    className="font-normal dark:text-blue-500 text-blue-600 hover:underline cursor-pointer text-left flex items-center space-x-1"
+                  >
+                    <span>{row.getAssistantconversationid()}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </CustomLink>
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('assistant_id') && (
+                <TableCell>
+                  <CustomLink
+                    to={`/deployment/assistant/${row.getAssistantid()}`}
+                    className="font-normal dark:text-blue-500 text-blue-600 hover:underline cursor-pointer text-left flex items-center space-x-1"
+                  >
+                    <span>{row.getAssistantid()}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </CustomLink>
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('source') && (
+                <TableCell>
+                  <SourceIndicator source={row.getSource()} />
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('request') &&
+                row.getRequest() && (
+                  <TableCell>
+                    <p className="line-clamp-2">
+                      {toContentText(row.getRequest()?.getContentsList())}
+                    </p>
+                  </TableCell>
+                )}
+              {conversationLogAction.visibleColumn('response') &&
+              row.getResponse() ? (
+                <TableCell>
+                  <p className="line-clamp-2">
+                    {toContentText(row.getResponse()?.getContentsList())}
+                  </p>
+                </TableCell>
+              ) : (
+                <TableCell>
+                  <p className="line-clamp-2 opacity-65">Not available</p>
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('created_date') && (
+                <TableCell>
+                  {row.getCreateddate() &&
+                    toHumanReadableDateTime(row.getCreateddate()!)}
+                </TableCell>
+              )}
+              <TableCell>
+                <div className="divide-x dark:divide-gray-800 flex border w-fit">
+                  <IButton
+                    className="rounded-none"
+                    onClick={event => {
+                      setCurrentActivity(row);
+                      setShowLogModal(true);
+                    }}
+                  >
+                    <TooltipPlus
+                      className="bg-white dark:bg-gray-950 border-[0.5px] rounded-[2px] px-0 py-0"
+                      popupContent={
+                        <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-500">
+                          View detail
+                        </div>
+                      }
+                    >
+                      <Eye strokeWidth={1.5} className="h-4 w-4" />
+                    </TooltipPlus>
+                  </IButton>
+                  <IButton
+                    className="rounded-none"
+                    onClick={event => {
+                      handleTraceClick(row);
+                    }}
+                  >
+                    <TooltipPlus
+                      className="bg-white dark:bg-gray-950 border-[0.5px] rounded-[2px] px-0 py-0"
+                      popupContent={
+                        <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-500">
+                          View telemetry
+                        </div>
+                      }
+                    >
+                      <Telescope strokeWidth={1.5} className="h-4 w-4" />
+                    </TooltipPlus>
+                  </IButton>
+                  <ILinkBorderButton
+                    className="rounded-none"
+                    href={`/deployment/assistant/${row.getAssistantid()}/sessions/${row.getAssistantconversationid()}`}
+                  >
+                    <TooltipPlus
+                      className="bg-white dark:bg-gray-950 border-[0.5px] rounded-[2px] px-0 py-0"
+                      popupContent={
+                        <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-500">
+                          View conversation
+                        </div>
+                      }
+                    >
+                      <ExternalLink strokeWidth={1.5} className="h-4 w-4" />
+                    </TooltipPlus>
+                  </ILinkBorderButton>
+                </div>
+              </TableCell>
+              {conversationLogAction.visibleColumn('status') && (
+                <TableCell>
+                  <StatusIndicator state={row.getStatus()} />
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('time_taken') && (
+                <TableCell>
+                  {formatNanoToReadableMilli(
+                    getTimeTakenMetric(row.getMetricsList()),
+                  )}
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('total_token') && (
+                <TableCell>
+                  {getTotalTokenMetric(row.getMetricsList())}
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('user_feedback') && (
+                <TableCell>
+                  {getMetricValueOrDefault(
+                    row.getMetricsList(),
+                    'custom.feedback',
+                    '__',
+                  )}
+                </TableCell>
+              )}
+              {conversationLogAction.visibleColumn('user_text_feedback') && (
+                <TableCell>
+                  {getMetricValueOrDefault(
+                    row.getMetricsList(),
+                    'custom.feedback_text',
+                    '--',
+                  )}
+                </TableCell>
+              )}
+            </TableRow>
           ))}
         </ScrollableResizableTable>
       ) : (

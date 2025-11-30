@@ -2305,6 +2305,9 @@
   .min-h-52 {
     min-height: calc(var(--spacing) * 52);
   }
+  .min-h-\[20px\] {
+    min-height: 20px;
+  }
   .min-h-\[45px\] {
     min-height: 45px;
   }

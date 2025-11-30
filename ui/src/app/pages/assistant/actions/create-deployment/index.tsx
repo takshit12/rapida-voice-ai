@@ -18,6 +18,7 @@ import {
   ChevronUp,
   Code,
   ExternalLink,
+  Eye,
   Globe,
   Info,
   Phone,
@@ -37,7 +38,7 @@ import {
   GetAssistantRequest,
 } from '@rapidaai/react';
 import toast from 'react-hot-toast/headless';
-import { CONFIG, connectionConfig } from '@/configs';
+import { connectionConfig } from '@/configs';
 import { ProviderPill } from '@/app/components/pill/provider-model-pill';
 import { AnimatePresence, motion } from 'framer-motion';
 import { PlusIcon } from '@/app/components/Icon/plus';
@@ -49,7 +50,9 @@ import { CodeHighlighting } from '@/app/components/code-highlighting';
 import { useRapidaStore } from '@/hooks';
 import { cn } from '@/utils';
 import { AssistantPhoneCallDeploymentDialog } from '@/app/components/base/modal/assistant-phone-call-deployment-modal';
-
+import { AssistantDebugDeploymentDialog } from '@/app/components/base/modal/assistant-debug-deployment-modal';
+import { AssistantWebWidgetlDeploymentDialog } from '@/app/components/base/modal/assistant-web-widget-deployment-modal';
+import { AssistantApiDeploymentDialog } from '@/app/components/base/modal/assistant-api-deployment-modal';
 export const ConfigureAssistantDeploymentPage = () => {
   /**
    * assistant ID
@@ -138,6 +141,30 @@ export const ConfigureAssistantDeploymentPage = () => {
           modalOpen={isPhoneExpanded}
           setModalOpen={setIsPhoneExpanded}
           deployment={assistant?.getPhonedeployment()!}
+        />
+      )}
+
+      {assistant?.getDebuggerdeployment() && (
+        <AssistantDebugDeploymentDialog
+          modalOpen={isExpanded}
+          setModalOpen={setIsExpanded}
+          deployment={assistant?.getDebuggerdeployment()!}
+        />
+      )}
+
+      {assistant?.getWebplugindeployment() && (
+        <AssistantWebWidgetlDeploymentDialog
+          modalOpen={isWidgetExpanded}
+          setModalOpen={setIsWidgetExpanded}
+          deployment={assistant?.getWebplugindeployment()!}
+        />
+      )}
+
+      {assistant?.getApideployment() && (
+        <AssistantApiDeploymentDialog
+          modalOpen={isApiExpanded}
+          setModalOpen={setIsApiExpanded}
+          deployment={assistant?.getApideployment()!}
         />
       )}
       <Helmet title="Assistant deployment" />
@@ -249,11 +276,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                   <ExternalLink className="w-4 h-4 " />
                 </IButton>
                 <IButton onClick={() => setIsExpanded(!isExpanded)}>
-                  {isExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  <Eye className="w-4 h-4" strokeWidth={1.5} />
                 </IButton>
               </div>
             </div>
@@ -314,26 +337,6 @@ export const ConfigureAssistantDeploymentPage = () => {
                 </div>
               </div>
             </div>
-            <AnimatePresence>
-              <motion.div
-                initial={{ height: 0 }} // h-10 is 0px in most Tailwind configurations
-                animate={{ height: isExpanded ? 'auto' : 0 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 divide-x border-t overflow-hidden text-muted"
-              >
-                <VoiceInput
-                  deployment={assistant
-                    .getDebuggerdeployment()
-                    ?.getInputaudio()}
-                />
-
-                <VoiceOutput
-                  deployment={assistant
-                    .getDebuggerdeployment()
-                    ?.getOutputaudio()}
-                />
-              </motion.div>
-            </AnimatePresence>
           </div>
         )}
         {/* phone */}
@@ -356,11 +359,8 @@ export const ConfigureAssistantDeploymentPage = () => {
                   <Plus className="w-4 h-4 " />
                 </IButton>
                 <IButton onClick={() => setIsApiExpanded(!isApiExpanded)}>
-                  {isApiExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  <span className="mr-2">Instruction</span>
+                  <Code className="w-4 h-4 " />
                 </IButton>
               </div>
             </div>
@@ -426,22 +426,6 @@ export const ConfigureAssistantDeploymentPage = () => {
                 </div>
               </div>
             </div>
-            <AnimatePresence>
-              <motion.div
-                initial={{ height: 0 }} // h-10 is 40px in most Tailwind configurations
-                animate={{ height: isApiExpanded ? 'auto' : 0 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 divide-x border-t overflow-hidden text-muted"
-              >
-                <VoiceInput
-                  deployment={assistant.getApideployment()?.getInputaudio()}
-                />
-
-                <VoiceOutput
-                  deployment={assistant.getApideployment()?.getOutputaudio()}
-                />
-              </motion.div>
-            </AnimatePresence>
           </div>
         )}
         {assistant?.hasPhonedeployment() && (
@@ -555,20 +539,9 @@ export const ConfigureAssistantDeploymentPage = () => {
                   <span className="mr-2">Edit Widget</span>
                   <Plus className="w-4 h-4 " />
                 </IButton>
-                <IButton
-                  onClick={() => {
-                    setIsWidgetCodeExpanded(!isWidgetCodeExpanded);
-                  }}
-                >
+                <IButton onClick={() => setIsWidgetExpanded(!isWidgetExpanded)}>
                   <span className="mr-2">Instruction</span>
                   <Code className="w-4 h-4 " />
-                </IButton>
-                <IButton onClick={() => setIsWidgetExpanded(!isWidgetExpanded)}>
-                  {isWidgetExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
                 </IButton>
               </div>
             </div>
@@ -632,66 +605,6 @@ export const ConfigureAssistantDeploymentPage = () => {
                 </div>
               </div>
             </div>
-            <AnimatePresence>
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{
-                  height: isWidgetCodeExpanded ? 'auto' : 0,
-                  opacity: isWidgetCodeExpanded ? 1 : 0,
-                }}
-                transition={{ duration: 0.3 }}
-                className={cn(
-                  isWidgetCodeExpanded && 'space-y-6 p-4 border-t text-muted',
-                )}
-              >
-                <FieldSet>
-                  <div className="text-muted-foreground">
-                    Add the Rapida.js script to your HTML
-                  </div>
-                  <CodeHighlighting code='<script src="https://cdn-01.rapida.ai/public/scripts/app.min.js" defer></script>'></CodeHighlighting>
-                </FieldSet>
-                <FieldSet>
-                  <div className="text-muted-foreground">
-                    Add the chatbot configuration script
-                  </div>
-                  <CodeHighlighting
-                    code={`
-                        <script>window.chatbotConfig = {
-        theme: {
-          color: "black",
-        },
-        assistant_id: "2139456643765633024",
-        token:
-          "",
-        user: {
-          id: "ayan-global-user",
-          name: "Guest",
-        }
-      }</script>`.trim()}
-                  ></CodeHighlighting>
-                </FieldSet>
-              </motion.div>
-            </AnimatePresence>
-            <AnimatePresence>
-              <motion.div
-                initial={{ height: 0 }} // h-10 is 0px in most Tailwind configurations
-                animate={{ height: isWidgetExpanded ? 'auto' : 0 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 divide-x border-t overflow-hidden"
-              >
-                <VoiceInput
-                  deployment={assistant
-                    .getWebplugindeployment()
-                    ?.getInputaudio()}
-                />
-
-                <VoiceOutput
-                  deployment={assistant
-                    .getWebplugindeployment()
-                    ?.getOutputaudio()}
-                />
-              </motion.div>
-            </AnimatePresence>
           </div>
         )}
       </div>
