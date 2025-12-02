@@ -204,7 +204,7 @@ down: down-all
 
 build-all:
 	@echo "Building all services..."
-	$(COMPOSE) build ui web-api integration-api endpoint-api
+	$(COMPOSE) build ui web-api integration-api endpoint-api document-api assistant-api
 	@echo "✓ All services built"
 
 build-ui:
@@ -239,7 +239,7 @@ build-endpoint:
 
 rebuild-all:
 	@echo "Rebuilding all services (no cache)..."
-	$(COMPOSE) build --no-cache ui web-api integration-api endpoint-api
+	$(COMPOSE) build --no-cache ui web-api integration-api endpoint-api document-api assistant-api
 	@echo "✓ All services rebuilt"
 
 rebuild-web:
@@ -456,3 +456,39 @@ full: build-all up-all
 
 # Development mode - start with rebuild
 dev: rebuild-all up-all logs-all
+
+
+
+# ============================================================================
+# RUN WITHOUT DOCKER TARGETS
+# ============================================================================
+
+
+
+run-document:
+	@echo "Running document-api without Docker..."
+	PYTHONPATH=api/document-api uvicorn app.main:app --host 0.0.0.0 --port 9010
+
+run-assistant:
+	@echo "Running assistant-api without Docker..."
+	go run cmd/assistant/assistant.go
+
+run-web:
+	@echo "Running web-api without Docker..."
+	go run cmd/web/web.go
+
+run-endpoint:
+	@echo "Running endpoint-api without Docker..."
+	go run cmd/endpoint/endpoint.go
+
+run-integration:
+	@echo "Running integration-api without Docker..."
+	go run cmd/integration/integration.go
+	
+run-ui:
+	@echo "Running UI with yarn start in ui folder..."
+	cd ui && yarn start
+
+# Add appropriate aliases for clarity
+run-{service-name}:
+	@echo "Please specify a valid service name: document-api, assistant, web, endpoint, or integration."

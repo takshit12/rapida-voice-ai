@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import assistant_deployment_pb2 as assistant__deployment__pb2
+import app.bridges.artifacts.protos.assistant_deployment_pb2 as assistant__deployment__pb2
 
 GRPC_GENERATED_VERSION = '1.72.1'
 GRPC_VERSION = grpc.__version__

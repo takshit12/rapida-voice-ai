@@ -52,14 +52,8 @@ class ModelManager:
 
     # model specific parameters
     model_provider_name: str
-    model_provider_id: int
     model_parameters: Optional[Dict] = {}
 
-    @property
-    def provider_id(self):
-        if self.model_provider_id:
-            return self.model_provider_id
-        raise ModelCurrentlyNotSupportError("no provider id, probably not initialize")
 
     def __init__(
         self,
@@ -69,7 +63,6 @@ class ModelManager:
         organization_id: int,
         #
         model_provider_name: str,
-        model_provider_id: int,
         model_parameters: Optional[Dict] = {},
         references: Optional[Dict] = {},
     ):
@@ -82,16 +75,13 @@ class ModelManager:
         self.project_id = project_id
         self.organization_id = organization_id
         self.model_provider_name = model_provider_name
-        self.model_provider_id = model_provider_id
         self.model_parameters = model_parameters
 
     async def _fetch_credential(self, credential_id: int) -> VaultCredential:
         """
 
         Args:
-            provider_id:
-            project_id:
-            organization_id:
+            credential_id:
 
         Returns:
 

@@ -35,8 +35,6 @@ DROP TABLE IF EXISTS assistant_webhook_logs CASCADE;
 DROP TABLE IF EXISTS assistant_webhooks CASCADE;
 DROP TABLE IF EXISTS assistant_whatsapp_deployments CASCADE;
 DROP TABLE IF EXISTS assistants CASCADE;
-DROP TABLE IF EXISTS knowledge_collections CASCADE;
-DROP TABLE IF EXISTS knowledge_document_embeddings CASCADE;
 DROP TABLE IF EXISTS knowledge_document_process_rules CASCADE;
 DROP TABLE IF EXISTS knowledge_document_segments CASCADE;
 DROP TABLE IF EXISTS knowledge_documents CASCADE;

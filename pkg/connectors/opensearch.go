@@ -469,6 +469,9 @@ func NewOpenSearchConnector(config *configs.OpenSearchConfig, logger commons.Log
 
 // generating connection string from configuration
 func (openSearch *openSearchConnector) connectionString() string {
+	if openSearch.cfg.Port != nil {
+		return fmt.Sprintf("%s://%s:%d", openSearch.cfg.Schema, openSearch.cfg.Host, *openSearch.cfg.Port)
+	}
 	return fmt.Sprintf("%s://%s", openSearch.cfg.Schema, openSearch.cfg.Host)
 }
 

@@ -525,8 +525,9 @@ CREATE TABLE public.assistant_tags (
     updated_by bigint NOT NULL
 );
 
-CREATE INDEX idx_assistant_tags_assistant_id
-    ON assistant_tags (assistant_id);
+
+ALTER TABLE public.assistant_tags
+ADD CONSTRAINT uq_assistant_tags_assistant_id UNIQUE (assistant_id);
 
 
 CREATE TABLE public.assistant_tool_logs (
@@ -700,24 +701,6 @@ CREATE TABLE public.assistants (
 CREATE INDEX idx_assistants_on_organization_id ON public.assistants USING btree (organization_id);
 CREATE INDEX idx_assistants_on_project_id ON public.assistants USING btree (project_id);
 CREATE INDEX idx_assistants_on_assistant_provider_id ON public.assistants USING btree (assistant_provider_id);
-
-
-CREATE SEQUENCE public.knowledge_document_embeddings_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-CREATE TABLE public.knowledge_document_embeddings (
-    id integer DEFAULT nextval('public.knowledge_document_embeddings_id_seq'::regclass) NOT NULL,
-    hash character varying(64) NOT NULL,
-    embedding bytea NOT NULL,
-    embedding_model_provider_name character varying(200) NOT NULL,
-    created_date timestamp without time zone DEFAULT now() NOT NULL,
-    updated_date timestamp without time zone,
-    base64 text
-);
 
 CREATE TABLE public.knowledge_document_process_rules (
     id bigint PRIMARY KEY,

@@ -101,7 +101,6 @@ class IndexingRunner:
             project_id=knowledge.project_id,
             organization_id=knowledge.organization_id,
             model_provider_name=knowledge.embedding_model_provider_name,
-            model_provider_id=knowledge.embedding_model_provider_id,
             model_parameters=self.knowledge_service.get_knowledge_model_options(knowledge.id),
             references={
                 "knowledge_id": self.knowledge.id,
@@ -179,18 +178,7 @@ class IndexingRunner:
 
         return text_docs
 
-    # async def _model_manager(self) -> ModelManager:
-    #     # The above code is creating an instance of `ModelManagerFactory` with three service clients
-    #     # (`providerClient`, `vaultClient`, `integrationClient`) as arguments. It then calls the
-    #     # `get_model_manager` method on this instance with various parameters such as `provider_id`,
-    #     # `provider_model_id`, `project_id`, `organization_id`, and `docs`. This method is likely responsible
-    #     # for retrieving a model manager object based on the provided parameters.
-    #     return await self.model_manager.initialize(
-    #         model_provider_id=self.knowledge.embedding_model_provider_id,
-    #         model_provider_name=self.knowledge.embedding_model_provider_name,
-    #         project_id=self.knowledge.project_id,
-    #         organization_id=self.knowledge.organization_id,
-    #     )
+
 
     async def _load(
             self,

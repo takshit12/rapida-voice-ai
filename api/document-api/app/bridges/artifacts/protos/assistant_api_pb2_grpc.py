@@ -3,13 +3,13 @@
 import grpc
 import warnings
 
-import assistant_analysis_pb2 as assistant__analysis__pb2
-import assistant_api_pb2 as assistant__api__pb2
-import assistant_knowledge_pb2 as assistant__knowledge__pb2
-import assistant_provider_pb2 as assistant__provider__pb2
-import assistant_tool_pb2 as assistant__tool__pb2
-import assistant_webhook_pb2 as assistant__webhook__pb2
-import common_pb2 as common__pb2
+import app.bridges.artifacts.protos.assistant_analysis_pb2 as assistant__analysis__pb2
+import app.bridges.artifacts.protos.assistant_api_pb2 as assistant__api__pb2
+import app.bridges.artifacts.protos.assistant_knowledge_pb2 as assistant__knowledge__pb2
+import app.bridges.artifacts.protos.assistant_provider_pb2 as assistant__provider__pb2
+import app.bridges.artifacts.protos.assistant_tool_pb2 as assistant__tool__pb2
+import app.bridges.artifacts.protos.assistant_webhook_pb2 as assistant__webhook__pb2
+import app.bridges.artifacts.protos.common_pb2 as common__pb2
 
 GRPC_GENERATED_VERSION = '1.72.1'
 GRPC_VERSION = grpc.__version__

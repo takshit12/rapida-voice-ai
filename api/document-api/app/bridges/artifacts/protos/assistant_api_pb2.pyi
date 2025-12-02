@@ -1,11 +1,11 @@
 from google.protobuf import timestamp_pb2 as _timestamp_pb2
-import common_pb2 as _common_pb2
-import assistant_deployment_pb2 as _assistant_deployment_pb2
-import assistant_tool_pb2 as _assistant_tool_pb2
-import assistant_analysis_pb2 as _assistant_analysis_pb2
-import assistant_webhook_pb2 as _assistant_webhook_pb2
-import assistant_knowledge_pb2 as _assistant_knowledge_pb2
-import assistant_provider_pb2 as _assistant_provider_pb2
+import app.bridges.artifacts.protos.common_pb2 as _common_pb2
+import app.bridges.artifacts.protos.assistant_deployment_pb2 as _assistant_deployment_pb2
+import app.bridges.artifacts.protos.assistant_tool_pb2 as _assistant_tool_pb2
+import app.bridges.artifacts.protos.assistant_analysis_pb2 as _assistant_analysis_pb2
+import app.bridges.artifacts.protos.assistant_webhook_pb2 as _assistant_webhook_pb2
+import app.bridges.artifacts.protos.assistant_knowledge_pb2 as _assistant_knowledge_pb2
+import app.bridges.artifacts.protos.assistant_provider_pb2 as _assistant_provider_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message

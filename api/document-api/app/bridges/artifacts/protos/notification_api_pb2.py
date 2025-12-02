@@ -23,7 +23,7 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
-import common_pb2 as common__pb2
+import app.bridges.artifacts.protos.common_pb2 as common__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16notification-api.proto\x12\x10notification_api\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xe0\x01\n\x13NotificationSetting\x12\x0e\n\x02id\x18\x01 \x01(\x04\x42\x02\x30\x01\x12\x12\n\nauthUserId\x18\x02 \x01(\x04\x12\x0f\n\x07\x63hannel\x18\x03 \x01(\t\x12\x11\n\teventType\x18\x04 \x01(\t\x12\x0f\n\x07\x65nabled\x18\x05 \x01(\x08\x12\x0e\n\x06status\x18\x08 \x01(\t\x12/\n\x0b\x63reatedDate\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0bupdatedDate\x18\x0b \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"[\n UpdateNotificationSettingRequest\x12\x37\n\x08settings\x18\x01 \x03(\x0b\x32%.notification_api.NotificationSetting\"\x1f\n\x1dGetNotificationSettingRequest\"\x88\x01\n\x1bNotificationSettingResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x33\n\x04\x64\x61ta\x18\x03 \x03(\x0b\x32%.notification_api.NotificationSetting\x12\x15\n\x05\x65rror\x18\x04 \x01(\x0b\x32\x06.Error2\x90\x02\n\x13NotificationService\x12~\n\x19UpdateNotificationSetting\x12\x32.notification_api.UpdateNotificationSettingRequest\x1a-.notification_api.NotificationSettingResponse\x12y\n\x17GetNotificationSettting\x12/.notification_api.GetNotificationSettingRequest\x1a-.notification_api.NotificationSettingResponseB\x1cZ\x1agithub.com/rapidaai/protosb\x06proto3')

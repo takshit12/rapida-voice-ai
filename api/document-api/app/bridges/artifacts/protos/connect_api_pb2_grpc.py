@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import connect_api_pb2 as connect__api__pb2
+import app.bridges.artifacts.protos.connect_api_pb2 as connect__api__pb2
 
 GRPC_GENERATED_VERSION = '1.72.1'
 GRPC_VERSION = grpc.__version__

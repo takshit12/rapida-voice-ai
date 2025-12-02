@@ -67,9 +67,6 @@ class Knowledge(Audited):
     organization_id = Column(BigInteger, nullable=False)
 
     embedding_model_provider_name = Column(BigInteger, nullable=False)
-    embedding_model_provider_id = Column(BigInteger, nullable=False)
-    # migrate with following
-    # f'vs__{self.organization_id}__{self.project_id}__{self.knowledge_id}__{provider_model_id}'
     storage_namespace = Column(String(400), nullable=False)
 
 
@@ -240,19 +237,3 @@ class KnowledgeDocumentSegment(Audited):
     error = Column(Text, nullable=True)
     stopped_at = Column(DateTime, nullable=True)
 
-
-class KnowledgeDocumentEmbedding(Audited):
-    __tablename__ = 'knowledge_document_embeddings'
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    hash = Column(String(64), nullable=False)
-    base64 = Column(Text, nullable=False)
-    embedding = Column(LargeBinary, nullable=False)
-    embedding_model_name = Column(String(100), nullable=False)
-    embedding_model_provider_name = Column(String(100), nullable=False)
-
-    def set_embedding(self, embedding_data: list[float]):
-        self.embedding = pickle.dumps(embedding_data, protocol=pickle.HIGHEST_PROTOCOL)
-
-    def get_embedding(self) -> list[float]:
-        return pickle.loads(self.embedding)

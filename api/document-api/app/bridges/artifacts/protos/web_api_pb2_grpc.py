@@ -3,8 +3,8 @@
 import grpc
 import warnings
 
-import common_pb2 as common__pb2
-import web_api_pb2 as web__api__pb2
+import app.bridges.artifacts.protos.common_pb2 as common__pb2
+import app.bridges.artifacts.protos.web_api_pb2 as web__api__pb2
 
 GRPC_GENERATED_VERSION = '1.72.1'
 GRPC_VERSION = grpc.__version__

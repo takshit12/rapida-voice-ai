@@ -5,13 +5,14 @@ Author: Prashant Srivastav <prashant@rapida.ai>
 Licensed under GPL-2.0 with Rapida Additional Terms.
 See LICENSE.md for details or contact sales@rapida.ai for commercial use.
 """
+import logging
 import os
 import shutil
 from collections.abc import Generator
 
 from app.configs.storage_config import AssetStoreConfig
 from app.storage.file_storage.base_storage import BaseStorage
-
+_log = logging.getLogger("app.storage.file_storage.local_storage")
 
 class LocalStorage(BaseStorage):
     """Implementation for local storage.
@@ -28,6 +29,7 @@ class LocalStorage(BaseStorage):
         else:
             filename = self.folder + '/' + filename
 
+        filename = os.path.expanduser(filename)
         folder = os.path.dirname(filename)
         os.makedirs(folder, exist_ok=True)
 
@@ -39,7 +41,8 @@ class LocalStorage(BaseStorage):
             filename = self.folder + filename
         else:
             filename = self.folder + '/' + filename
-
+        
+        filename = os.path.expanduser(filename)
         if not os.path.exists(filename):
             raise FileNotFoundError("File not found")
 
@@ -54,7 +57,8 @@ class LocalStorage(BaseStorage):
                 filename = self.folder + filename
             else:
                 filename = self.folder + '/' + filename
-
+            
+            filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 raise FileNotFoundError("File not found")
 
@@ -69,6 +73,8 @@ class LocalStorage(BaseStorage):
             filename = self.folder + filename
         else:
             filename = self.folder + '/' + filename
+        
+        filename = os.path.expanduser(filename)
 
         if not os.path.exists(filename):
             raise FileNotFoundError("File not found")
@@ -80,7 +86,7 @@ class LocalStorage(BaseStorage):
             filename = self.folder + filename
         else:
             filename = self.folder + '/' + filename
-
+        filename = os.path.expanduser(filename)
         return os.path.exists(filename)
 
     def delete(self, filename):
@@ -88,5 +94,6 @@ class LocalStorage(BaseStorage):
             filename = self.folder + filename
         else:
             filename = self.folder + '/' + filename
+        filename = os.path.expanduser(filename)
         if os.path.exists(filename):
             os.remove(filename)

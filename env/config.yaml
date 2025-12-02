@@ -9,42 +9,30 @@ authentication_config:
     secret_key: "rpd_pks"
 
 elastic_search:
-  host: "search-rapida-search-01-5k7cwwoptncgdagfvbqer7j3g4.aos.ap-south-1.on.aws"
-  port: 443
-  auth:
-    user: "rapida_username"
-    password: "BigBang_rapida_2023"
-  scheme: "https"
+  host: "localhost"
+  port: 9200
+  scheme: "http"
   max_connection: 5
 
 postgres:
   host: "localhost"
   port: 5432
   auth:
-    password: "root"
-    user: "prashant.srivastav"
-  db: "workflow_db"
-  max_connection: 1
-  ideal_connection: 1
+    password: "rapida_db_password"
+    user: "rapida_user"
+  db: "assistant_db"
+  max_connection: 10
+  ideal_connection: 5
 
 internal_service:
   web_host: "localhost:9001"
   integration_host: "localhost:9004"
-  provider_host: "localhost:9001"
-  experiment_host: "localhost:9003"
   endpoint_host: "localhost:9005"
-  webhook_host: "localhost:9006"
-  workflow_host: "localhost:9006"
+  assistant_host: "localhost:9006"
 
 storage:
-  # storage_type: "local"
-  # storage_path_prefix: "/opt/apps/assets"
-  storage_type: "s3"
-  storage_path_prefix: "development-assets-01"
-  auth:
-    region: "ap-south-1"
-    access_key_id: "AKIAWFZCROPHVZP62OX6"
-    secret_access_key: "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"
+  storage_type: "local"
+  storage_path_prefix: "~/rapida-data/assets/workflow"
 
 celery:
   broker: "redis://localhost:6379/0"

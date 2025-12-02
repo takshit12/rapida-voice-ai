@@ -6,11 +6,11 @@ import (
 
 	knowledge_client "github.com/rapidaai/pkg/clients/workflow"
 	"github.com/rapidaai/pkg/utils"
-	protos "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 
 	web_api "github.com/rapidaai/api/web-api/api"
 	config "github.com/rapidaai/api/web-api/config"
-	commons "github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/types"
 )
@@ -43,7 +43,6 @@ func NewKnowledgeGRPC(config *config.WebAppConfig, logger commons.Logger, postgr
 
 // GetAllKnowledgeDocumentSegment implements lexatic_backend.KnowledgeServiceServer.
 func (knowledge *webKnowledgeGRPCApi) GetAllKnowledgeDocumentSegment(c context.Context, iRequest *protos.GetAllKnowledgeDocumentSegmentRequest) (*protos.GetAllKnowledgeDocumentSegmentResponse, error) {
-	knowledge.logger.Debugf("GetAllKnowledgeDocumentSegment from grpc with requestPayload %v, %v", iRequest, c)
 	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
@@ -53,7 +52,6 @@ func (knowledge *webKnowledgeGRPCApi) GetAllKnowledgeDocumentSegment(c context.C
 }
 
 func (knowledge *webKnowledgeGRPCApi) GetKnowledge(c context.Context, iRequest *protos.GetKnowledgeRequest) (*protos.GetKnowledgeResponse, error) {
-	knowledge.logger.Debugf("GetKnowledge from grpc with requestPayload %v, %v", iRequest, c)
 	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
@@ -77,7 +75,6 @@ func (knowledge *webKnowledgeGRPCApi) GetKnowledge(c context.Context, iRequest *
 /*
  */
 func (knowledge *webKnowledgeGRPCApi) GetAllKnowledge(c context.Context, iRequest *protos.GetAllKnowledgeRequest) (*protos.GetAllKnowledgeResponse, error) {
-	knowledge.logger.Debugf("GetAllKnowledge from grpc with requestPayload %v, %v", iRequest, c)
 	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
@@ -100,7 +97,6 @@ func (knowledge *webKnowledgeGRPCApi) GetAllKnowledge(c context.Context, iReques
 }
 
 func (knowledge *webKnowledgeGRPCApi) CreateKnowledge(c context.Context, iRequest *protos.CreateKnowledgeRequest) (*protos.CreateKnowledgeResponse, error) {
-	knowledge.logger.Debugf("Create knowledge from grpc with requestPayload %v, %v", iRequest, c)
 	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(c)
 	if !isAuthenticated {
 		knowledge.logger.Errorf("unauthenticated request for get actvities")
@@ -121,7 +117,6 @@ func (knowledgeGRPCApi *webKnowledgeGRPCApi) CreateKnowledgeTag(ctx context.Cont
 }
 
 func (knowledgeGRPCApi *webKnowledgeGRPCApi) UpdateKnowledgeDetail(ctx context.Context, iRequest *protos.UpdateKnowledgeDetailRequest) (*protos.GetKnowledgeResponse, error) {
-	knowledgeGRPCApi.logger.Debugf("Create knowledge provider model request %v, %v", iRequest, ctx)
 	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
 	if !isAuthenticated {
 		knowledgeGRPCApi.logger.Errorf("unauthenticated request to create knowledge tag")
@@ -131,7 +126,6 @@ func (knowledgeGRPCApi *webKnowledgeGRPCApi) UpdateKnowledgeDetail(ctx context.C
 }
 
 func (knowledgeGRPCApi *webKnowledgeGRPCApi) CreateKnowledgeDocument(ctx context.Context, iRequest *protos.CreateKnowledgeDocumentRequest) (*protos.CreateKnowledgeDocumentResponse, error) {
-	knowledgeGRPCApi.logger.Debugf("Create knowledge document request request %+v", iRequest)
 	iAuth, isAuthenticated := types.GetAuthPrincipleGPRC(ctx)
 	if !isAuthenticated {
 		knowledgeGRPCApi.logger.Errorf("unauthenticated request to create knowledge document")
@@ -142,7 +136,6 @@ func (knowledgeGRPCApi *webKnowledgeGRPCApi) CreateKnowledgeDocument(ctx context
 
 // GetAllKnowledgeDocument implements lexatic_backend.KnowledgeServiceServer.
 func (knowledgeGRPCApi *webKnowledgeGRPCApi) GetAllKnowledgeDocument(ctx context.Context, iRequest *protos.GetAllKnowledgeDocumentRequest) (*protos.GetAllKnowledgeDocumentResponse, error) {
-	knowledgeGRPCApi.logger.Debugf("Get all knowledge document request %v, %v", iRequest, ctx)
 	iAuth, isAuthenticated := types.GetSimplePrincipleGRPC(ctx)
 	if !isAuthenticated {
 		knowledgeGRPCApi.logger.Errorf("unauthenticated request to get all knowledge document")

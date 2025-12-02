@@ -32,7 +32,7 @@ internal_service:
 
 storage:
   storage_type: "local"
-  storage_path_prefix: "/opt/apps/assets"
+  storage_path_prefix: "/app/rapida-data/assets/workflow"
 
 knowledge_extractor_config:
   chunking_technique:

@@ -15,3 +15,11 @@ python3 -m grpc.tools.protoc \
     --grpc_python_out=./api/document-api/app/bridges/artifacts/protos \
     ./protos/artifacts/*.proto
 
+
+find "api/document-api/app/bridges/artifacts/protos/" \
+  -type f \( -name "*.py" -o -name "*.pyi" \) \
+  -exec sed -i.bak -E \
+    '/^import [a-zA-Z0-9_]+_pb2/ s|import ([a-zA-Z0-9_]+_pb2)|import app.bridges.artifacts.protos.\1|' {} +
+
+# Remove backup files
+find "api/document-api/app/bridges/artifacts/protos/" -name "*.bak" -delete

@@ -341,13 +341,13 @@ func (knowledge *knowledgeDocumentService) GetAllDocumentSegment(
 
 	searchBodyJSON, err := json.Marshal(query)
 	if err != nil {
-		knowledge.logger.Errorf("Error marshaling search body: %s", err)
+		knowledge.logger.Errorf("Error marshaling search body: %v", err)
 		return 0, nil, err
 	}
 
 	result := knowledge.opensearch.SearchWithCount(ctx, indexs, string(searchBodyJSON))
 	if result.Err != nil {
-		knowledge.logger.Errorf("Error while searching opensearch: %s", err)
+		knowledge.logger.Errorf("Error while searching opensearch: %v", err)
 		return 0, nil, err
 	}
 

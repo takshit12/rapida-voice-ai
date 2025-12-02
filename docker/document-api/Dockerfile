@@ -48,7 +48,7 @@ USER rapida-app
 
 # Copy app code
 COPY --chown=rapida-app:rapida-app api/document-api/app ./app
-COPY --chown=rapida-app:rapida-app docker/document-api/config.yaml ./config.yaml
+COPY --chown=rapida-app:rapida-app docker/document-api/config.yaml ./env/config.yaml
 
 EXPOSE 9010
 
