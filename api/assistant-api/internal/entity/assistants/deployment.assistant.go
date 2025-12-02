@@ -127,8 +127,6 @@ type AssistantApiDeployment struct {
  */
 type AssistantDebuggerDeployment struct {
 	AssistantDeploymentBehavior
-
-	Icon       string                    `json:"icon" gorm:"type:string;size:50;not null;"`
 	InputAudio *AssistantDeploymentAudio `json:"inputAudio"  gorm:"foreignKey:AssistantDeploymentId"`
 	OuputAudio *AssistantDeploymentAudio `json:"outputAudio"  gorm:"foreignKey:AssistantDeploymentId"`
 }

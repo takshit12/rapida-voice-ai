@@ -8,6 +8,7 @@ import (
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/requests/customizers"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
 	internal_assistant_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry/assistant"
+	internal_assistant_telemetry_exporters "github.com/rapidaai/api/assistant-api/internal/telemetry/assistant/exporters"
 
 	internal_agent_embeddings "github.com/rapidaai/api/assistant-api/internal/agents/embeddings"
 	internal_agent_rerankers "github.com/rapidaai/api/assistant-api/internal/agents/rerankers"
@@ -139,11 +140,11 @@ func NewGenericRequestor(
 		integrationClient: integration_client.NewIntegrationServiceClientGRPC(&config.AppConfig, logger, redis),
 
 		//
-		tracer: internal_assistant_telemetry.NewInMemoryTracer(logger), // internal_assistant_telemetry_exporters.NewLoggingAssistantTraceExporter(logger),
-		// internal_assistant_telemetry_exporters.NewOpensearchAssistantTraceExporter(
-		// 	logger,
-		// 	&config.AppConfig, opensearch,
-		// ),
+		tracer: internal_assistant_telemetry.NewInMemoryTracer(logger, internal_assistant_telemetry_exporters.NewLoggingAssistantTraceExporter(logger),
+			internal_assistant_telemetry_exporters.NewOpensearchAssistantTraceExporter(
+				logger,
+				&config.AppConfig, opensearch,
+			)),
 
 		recorder:          internal_adapter_request_customizers.NewRecorder(logger),
 		messaging:         internal_adapter_request_customizers.NewMessaging(logger),
