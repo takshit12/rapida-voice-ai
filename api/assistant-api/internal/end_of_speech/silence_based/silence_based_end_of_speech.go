@@ -44,7 +44,6 @@ func (a *silenceBasedEndOfSpeech) Name() string {
 }
 
 func (alyzer *silenceBasedEndOfSpeech) Analyze(ctx context.Context, msg internal_end_of_speech.EndOfSpeechInput) error {
-	alyzer.logger.Infof("silenceBasedEndOfSpeech: analyze %s", msg.GetMessage())
 	switch input := msg.(type) {
 	case *internal_end_of_speech.UserEndOfSpeechInput:
 		alyzer.triggerExtension(ctx, input.GetMessage(), alyzer.thresholdDuration)
@@ -73,11 +72,6 @@ func (a *silenceBasedEndOfSpeech) handleSTTInput(ctx context.Context, input *int
 	if normalizeMessage(sActivity.GetMessage()) != normalizeMessage(input.GetMessage()) {
 		return a.triggerExtension(ctx, input.GetMessage(), a.thresholdDuration)
 	}
-	// skip in case of current message is complete of previour partial message
-	a.logger.Infof("silenceBasedEndOfSpeech: Saving time Partial Message %s completed %v", sActivity.GetMessage(), sActivity.IsComplete)
-	a.logger.Infof("silenceBasedEndOfSpeech: Saving time Complete Message %s completed %v", input.GetMessage(), input.IsComplete)
-	a.logger.Infof("silenceBasedEndOfSpeech: Saving time from utterance %d", a.thresholdDuration)
-	// no saving
 	adjustedThreshold := a.thresholdDuration - 200
 	if adjustedThreshold < 0 {
 		adjustedThreshold = 100

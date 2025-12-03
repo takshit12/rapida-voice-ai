@@ -252,7 +252,6 @@ func (eService *assistantService) Get(ctx context.Context,
 					}).
 					Where("assistant_id = ?", assistantId).First(&deployment)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant api deployment with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantApiDeployment = deployment
@@ -276,7 +275,6 @@ func (eService *assistantService) Get(ctx context.Context,
 					}).
 					First(&deployment)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant debugger deployment with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantDebuggerDeployment = deployment
@@ -299,7 +297,6 @@ func (eService *assistantService) Get(ctx context.Context,
 					}).
 					Where("assistant_id = ?", assistantId).First(&deployment)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant webplugin deployment with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantWebPluginDeployment = deployment
@@ -314,7 +311,6 @@ func (eService *assistantService) Get(ctx context.Context,
 				tx := db.
 					Where("assistant_id = ?", assistantId).First(&deployment)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant whatsapp deployment with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantWhatsappDeployment = deployment
@@ -338,17 +334,13 @@ func (eService *assistantService) Get(ctx context.Context,
 					}).
 					Where("assistant_id = ?", assistantId).First(&deployment)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant phone deployment with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantPhoneDeployment = deployment
 			})
 	}
 
-	//
-	//
 	if opts.InjectAssistantProvider {
-		// if version is already there the load from that version
 		if assistantProviderId != nil {
 			assistant.AssistantProviderId = *assistantProviderId
 		}
@@ -365,7 +357,6 @@ func (eService *assistantService) Get(ctx context.Context,
 						assistant.AssistantProviderId).
 					First(&providerModel)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant provider model with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantProviderModel = providerModel
@@ -382,7 +373,6 @@ func (eService *assistantService) Get(ctx context.Context,
 						assistant.AssistantProviderId).
 					First(&websocket)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant provider websocket with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantProviderWebsocket = websocket
@@ -399,7 +389,6 @@ func (eService *assistantService) Get(ctx context.Context,
 						assistant.AssistantProviderId).
 					First(&agentkit)
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant provider agentkit with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantProviderAgentkit = agentkit
@@ -417,7 +406,6 @@ func (eService *assistantService) Get(ctx context.Context,
 					Find(&webhooks).
 					Order("execution_priority DESC")
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant webhook with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantWebhooks = webhooks
@@ -435,7 +423,6 @@ func (eService *assistantService) Get(ctx context.Context,
 					Find(&analysis).
 					Order("execution_priority DESC")
 				if tx.Error != nil {
-					eService.logger.Warnf("unable to find assistant analysis with error %+v", tx.Error)
 					return
 				}
 				assistant.AssistantAnalyses = analysis

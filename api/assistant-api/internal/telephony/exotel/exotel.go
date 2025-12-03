@@ -89,9 +89,9 @@ func (tpc *exotelTelephony) MakeCall(
 	formData.Set("From", toPhone)
 	formData.Set("CallerId", fromPhone)
 	formData.Set("Url", fmt.Sprintf("wss://%s/%s",
-		tpc.appCfg.MediaHost,
+		tpc.appCfg.PublicAssistantHost,
 		internal_telephony.GetAnswerPath("exotel", auth, assistantId, sessionId, toPhone)))
-	formData.Set("StatusCallback", fmt.Sprintf("https://%s/%s", tpc.appCfg.MediaHost, internal_telephony.GetEventPath("exotel", auth, assistantId, sessionId)))
+	formData.Set("StatusCallback", fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("exotel", auth, assistantId, sessionId)))
 	client := &http.Client{Timeout: 60 * time.Second}
 	req, err := http.NewRequest("POST", *clientUrl, strings.NewReader(formData.Encode()))
 	if err != nil {

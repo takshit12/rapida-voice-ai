@@ -272,8 +272,6 @@ func (listening *GenericRequestor) afterAnalyze(
 	a interface{},
 ) error {
 	ctx, span, _ := listening.Tracer().StartSpan(listening.Context(), utils.AssistantUtteranceStage)
-	//
-	listening.logger.Debugf("%T and %+v", a, a)
 	switch v := a.(type) {
 	case *internal_end_of_speech.EndOfSpeechResult:
 		span.EndSpan(ctx,
@@ -310,17 +308,11 @@ func (listening *GenericRequestor) afterAnalyze(
 				V: internal_telemetry.StringValue("vad"),
 			},
 		)
-		if v.GetSpeechStartAt() < 1 {
+		// might be noise at first
+		if v.GetSpeechStartAt() < 3 {
 			listening.logger.Warn("interrupt: very early interruption")
 			return nil
 		}
-
-		listening.ListenText(
-			ctx,
-			&internal_end_of_speech.SystemEndOfSpeechInput{
-				Time: time.Now(),
-			},
-		)
 		listening.OnInterrupt(ctx, "vad")
 		listening.ListenText(
 			ctx,
@@ -341,7 +333,6 @@ func (listening *GenericRequestor) ListenText(
 	if listening.endOfSpeech != nil {
 		var err error
 		utils.Go(ctx, func() {
-			listening.logger.Debugf("sending event analyze %+v", msg)
 			err = listening.endOfSpeech.Analyze(ctx, msg)
 			if err != nil {
 				if err == context.Canceled {
@@ -353,7 +344,6 @@ func (listening *GenericRequestor) ListenText(
 		})
 		return err
 	}
-	// break the slience as no end of speech is configured
 	return listening.OnSilenceBreak(ctx)
 }
 

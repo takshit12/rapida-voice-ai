@@ -53,8 +53,8 @@ export const AudioMessagingAction: FC<AudioMessagingActionProps> = ({
       <div className="flex items-center justify-center w-full">
         {!isConnected ? (
           <button
-            onClick={() => {
-              handleConnectAgent();
+            onClick={async () => {
+              await handleConnectAgent();
             }}
             className={cn(
               'flex items-center gap-1.5 border-[0.5px] border-primary/10 bg-gray-100 dark:bg-gray-950 rounded-[2px] p-1 shadow-lg  px-4 py-2',

@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type twilioTalking struct {
+type phoneTalking struct {
 	internal_adapter_request_generic.GenericRequestor
 	logger commons.Logger
 }
@@ -38,7 +38,7 @@ func NewTalking(
 	streamer internal_streamers.Streamer,
 ) (internal_adapter_requests.Talking, error) {
 
-	return &twilioTalking{
+	return &phoneTalking{
 		logger: logger,
 		GenericRequestor: internal_adapter_request_generic.NewGenericRequestor(
 			ctx,
@@ -54,7 +54,7 @@ func NewTalking(
 	}, nil
 }
 
-func (talking *twilioTalking) Talk(
+func (talking *phoneTalking) Talk(
 	ctx context.Context,
 	auth types.SimplePrinciple,
 	identifier string) error {

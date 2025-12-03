@@ -2394,10 +2394,10 @@
     uuid "^10.0.0"
     zustand "^4.5.5"
 
-"@rapidaai/react@1.1.45":
-  version "1.1.45"
-  resolved "https://registry.yarnpkg.com/@rapidaai/react/-/react-1.1.45.tgz#97162ea5c45f4d22d1b64d76783d0c90d013b5bd"
-  integrity sha512-gYKpDNUK3D2FnpJzzgenjsqd9Z4G2dJNis39s1ZusjVIin0REpDW6AoeP81jUL999CPFdVsKuBMnsGBSHFZXVw==
+"@rapidaai/react@1.1.46":
+  version "1.1.46"
+  resolved "https://registry.yarnpkg.com/@rapidaai/react/-/react-1.1.46.tgz#3662f1ca9de737b5cf4e284859c0d19e9f41c79f"
+  integrity sha512-dM1xvoQbrlq2Y1yVaNmAvPj4hljDPlNom09YsU8adw/22hfQFc7fguUkhEOdWkwe2Hy/Y3pLF9DytQXV0x43xg==
   dependencies:
     "@emotion/is-prop-valid" "^1.3.1"
     "@grpc/grpc-js" "^1.13.4"
@@ -14915,7 +14915,7 @@ range-parser@^1.2.1, range-parser@~1.2.1:
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.1.tgz#3cf37023d199e1c24d1a55b84800c2f3e6468031"
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
 
-rapida-react@1.1.25, rapida-react@^1.1.22:
+rapida-react@^1.1.22:
   version "1.1.25"
   resolved "https://registry.yarnpkg.com/rapida-react/-/rapida-react-1.1.25.tgz#a564107780466919b2ee7a8f93d407868e3d12d0"
   integrity sha512-4k7dT0yF3MLmwJrZj5MgIPi3j2cw8P9AkVE1HUU6SSobJd8iKky0wrJf+NyLS04Tj0Lkkk1xTG76JVVcLPUiPw==

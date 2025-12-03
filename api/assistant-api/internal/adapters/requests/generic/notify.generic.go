@@ -11,8 +11,7 @@ import (
 // sendMessage is a helper function that centralizes the logic for sending a response via the stream.
 func (n *GenericRequestor) sendMessage(ctx context.Context, response *lexatic_backend.AssistantMessagingResponse) error {
 	if err := n.Streamer().Send(response); err != nil {
-		n.logger.Errorf("Failed to send to streamer, error: %v", err)
-		return err
+		return nil
 	}
 	return nil
 }

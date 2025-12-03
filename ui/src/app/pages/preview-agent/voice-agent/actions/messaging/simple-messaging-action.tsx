@@ -126,8 +126,8 @@ export const SimpleMessagingAction: FC<SimpleMessagingAcitonProps> = ({
           ) : (
             <button
               onClick={async () => {
-                !isConnected && (await handleConnectAgent());
                 await handleVoiceToggle();
+                !isConnected && (await handleConnectAgent());
               }}
               className="voice-action relative flex h-9 items-center justify-center rounded-[2px] bg-primary text-white transition-colors focus-visible:outline-hidden focus-visible:outline-black disabled:text-gray-50 disabled:opacity-30 can-hover:hover:opacity-70 min-w-8 p-2"
             >

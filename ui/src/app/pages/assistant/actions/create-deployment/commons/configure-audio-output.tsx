@@ -186,18 +186,7 @@ export const ConfigureAudioOutputProvider: React.FC<
                   className="bg-light-background dark:bg-gray-950 max-w-6xl"
                   currentValue={getParamValue(
                     'speaker.pronunciation.dictionaries',
-                    [
-                      'currency',
-                      'date',
-                      'time',
-                      'numeral',
-                      'address',
-                      'url',
-                      'tech-abbreviation',
-                      'role-abbreviation',
-                      'general-abbreviation',
-                      'symbol',
-                    ].join('<|||>'),
+                    '',
                   ).split('<|||>')}
                   setValue={v => {
                     updateParameter(
@@ -262,37 +251,7 @@ export const ConfigureAudioOutputProvider: React.FC<
                   className="bg-light-background dark:bg-gray-950 max-w-6xl"
                   currentValue={getParamValue(
                     'speaker.conjunction.boundaries',
-                    [
-                      'for',
-                      'and',
-                      'nor',
-                      'but',
-                      'or',
-                      'yet',
-                      'so',
-                      'after',
-                      'although',
-                      'as',
-                      'because',
-                      'before',
-                      'even',
-                      'if',
-                      'once',
-                      'since',
-                      'so that',
-                      'than',
-                      'that',
-                      'though',
-                      'unless',
-                      'until',
-                      'when',
-                      'whenever',
-                      'where',
-                      'wherever',
-                      'whereas',
-                      'whether',
-                      'while',
-                    ].join('<|||>'),
+                    '',
                   ).split('<|||>')}
                   setValue={v => {
                     updateParameter(

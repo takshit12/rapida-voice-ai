@@ -42,8 +42,9 @@ func (psql *postgresConnector) connectionString() string {
 }
 
 func (psql *postgresConnector) Connect(ctx context.Context) error {
+	lgr := logger.Discard.LogMode(logger.Silent)
 	db, err := gorm.Open(postgres.Open(psql.connectionString()), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: lgr,
 	})
 	if err != nil {
 		psql.logger.Errorf("Failed to open postgres connection %s.", err)

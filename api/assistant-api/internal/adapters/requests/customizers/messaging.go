@@ -130,9 +130,10 @@ func (ms *messaging) GetMessage(actor type_enums.MessageActor) (*types.Message, 
 		return ms.out, nil
 	}
 	if ms.in != nil {
+		fmt.Errorf("user message is nil %v", ms)
 		return ms.in, nil
 	}
-	return nil, fmt.Errorf("invalid message for acting assistant")
+	return nil, fmt.Errorf("invalid message for acting user")
 }
 
 func (ms *messaging) Transition(newState InteractionState) error {

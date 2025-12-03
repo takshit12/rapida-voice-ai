@@ -95,7 +95,6 @@ func (spk *GenericRequestor) ConnectSpeaker(ctx context.Context, audioInConfig, 
 	start := time.Now()
 	outputTransformer, err := spk.
 		GetTextToSpeechTransformer()
-
 	if err != nil {
 		spk.logger.Errorf("no output transformer, so skipping it or error occured %v", err)
 		return err

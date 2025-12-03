@@ -102,10 +102,10 @@ func (vt *vonageTelephony) MakeCall(
 	connectAction := ncco.Ncco{}
 	nccoConnect := ncco.ConnectAction{
 		EventType: "synchronous",
-		EventUrl:  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.MediaHost, internal_telephony.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
+		EventUrl:  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
 		Endpoint: []ncco.Endpoint{ncco.WebSocketEndpoint{
 			Uri: fmt.Sprintf("wss://%s/%s",
-				vt.appCfg.MediaHost,
+				vt.appCfg.PublicAssistantHost,
 				internal_telephony.GetAnswerPath("vonage", auth, assistantId, assistantConversationId, toPhone)),
 			ContentType: "audio/l16;rate=16000",
 		}},
@@ -138,12 +138,12 @@ func (vt *vonageTelephony) ReceiveCall(c *gin.Context, auth types.SimplePrincipl
 		{
 			"action":    "connect",
 			"eventType": "synchronous",
-			"eventUrl":  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.MediaHost, internal_telephony.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
+			"eventUrl":  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
 			"endpoint": []gin.H{
 				{
 					"type": "websocket",
 					"uri": fmt.Sprintf("wss://%s/%s",
-						vt.appCfg.MediaHost,
+						vt.appCfg.PublicAssistantHost,
 						internal_telephony.GetAnswerPath("vonage", auth, assistantId, assistantConversationId, clientNumber)),
 					"content-type": "audio/l16;rate=16000",
 				},

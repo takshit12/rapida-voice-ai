@@ -20,7 +20,7 @@ type AssistantConfig struct {
 	AssetStoreConfig configs.AssetStoreConfig `mapstructure:"asset_store" validate:"required"`
 
 	// telephony host
-	MediaHost string `mapstructure:"media_host" validate:"required"`
+	PublicAssistantHost string `mapstructure:"public_assistant_host" validate:"required"`
 }
 
 // reading config and intializing configs for application

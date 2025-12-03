@@ -72,14 +72,12 @@ func (r *recorder) User(in []byte) error {
 func (r *recorder) Interrupt() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
 	interruptTime := time.Now()
-
 	// Check if the last interruption occurred very recently
 	if r.interruptionTime != nil {
 		elapsed := interruptTime.Sub(*r.interruptionTime)
 		if elapsed <= 100*time.Millisecond && elapsed >= 50*time.Millisecond {
-			r.logger.Info("Interrupt ignored. Too soon after the previous interruption:", elapsed)
+			r.logger.Info("Interrupt ignored. Too soon after the previous interruption: ", elapsed)
 			// Update interruption time regardless of ignoring
 			r.interruptionTime = &interruptTime
 			return nil
@@ -88,7 +86,7 @@ func (r *recorder) Interrupt() error {
 
 	// Update interruption time
 	r.interruptionTime = &interruptTime
-	r.logger.Info("User interruption detected at", interruptTime)
+	r.logger.Info("User interruption detected at ", interruptTime)
 
 	// Remove system audio chunks that would "play" after interruption
 	r.removeInterruptedSystemAudio(interruptTime)

@@ -69,7 +69,6 @@ func (talking *debuggerTalking) Talk(
 	auth types.SimplePrinciple,
 	identifier string,
 ) error {
-
 	talking.StartedAt = time.Now()
 	var initialized = false
 	for {

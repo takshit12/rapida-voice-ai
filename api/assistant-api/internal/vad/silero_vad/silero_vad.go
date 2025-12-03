@@ -1,6 +1,8 @@
 package internal_silero_vad
 
 import (
+	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -38,9 +40,11 @@ func NewSileroVAD(logger commons.Logger,
 		threshold = thr
 	}
 	config := speech.DetectorConfig{
-		ModelPath:  envModelPath,
-		SampleRate: vadAudioConfig.SampleRate,
-		Threshold:  float32(threshold),
+		ModelPath:            envModelPath,
+		SampleRate:           vadAudioConfig.SampleRate,
+		Threshold:            float32(threshold),
+		MinSilenceDurationMs: 100,
+		SpeechPadMs:          30,
 	}
 	detector, err := speech.NewDetector(config)
 	if err != nil {
@@ -63,29 +67,41 @@ func (s *SileroVAD) Name() string {
 func (svad *SileroVAD) Process(input []byte) error {
 	idi, err := svad.audioSampler.Resample(input, svad.inputConfig, svad.vadConfig)
 	if err != nil {
-		svad.logger.Debugf("geto %+v", err)
+		svad.logger.Debugf("Resampling failed: %+v", err) // Improved logging
 		return err
 	}
 
-	//
 	floatSample, err := svad.audioSampler.ConvertToFloat32Samples(idi, svad.vadConfig)
 	if err != nil {
-		svad.logger.Debugf("geto %+v", err)
+		svad.logger.Debugf("Sample conversion failed: %+v", err) // Improved logging
 		return err
 	}
 
 	segments, err := svad.detector.Detect(floatSample)
 	if err != nil {
-		return err
+		return fmt.Errorf("error during detection: %w", err) // Return error with context
 	}
+
+	if len(segments) == 0 { // No speech detected
+		return nil
+	}
+	// Initialize minStart to a large value and maxEnd to a small value
+	minStart := math.MaxFloat64
+	maxEnd := -math.MaxFloat64
+
 	for _, seg := range segments {
 		start := float64(seg.SpeechStartAt)
 		end := float64(seg.SpeechEndAt)
-		svad.onActivity(&internal_vad.VadResult{StartSec: start, EndSec: end})
+		if start < minStart {
+			minStart = start
+		}
+		if end > maxEnd {
+			maxEnd = end
+		}
 	}
+	svad.onActivity(&internal_vad.VadResult{StartSec: minStart, EndSec: maxEnd})
 	return nil
 }
-
 func (s *SileroVAD) Close() error {
 	s.detector.Destroy()
 	return nil

@@ -1,9 +1,8 @@
-// Copyright (c) Rapida
-// Author: Prashant <prashant@rapida.ai>
+// Copyright (c) 2023-2025 RapidaAI
+// Author: Prashant Srivastav <prashant@rapida.ai>
 //
-// Licensed under the Rapida internal use license.
-// This file is part of Rapida's proprietary software and is not open source.
-// Unauthorized copying, modification, or redistribution is strictly prohibited.
+// Licensed under GPL-2.0 with Rapida Additional Terms.
+// See LICENSE.md or contact sales@rapida.ai for commercial usage.
 
 package internal_transformer_google
 
@@ -35,6 +34,7 @@ func (g *googleSpeechToText) Name() string {
 }
 
 func (g *googleSpeechToText) Initialize() error {
+	g.logger.Debugf("got all speech to text options %+v", g.providerOptions.SpeechToTextOptions())
 	err := g.stream.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: g.providerOptions.SpeechToTextOptions(),
@@ -43,7 +43,6 @@ func (g *googleSpeechToText) Initialize() error {
 	if err != nil {
 		return err
 	}
-
 	// Launch callback listener
 	go g.SpeechToTextCallback(g.ctx)
 	return nil
@@ -112,7 +111,6 @@ func (g *googleSpeechToText) SpeechToTextCallback(ctx context.Context) {
 	}
 }
 
-// NewGoogleSpeechToText initializes the transformer with context and stream.
 func NewGoogleSpeechToText(
 	ctx context.Context,
 	logger commons.Logger,

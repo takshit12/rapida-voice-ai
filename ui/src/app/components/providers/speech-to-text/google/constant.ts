@@ -18,38 +18,18 @@ export const GOOGLE_LANGUAGE = [
 
 export const GOOGLE_MODELS = [
   {
-    name: 'default',
-    id: 'default',
+    name: 'chirp_3',
+    id: 'chirp_3',
   },
   {
-    name: 'command_and_search',
-    id: 'command_and_search',
+    name: 'chirp_2',
+    id: 'chirp_2',
   },
   {
     name: 'telephony',
     id: 'telephony',
   },
 ];
-// export const GOOGLE_ENCODINGS = [
-//   { value: 'unspecified', name: 'Not specified' },
-//   { value: 'linear16', name: 'Linear16' },
-//   { value: 'flac', name: 'FLAC' },
-//   { value: 'mulaw', name: 'Mulaw' },
-//   { value: 'amr', name: 'AMR' },
-//   { value: 'amr_wb', name: 'AMR-WB' },
-//   { value: 'ogg_opus', name: 'OGG_OPUS' },
-//   { value: 'speex', name: 'SPEEX' },
-//   { value: 'mp3', name: 'MP3 (Beta)' },
-//   { value: 'webm_opus', name: 'WEBM_OPUS' },
-// ];
-
-// export const GOOGLE_SAMPLE_RATES = [
-//   { value: '8000', name: '8000 Hz' },
-//   { value: '16000', name: '16000 Hz' },
-//   { value: '24000', name: '24000 Hz' },
-//   { value: '32000', name: '32000 Hz' },
-//   { value: '48000', name: '48000 Hz' },
-// ];
 
 export const GetGoogleDefaultOptions = (current: Metadata[]): Metadata[] => {
   const mtds: Metadata[] = [];

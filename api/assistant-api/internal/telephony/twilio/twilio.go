@@ -117,7 +117,7 @@ func (tpc *twilioTelephony) MakeCall(
 	callParams.SetTo(toPhone)
 	callParams.SetFrom(fromPhone)
 	callParams.SetStatusCallback(
-		fmt.Sprintf("https://%s/%s", tpc.appCfg.MediaHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
+		fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
 	)
 	callParams.SetStatusCallbackEvent([]string{
 		"initiated", "ringing", "answered", "completed",
@@ -125,13 +125,13 @@ func (tpc *twilioTelephony) MakeCall(
 	callParams.SetStatusCallbackMethod("POST")
 	callParams.SetTwiml(
 		tpc.CreateTwinML(
-			tpc.appCfg.MediaHost,
+			tpc.appCfg.PublicAssistantHost,
 			fmt.Sprintf("%d__%d", assistantId, assistantConversationId),
 			internal_telephony.GetAnswerPath("twilio", auth, assistantId,
 				assistantConversationId,
 				toPhone,
 			),
-			fmt.Sprintf("https://%s/%s", tpc.appCfg.MediaHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
+			fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
 			assistantId,
 			toPhone),
 	)
@@ -169,12 +169,12 @@ func (tpc *twilioTelephony) CreateTwinML(mediaServer string, name, path string, 
 func (tpc *twilioTelephony) ReceiveCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
 	c.Data(http.StatusOK, "text/xml", []byte(
 		tpc.CreateTwinML(
-			tpc.appCfg.MediaHost,
+			tpc.appCfg.PublicAssistantHost,
 			fmt.Sprintf("%d__%d", assistantId, assistantConversationId),
 			fmt.Sprintf("v1/talk/twilio/prj/%d/%s/%d/%s",
 				assistantId,
 				clientNumber, assistantConversationId, auth.GetCurrentToken()),
-			fmt.Sprintf("https://%s/%s", tpc.appCfg.MediaHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
+			fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
 			assistantId, clientNumber),
 	))
 	return nil
