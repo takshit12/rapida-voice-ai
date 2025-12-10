@@ -79,11 +79,18 @@ func (dg *deepgramTTS) Initialize() error {
 		dg.TextToSpeechOptions(),
 		internal_transformer_deepgram_internal.NewDeepgramSpeakCallback(dg.logger, dg.onspeech, dg.oncomplete),
 	)
-	dg.client = client
+
 	if err != nil {
 		dg.logger.Errorf("deepgram-tts: unable create dg client with error %+v", err.Error())
 		return err
 	}
+
+	if !client.Connect() {
+		dg.logger.Errorf("deepgram-tts: unable to connect to deepgram service")
+		return fmt.Errorf("deepgram-tts: connection failed")
+	}
+	dg.logger.Debugf("deepgram-tts: connection established")
+	dg.client = client
 	return nil
 }
 
@@ -105,7 +112,6 @@ func (dg *deepgramTTS) Transform(
 	if dg.client == nil {
 		return fmt.Errorf("deepgram-tts: connection is not initialized")
 	}
-
 	dg.contextId = opts.ContextId
 	err := dg.client.Speak(sentence)
 	if err != nil {

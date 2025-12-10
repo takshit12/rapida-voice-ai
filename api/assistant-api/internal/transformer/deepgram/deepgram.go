@@ -55,7 +55,7 @@ func NewDeepgramOption(
 }
 
 func (dgOpt *deepgramOption) GetKey() string {
-	return dgOpt.key
+	return "322d1ac3af9409676c44103e92f880d9969871b5"
 }
 
 func (dgOpt *deepgramOption) SpeechToTextOptions() *interfaces.LiveTranscriptionOptions {
@@ -79,7 +79,9 @@ func (dgOpt *deepgramOption) SpeechToTextOptions() *interfaces.LiveTranscription
 	if language, err := dgOpt.mdlOpts.GetString("listen.language"); err == nil {
 		opts.Language = language
 	}
-
+	if channels, err := dgOpt.mdlOpts.GetUint32("listen.channel"); err == nil {
+		opts.Channels = int(channels)
+	}
 	if smartFormat, err := dgOpt.mdlOpts.GetBool("listen.smart_format"); err == nil {
 		opts.SmartFormat = smartFormat
 	}
@@ -140,23 +142,8 @@ func (dgOpt *deepgramOption) TextToSpeechOptions() *interfaces.WSSpeakOptions {
 		SampleRate: dgOpt.audioConfig.SampleRate,
 	}
 
-	var model, voiceID, language string
-	if modelValue, err := dgOpt.mdlOpts.GetString("speak.model"); err == nil {
-		model = modelValue
-	}
-
 	if voiceIDValue, err := dgOpt.mdlOpts.GetString("speak.voice.id"); err == nil {
-		voiceID = voiceIDValue
-	}
-
-	if languageValue, err := dgOpt.mdlOpts.GetString("speak.language"); err == nil {
-		language = languageValue
-	}
-
-	if model == "" && voiceID == "" && language == "" {
-		opts.Model = "aura-asteria-en"
-	} else {
-		opts.Model = fmt.Sprintf("%s-%s-%s", model, voiceID, language)
+		opts.Model = voiceIDValue
 	}
 
 	return opts

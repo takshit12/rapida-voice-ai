@@ -60,7 +60,7 @@ func (rt *sarvamTextToSpeech) Initialize() error {
 	headers := map[string][]string{
 		"Api-Subscription-Key": {rt.GetKey()},
 	}
-	conn, _, err := websocket.DefaultDialer.Dial("wss://api.sarvam.ai/text-to-speech/ws?model=bulbul:v2&send_completion_event=true", headers)
+	conn, _, err := websocket.DefaultDialer.Dial(rt.textToSpeechUrl(), headers)
 	if err != nil {
 		rt.logger.Errorf("sarvam-tts: unable to connect to websocket err: %v", err)
 		return err

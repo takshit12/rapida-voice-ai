@@ -90,7 +90,6 @@ func (ro *sarvamOption) configureTextToSpeech() map[string]interface{} {
 	if speaker, err := ro.modelOpts.GetString("speak.voice.id"); err == nil {
 		configMsg["data"].(map[string]interface{})["speaker"] = speaker
 	}
-	ro.logger.Debugf("this is %v", configMsg)
 	return configMsg
 }
 

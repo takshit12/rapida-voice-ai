@@ -76,12 +76,16 @@ func (dg *deepgramSTT) Initialize() error {
 		internal_transformer_deepgram_internal.
 			NewDeepgramSttCallback(dg.logger, dg.options.OnTranscript))
 
-	//
-	dg.client = dgClient
 	if err != nil {
 		dg.logger.Errorf("deepgram-stt: unable create dg client with error %+v", err.Error())
 		return err
 	}
+	if !dgClient.Connect() {
+		dg.logger.Errorf("deepgram-stt: unable to connect to deepgram service")
+		return fmt.Errorf("deepgram-stt: connection failed")
+	}
+	dg.client = dgClient
+	dg.logger.Debugf("deepgram-stt: connection established")
 	return nil
 }
 

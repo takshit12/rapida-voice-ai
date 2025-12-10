@@ -44,16 +44,26 @@ func (d *deepgramSttCallback) Open(or *msginterfaces.OpenResponse) error {
 
 // Handle incoming transcription messages from Deepgram
 func (d *deepgramSttCallback) Message(mr *msginterfaces.MessageResponse) error {
+	d.logger.Debugf("deepgram-stt: received message %+v", mr)
+	var finalTranscript string
+	var finalConfidence float64
+	var finalLanguage string
+	var isFinal bool
 	for _, alternative := range mr.Channel.Alternatives {
 		if alternative.Transcript != "" {
-			return d.onTranscript(
-				alternative.Transcript,
-				alternative.Confidence,
-				d.GetMostUsedLanguage(alternative.Languages),
-				mr.IsFinal,
-			)
+			d.logger.Debugf("deepgram-stt: response text %v", alternative)
+			finalTranscript = alternative.Transcript
+			finalConfidence = alternative.Confidence
+			finalLanguage = d.GetMostUsedLanguage(alternative.Languages)
+			isFinal = mr.IsFinal
+			break
 		}
 	}
+	if finalTranscript != "" {
+		d.logger.Debugf("return transcript %v %v %v %v", finalTranscript, finalConfidence, finalLanguage, isFinal)
+		return d.onTranscript(finalTranscript, finalConfidence, finalLanguage, isFinal)
+	}
+
 	return nil
 }
 

@@ -350,12 +350,14 @@ func (listening *GenericRequestor) ListenText(
 func (listening *GenericRequestor) ListenAudio(
 	ctx context.Context,
 	in []byte,
-) (out []byte, err error) {
+) ([]byte, error) {
+	out := in
 	if listening.denoiser != nil {
-		out, _, err = listening.denoiser.Denoise(ctx, in)
+		dnOut, _, err := listening.denoiser.Denoise(ctx, in)
 		if err != nil {
 			listening.logger.Warnf("error while denoising process | will process actual audio byte")
 		}
+		out = dnOut
 	}
 	if listening.vad != nil {
 		utils.Go(ctx, func() {
@@ -364,12 +366,12 @@ func (listening *GenericRequestor) ListenAudio(
 	}
 	if listening.speechToTextTransformer != nil {
 		utils.Go(ctx, func() {
-			if err := listening.speechToTextTransformer.Transform(ctx, out, nil); err != nil {
+			if err := listening.speechToTextTransformer.Transform(ctx, in, nil); err != nil {
 				if !errors.Is(err, io.EOF) {
 					listening.logger.Tracef(ctx, "error while transforming input %s and error %v", listening.speechToTextTransformer.Name(), err)
 				}
 			}
 		})
 	}
-	return
+	return out, nil
 }

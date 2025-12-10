@@ -355,9 +355,7 @@ func (conversationService *assistantConversationService) ApplyConversationArgume
 	arguments map[string]interface{},
 ) ([]*internal_conversation_gorm.AssistantConversationArgument, error) {
 	start := time.Now()
-	//
 	if len(arguments) == 0 {
-		conversationService.logger.Warnf("error while updating arguments, empty set of argument found")
 		return nil, nil
 	}
 
