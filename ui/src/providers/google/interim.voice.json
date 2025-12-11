@@ -652,34 +652,6 @@
     },
     {
         "languageCodes": [
-            "en-AU"
-        ],
-        "name": "en-AU-News-E",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-AU"
-        ],
-        "name": "en-AU-News-F",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-AU"
-        ],
-        "name": "en-AU-News-G",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-AU"
-        ],
-        "name": "en-AU-Polyglot-1",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
             "en-GB"
         ],
         "name": "en-GB-Chirp-HD-D",
@@ -908,69 +880,6 @@
         ],
         "name": "en-GB-Chirp3-HD-Zubenelgenubi",
         "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-G",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-H",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-I",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-J",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-K",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-L",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-News-M",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-Studio-B",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-GB"
-        ],
-        "name": "en-GB-Studio-C",
-        "ssmlGender": "FEMALE"
     },
     {
         "languageCodes": [
@@ -1207,13 +1116,6 @@
         "languageCodes": [
             "en-US"
         ],
-        "name": "en-US-Casual-K",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
         "name": "en-US-Chirp-HD-D",
         "ssmlGender": "MALE"
     },
@@ -1439,48 +1341,6 @@
             "en-US"
         ],
         "name": "en-US-Chirp3-HD-Zubenelgenubi",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
-        "name": "en-US-News-K",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
-        "name": "en-US-News-L",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
-        "name": "en-US-News-N",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
-        "name": "en-US-Polyglot-1",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
-        "name": "en-US-Studio-O",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "en-US"
-        ],
-        "name": "en-US-Studio-Q",
         "ssmlGender": "MALE"
     },
     {
@@ -1716,27 +1576,6 @@
     },
     {
         "languageCodes": [
-            "es-ES"
-        ],
-        "name": "es-ES-Polyglot-1",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "es-ES"
-        ],
-        "name": "es-ES-Studio-C",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "es-ES"
-        ],
-        "name": "es-ES-Studio-F",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
             "es-US"
         ],
         "name": "es-US-Chirp-HD-D",
@@ -1964,48 +1803,6 @@
             "es-US"
         ],
         "name": "es-US-Chirp3-HD-Zubenelgenubi",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "es-US"
-        ],
-        "name": "es-US-News-D",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "es-US"
-        ],
-        "name": "es-US-News-E",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "es-US"
-        ],
-        "name": "es-US-News-F",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "es-US"
-        ],
-        "name": "es-US-News-G",
-        "ssmlGender": "FEMALE"
-    },
-    {
-        "languageCodes": [
-            "es-US"
-        ],
-        "name": "es-US-Polyglot-1",
-        "ssmlGender": "MALE"
-    },
-    {
-        "languageCodes": [
-            "es-US"
-        ],
-        "name": "es-US-Studio-B",
         "ssmlGender": "MALE"
     },
     {

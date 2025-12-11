@@ -85,7 +85,7 @@ func (g *googleSpeechToText) SpeechToTextCallback(ctx context.Context) {
 					continue
 				}
 				alt := result.Alternatives[0]
-				if g.options.OnTranscript != nil {
+				if g.options.OnTranscript != nil && len(alt.GetTranscript()) > 0 {
 					g.options.OnTranscript(
 						alt.GetTranscript(),
 						float64(alt.GetConfidence()),
