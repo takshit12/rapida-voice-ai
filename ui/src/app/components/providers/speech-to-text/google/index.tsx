@@ -5,20 +5,13 @@ import { FieldSet } from '@/app/components/form/fieldset';
 import { Input } from '@/app/components/form/input';
 import { Slider } from '@/app/components/form/slider';
 import { InputHelper } from '@/app/components/input-helper';
-import {
-  GOOGLE_SPEECH_TO_TEXT_LANGUGAE,
-  GOOGLE_SPEECH_TO_TEXT_MODEL,
-} from '@/providers/index';
+import { GOOGLE_SPEECH_TO_TEXT_MODEL } from '@/providers/index';
+import { useEffect } from 'react';
+
 export {
   GetGoogleDefaultOptions,
   ValidateGoogleOptions,
 } from '@/app/components/providers/speech-to-text/google/constant';
-
-const renderOption = (c: { name: string }) => (
-  <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
-    <span className="truncate capitalize">{c.name}</span>
-  </span>
-);
 
 export const ConfigureGoogleSpeechToText: React.FC<{
   onParameterChange: (parameters: Metadata[]) => void;
@@ -28,79 +21,137 @@ export const ConfigureGoogleSpeechToText: React.FC<{
     parameters?.find(p => p.getKey() === key)?.getValue() ?? '';
 
   //
-  const updateParameter = (key: string, value: string) => {
+  const updateParameter = (updates: Array<{ key: string; value: string }>) => {
     const updatedParams = [...(parameters || [])];
-    const existingIndex = updatedParams.findIndex(p => p.getKey() === key);
-    const newParam = new Metadata();
-    newParam.setKey(key);
-    newParam.setValue(value);
-    if (existingIndex >= 0) {
-      updatedParams[existingIndex] = newParam;
-    } else {
-      updatedParams.push(newParam);
-    }
+
+    updates.forEach(({ key, value }) => {
+      const existingIndex = updatedParams.findIndex(p => p.getKey() === key);
+      const newParam = new Metadata();
+      newParam.setKey(key);
+      newParam.setValue(value);
+      if (existingIndex >= 0) {
+        updatedParams[existingIndex] = newParam;
+      } else {
+        updatedParams.push(newParam);
+      }
+    });
+
     onParameterChange(updatedParams);
+  };
+  const getAvailableModels = () => {
+    const region = getParamValue('listen.region');
+    return GOOGLE_SPEECH_TO_TEXT_MODEL()[region]?.model || [];
+  };
+
+  const getAvailableLanguages = () => {
+    const region = getParamValue('listen.region');
+    const model = getParamValue('listen.model');
+    const langs =
+      GOOGLE_SPEECH_TO_TEXT_MODEL()[region]?.model.find(m => m.id === model)
+        ?.language_codes || [];
+    return langs;
   };
 
   return (
     <>
-      <FieldSet className="col-span-1">
-        <FormLabel>Model</FormLabel>
-        <Dropdown
-          className="bg-light-background max-w-full dark:bg-gray-950"
-          currentValue={GOOGLE_SPEECH_TO_TEXT_MODEL().find(
-            x => x.id === getParamValue('listen.model'),
-          )}
-          setValue={(v: { id: string }) => {
-            updateParameter('listen.model', v.id);
-          }}
-          allValue={GOOGLE_SPEECH_TO_TEXT_MODEL()}
-          placeholder={`Select model`}
-          option={renderOption}
-          label={renderOption}
-        />
-      </FieldSet>
-      <FieldSet className="col-span-1">
-        <FormLabel>Language</FormLabel>
-        <Dropdown
-          className="bg-light-background max-w-full dark:bg-gray-950"
-          currentValue={GOOGLE_SPEECH_TO_TEXT_LANGUGAE().find(
-            x => x.code === getParamValue('listen.language'),
-          )}
-          setValue={(v: { code: string }) => {
-            updateParameter('listen.language', v.code);
-          }}
-          allValue={GOOGLE_SPEECH_TO_TEXT_LANGUGAE()}
-          placeholder={`Select language`}
-          option={renderOption}
-          label={renderOption}
-        />
-      </FieldSet>
-      <FieldSet className="col-span-1">
+      {/* Region Dropdown */}
+      <FieldSet>
         <FormLabel>Region</FormLabel>
         <Dropdown
           className="bg-light-background max-w-full dark:bg-gray-950"
-          currentValue={['global'].find(
-            x => x === getParamValue('listen.region'),
-          )}
-          setValue={(v: string) => {
-            updateParameter('listen.region', v);
+          currentValue={getParamValue('listen.region')}
+          setValue={(value: string) => {
+            updateParameter([
+              { key: 'listen.model', value: '' },
+              { key: 'listen.language', value: '' },
+              { key: 'listen.region', value: value },
+            ]);
           }}
-          allValue={['global']}
-          placeholder={`Select region`}
-          option={(c: string) => (
+          allValue={Object.keys(GOOGLE_SPEECH_TO_TEXT_MODEL())}
+          placeholder="Select region"
+          option={region => (
             <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
-              <span className="truncate capitalize">{c}</span>
+              {region}
             </span>
           )}
-          label={(c: string) => (
+          label={region => (
             <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
-              <span className="truncate capitalize">{c}</span>
+              {region}
             </span>
           )}
         />
       </FieldSet>
-      <FieldSet className="col-span-1">
+
+      {/* Model Dropdown */}
+      {getAvailableModels().length > 0 && (
+        <FieldSet>
+          <FormLabel>Model</FormLabel>
+          <Dropdown
+            className="bg-light-background max-w-full dark:bg-gray-950"
+            currentValue={getAvailableModels().find(
+              x => x.id === getParamValue('listen.model'),
+            )}
+            setValue={(model: { id: string; name: string }) => {
+              updateParameter([
+                { key: 'listen.model', value: model.id },
+                { key: 'listen.language', value: '' },
+              ]);
+            }}
+            allValue={getAvailableModels()}
+            placeholder="Select model"
+            option={model => (
+              <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
+                {model.name}
+              </span>
+            )}
+            label={model => (
+              <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
+                {model.id}
+              </span>
+            )}
+          />
+        </FieldSet>
+      )}
+
+      {/* Language Dropdown */}
+      {getAvailableLanguages().length > 0 && (
+        <FieldSet>
+          <FormLabel>Language</FormLabel>
+          <Dropdown
+            multiple={true}
+            className="bg-light-background max-w-full dark:bg-gray-950"
+            currentValue={
+              getParamValue('listen.language')?.split('<|||>') || []
+            }
+            setValue={v => {
+              updateParameter([
+                { key: 'listen.language', value: v.at(v.length - 1) },
+              ]);
+            }}
+            allValue={getAvailableLanguages().map(lang => lang.code)}
+            placeholder="Select language"
+            option={lang => (
+              <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
+                {lang}
+              </span>
+            )}
+            label={lang => (
+              <span className="inline-flex items-center gap-2 sm:gap-2.5 max-w-full text-sm font-medium">
+                {lang.map(x => {
+                  return (
+                    <span key={x} className="truncate">
+                      {x}
+                    </span>
+                  );
+                })}
+              </span>
+            )}
+          />
+        </FieldSet>
+      )}
+
+      {/* Transcript Confidence */}
+      <FieldSet>
         <FormLabel>Transcript Confidence Threshold</FormLabel>
         <div className="flex space-x-2 justify-center items-center">
           <Slider
@@ -108,8 +159,10 @@ export const ConfigureGoogleSpeechToText: React.FC<{
             max={0.9}
             step={0.1}
             value={parseFloat(getParamValue('listen.threshold')) || 0.1}
-            onSlide={c => {
-              updateParameter('listen.threshold', c.toString());
+            onSlide={value => {
+              updateParameter([
+                { key: 'listen.threshold', value: value.toString() },
+              ]);
             }}
           />
           <Input
@@ -118,8 +171,10 @@ export const ConfigureGoogleSpeechToText: React.FC<{
             max={0.9}
             step={0.1}
             value={getParamValue('listen.threshold')}
-            onChange={v => {
-              updateParameter('listen.threshold', v.target.value);
+            onChange={event => {
+              updateParameter([
+                { key: 'listen.threshold', value: event.target.value },
+              ]);
             }}
             className="bg-light-background w-16"
           />

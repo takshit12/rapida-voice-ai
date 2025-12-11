@@ -18,6 +18,7 @@ import (
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
+	"google.golang.org/grpc/status"
 )
 
 type googleSpeechToText struct {
@@ -61,7 +62,12 @@ func (g *googleSpeechToText) SpeechToTextCallback(ctx context.Context) {
 				return
 			}
 			if err != nil {
-				g.logger.Errorf("google-stt: recv error: %v", err)
+				g.logger.Errorf("google-stt: recv error: %v", err.Error())
+				if st, ok := status.FromError(err); ok {
+					for _, detail := range st.Details() {
+						g.logger.Errorf("google-stt: detailed error: %v", detail)
+					}
+				}
 				return
 			}
 			if resp == nil {

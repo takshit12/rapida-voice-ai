@@ -13,6 +13,7 @@ export const GetGoogleDefaultOptions = (current: Metadata[]): Metadata[] => {
     'listen.language',
     'listen.model',
     'listen.threshold',
+    'listen.region',
   ];
 
   // Function to create or update metadata
@@ -26,16 +27,10 @@ export const GetGoogleDefaultOptions = (current: Metadata[]): Metadata[] => {
   };
 
   addMetadata('rapida.credential_id');
-
-  // Set language
-  addMetadata('listen.language', 'en-US', value =>
-    GOOGLE_SPEECH_TO_TEXT_LANGUGAE().some(l => l.code === value),
-  );
-
-  // Set model
-  addMetadata('listen.model', 'default', value =>
-    GOOGLE_SPEECH_TO_TEXT_MODEL().some(m => m.id === value),
-  );
+  addMetadata('listen.language');
+  addMetadata('listen.threshold');
+  addMetadata('listen.model');
+  addMetadata('listen.region');
 
   // Only return metadata for the keys we want to keep
   return [
@@ -61,22 +56,22 @@ export const ValidateGoogleOptions = (
   const languageOption = options.find(
     opt => opt.getKey() === 'listen.language',
   );
-  if (
-    !languageOption ||
-    !GOOGLE_SPEECH_TO_TEXT_LANGUGAE().some(
-      lang => lang.code === languageOption.getValue(),
-    )
-  ) {
-    return 'Please provide a valid language options for google speech to text.';
-  }
+  // if (
+  //   !languageOption ||
+  //   !GOOGLE_SPEECH_TO_TEXT_LANGUGAE().some(
+  //     lang => lang.code === languageOption.getValue(),
+  //   )
+  // ) {
+  //   return 'Please provide a valid language options for google speech to text.';
+  // }
 
   // Validate model
-  const modelOption = options.find(opt => opt.getKey() === 'listen.model');
-  if (
-    !modelOption ||
-    !GOOGLE_SPEECH_TO_TEXT_MODEL().some(m => m.id === modelOption.getValue())
-  ) {
-    return 'Please provide a valid model for google speech to text.';
-  }
+  // const modelOption = options.find(opt => opt.getKey() === 'listen.model');
+  // if (
+  //   !modelOption ||
+  //   !GOOGLE_SPEECH_TO_TEXT_MODEL().some(m => m.id === modelOption.getValue())
+  // ) {
+  //   return 'Please provide a valid model for google speech to text.';
+  // }
   return undefined;
 };

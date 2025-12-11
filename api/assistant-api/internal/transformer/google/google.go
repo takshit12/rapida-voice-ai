@@ -8,6 +8,7 @@ package internal_transformer_google
 
 import (
 	"fmt"
+	"strings"
 
 	"cloud.google.com/go/speech/apiv2/speechpb"
 	"cloud.google.com/go/texttospeech/apiv1/texttospeechpb"
@@ -92,7 +93,7 @@ func (gog *googleOption) SpeechToTextOptions() *speechpb.StreamingRecognitionCon
 				EnableSpokenPunctuation:    true,
 			},
 			LanguageCodes: []string{DefaultLanguageCode},
-			Model:         "latest_long",
+			Model:         "long",
 
 			// global// "latest_long, telephony",
 			// DenoiserConfig: &speechpb.DenoiserConfig{
@@ -106,12 +107,19 @@ func (gog *googleOption) SpeechToTextOptions() *speechpb.StreamingRecognitionCon
 	}
 
 	if language, err := gog.mdlOpts.GetString("listen.language"); err == nil {
-		opts.Config.LanguageCodes = []string{language}
+		codes := strings.Split(language, commons.SEPARATOR)
+		nonEmptyCodes := []string{}
+		for _, code := range codes {
+			code = strings.TrimSpace(code)
+			if code != "" {
+				nonEmptyCodes = append(nonEmptyCodes, code)
+			}
+		}
+		opts.Config.LanguageCodes = nonEmptyCodes
 	} else {
 		gog.logger.Warn("Language not specified, defaulting to " + DefaultLanguageCode)
 	}
 
-	// Override model if specified in options
 	if model, err := gog.mdlOpts.GetString("listen.model"); err == nil {
 		opts.Config.Model = model
 	} else {
@@ -173,6 +181,11 @@ func (gog *googleOption) GetSpeechToTextEncoding(audioFormat internal_audio.Audi
 }
 
 func (gog *googleOption) GetRecognizer() string {
+	if region, err := gog.mdlOpts.GetString("listen.region"); err == nil {
+		if region != "global" {
+			return fmt.Sprintf("projects/%s/locations/%s/recognizers/_", gog.projectId, region)
+		}
+	}
 	return fmt.Sprintf("projects/%s/locations/global/recognizers/_", gog.projectId)
 }
 

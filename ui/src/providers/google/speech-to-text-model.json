@@ -1,10 +1,302 @@
-[
-    {
-        "name": "latest_long",
-        "id": "latest_long"
+{
+    "global": {
+        "region": "global",
+        "model": [
+            {
+                "name": "latest_long",
+                "id": "latest_long",
+                "language_codes": [
+                    {
+                        "code": "en-SG",
+                        "name": "English (Singapore)"
+                    },
+                    {
+                        "code": "en-US",
+                        "name": "English (United States)"
+                    },
+                    {
+                        "code": "hi-IN",
+                        "name": "Hindi (India)"
+                    },
+                    {
+                        "code": "gu-IN",
+                        "name": "Gujarati (India)"
+                    },
+                    {
+                        "code": "kn-IN",
+                        "name": "Kannada (India)"
+                    },
+                    {
+                        "code": "ta-IN",
+                        "name": "Tamil (India)"
+                    },
+                    {
+                        "code": "ms-MY",
+                        "name": "Malay (Malaysia)"
+                    },
+                    {
+                        "code": "ml-IN",
+                        "name": "Malayalam (India)"
+                    },
+                    {
+                        "code": "en-IN",
+                        "name": "English (India)"
+                    },
+                    {
+                        "code": "cmn-Hans-CN",
+                        "name": "Chinese (Simplified, China)"
+                    },
+                    {
+                        "code": "th-TH",
+                        "name": "Thai (Thailand)"
+                    },
+                    {
+                        "code": "id-ID",
+                        "name": "Indonesian (Indonesia)"
+                    }
+                ]
+            },
+            {
+                "name": "medical_conversation",
+                "id": "medical_conversation",
+                "language_codes": [
+                    {
+                        "code": "en-US",
+                        "name": "English (United States)"
+                    }
+                ]
+            },
+            {
+                "name": "telephony (only for phone call audio)",
+                "id": "telephony",
+                "language_codes": [
+                    {
+                        "code": "de-AT",
+                        "name": "German (Austria)"
+                    },
+                    {
+                        "code": "de-CH",
+                        "name": "German (Switzerland)"
+                    },
+                    {
+                        "code": "de-DE",
+                        "name": "German (Germany)"
+                    },
+                    {
+                        "code": "en-AU",
+                        "name": "English (Australia)"
+                    },
+                    {
+                        "code": "en-CA",
+                        "name": "English (Canada)"
+                    },
+                    {
+                        "code": "en-GB",
+                        "name": "English (United Kingdom)"
+                    },
+                    {
+                        "code": "en-HK",
+                        "name": "English (Hong Kong)"
+                    },
+                    {
+                        "code": "en-IE",
+                        "name": "English (Ireland)"
+                    },
+                    {
+                        "code": "en-IN",
+                        "name": "English (India)"
+                    },
+                    {
+                        "code": "en-NZ",
+                        "name": "English (New Zealand)"
+                    },
+                    {
+                        "code": "en-PK",
+                        "name": "English (Pakistan)"
+                    },
+                    {
+                        "code": "en-SG",
+                        "name": "English (Singapore)"
+                    },
+                    {
+                        "code": "en-US",
+                        "name": "English (United States)"
+                    },
+                    {
+                        "code": "es-AR",
+                        "name": "Spanish (Argentina)"
+                    },
+                    {
+                        "code": "es-BO",
+                        "name": "Spanish (Bolivia)"
+                    },
+                    {
+                        "code": "es-CL",
+                        "name": "Spanish (Chile)"
+                    },
+                    {
+                        "code": "es-CO",
+                        "name": "Spanish (Colombia)"
+                    },
+                    {
+                        "code": "es-CR",
+                        "name": "Spanish (Costa Rica)"
+                    },
+                    {
+                        "code": "es-DO",
+                        "name": "Spanish (Dominican Republic)"
+                    },
+                    {
+                        "code": "es-EC",
+                        "name": "Spanish (Ecuador)"
+                    },
+                    {
+                        "code": "es-ES",
+                        "name": "Spanish (Spain)"
+                    },
+                    {
+                        "code": "es-GT",
+                        "name": "Spanish (Guatemala)"
+                    },
+                    {
+                        "code": "es-HN",
+                        "name": "Spanish (Honduras)"
+                    },
+                    {
+                        "code": "es-MX",
+                        "name": "Spanish (Mexico)"
+                    },
+                    {
+                        "code": "es-NI",
+                        "name": "Spanish (Nicaragua)"
+                    },
+                    {
+                        "code": "es-PA",
+                        "name": "Spanish (Panama)"
+                    },
+                    {
+                        "code": "es-PE",
+                        "name": "Spanish (Peru)"
+                    },
+                    {
+                        "code": "es-PR",
+                        "name": "Spanish (Puerto Rico)"
+                    },
+                    {
+                        "code": "es-SV",
+                        "name": "Spanish (El Salvador)"
+                    },
+                    {
+                        "code": "es-US",
+                        "name": "Spanish (United States)"
+                    },
+                    {
+                        "code": "es-UY",
+                        "name": "Spanish (Uruguay)"
+                    },
+                    {
+                        "code": "es-VE",
+                        "name": "Spanish (Venezuela)"
+                    },
+                    {
+                        "code": "fr-BE",
+                        "name": "French (Belgium)"
+                    },
+                    {
+                        "code": "fr-CA",
+                        "name": "French (Canada)"
+                    },
+                    {
+                        "code": "fr-CH",
+                        "name": "French (Switzerland)"
+                    },
+                    {
+                        "code": "fr-FR",
+                        "name": "French (France)"
+                    },
+                    {
+                        "code": "hi-IN",
+                        "name": "Hindi (India)"
+                    },
+                    {
+                        "code": "it-CH",
+                        "name": "Italian (Switzerland)"
+                    },
+                    {
+                        "code": "it-IT",
+                        "name": "Italian (Italy)"
+                    },
+                    {
+                        "code": "ja-JP",
+                        "name": "Japanese (Japan)"
+                    },
+                    {
+                        "code": "ko-KR",
+                        "name": "Korean (South Korea)"
+                    },
+                    {
+                        "code": "nl-BE",
+                        "name": "Dutch (Belgium)"
+                    },
+                    {
+                        "code": "nl-NL",
+                        "name": "Dutch (Netherlands)"
+                    },
+                    {
+                        "code": "pt-BR",
+                        "name": "Portuguese (Brazil)"
+                    },
+                    {
+                        "code": "pt-PT",
+                        "name": "Portuguese (Portugal)"
+                    }
+                ]
+            }
+        ]
     },
-    {
-        "name": "telephony (only for phone call audio)",
-        "id": "telephony"
+    "asia-south1": {
+        "region": "asia-south1",
+        "model": [
+            {
+                "name": "latest_long",
+                "id": "latest_long",
+                "language_codes": [
+                    {
+                        "code": "en-US",
+                        "name": "English (United States)"
+                    },
+                    {
+                        "code": "en-IN",
+                        "name": "English (India)"
+                    },
+                    {
+                        "code": "hi-IN",
+                        "name": "Hindi (India)"
+                    },
+                    {
+                        "code": "en-GB",
+                        "name": "English (United Kingdom)"
+                    }
+                ]
+            },
+            {
+                "name": "telephony (only for phone call audio)",
+                "id": "telephony",
+                "language_codes": [
+                    {
+                        "code": "en-US",
+                        "name": "English (United States)"
+                    },
+                    {
+                        "code": "hi-IN",
+                        "name": "Hindi (India)"
+                    },
+                    {
+                        "code": "en-GB",
+                        "name": "English (United Kingdom)"
+                    }
+                ]
+            }
+        ]
     }
-]
+}
