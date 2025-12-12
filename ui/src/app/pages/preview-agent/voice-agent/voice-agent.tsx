@@ -23,8 +23,16 @@ import {
 import { InputVarForm } from '@/app/pages/endpoint/view/try-playground/experiment-prompt/components/input-var-form';
 import { InputVarType } from '@/models/common';
 import { InputGroup } from '@/app/components/input-group';
-import { Check, CheckCheck, ExternalLink, Info } from 'lucide-react';
+import {
+  Check,
+  CheckCheck,
+  ChevronLeft,
+  ExternalLink,
+  Info,
+} from 'lucide-react';
 import { useRapidaStore } from '@/hooks';
+import { PageTitleBlock } from '@/app/components/blocks/page-title-block';
+import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 
 export const VoiceAgent: FC<{
   connectConfig: ConnectionConfig;
@@ -53,8 +61,19 @@ export const VoiceAgent: FC<{
   return (
     <div className="h-dvh flex p-8 text-sm/6 w-full">
       <div className="relative overflow-hidden h-full mx-auto w-2/3 dark:bg-gray-950/50 border rounded-[2px]">
-        {!assistant?.getDebuggerdeployment()?.hasInputaudio() && (
-          <div className="bg-white dark:bg-gray-950 z-10 absolute top-0 left-0 right-0 ">
+        <div className="bg-white dark:bg-gray-950 z-10 absolute top-0 left-0 right-0 ">
+          <PageHeaderBlock className="border-b bg-light-background dark:bg-gray-900">
+            <a
+              href={`/deployment/assistant/${agentConfig.id}/overview`}
+              className="flex items-center hover:text-red-600 hover:cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5 mr-1" strokeWidth={1.5} />
+              <PageTitleBlock className="text-sm/6">
+                Back to Assistant
+              </PageTitleBlock>
+            </a>
+          </PageHeaderBlock>
+          {!assistant?.getDebuggerdeployment()?.hasInputaudio() && (
             <YellowNoticeBlock className="flex items-center justify-between">
               <Info className="shrink-0 w-4 h-4" />
               <div className="ms-3 text-sm font-medium">
@@ -74,8 +93,8 @@ export const VoiceAgent: FC<{
                 />
               </a>
             </YellowNoticeBlock>
-          </div>
-        )}
+          )}
+        </div>
         <div className="h-full flex flex-row flex-nowrap items-stretch">
           <div className="flex flex-col grow min-w-0 flex-1">
             <div className="flex flex-col justify-center grow min-h-0 px-4">
