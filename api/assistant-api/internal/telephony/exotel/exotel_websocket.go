@@ -1,10 +1,12 @@
 package internal_exotel_telephony
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
@@ -24,6 +26,13 @@ type exotelWebsocketStreamer struct {
 	version                 string
 	assistantConversationId uint64
 	streamSid               string
+
+	//
+	// mutex
+	audioBufferLock   sync.Mutex
+	inputAudioBuffer  *bytes.Buffer
+	outputAudioBuffer *bytes.Buffer
+	encoder           *base64.Encoding
 }
 type ExotelMediaEvent struct {
 	Event     string       `json:"event"`
@@ -54,6 +63,11 @@ func NewExotelWebsocketStreamer(
 		},
 		version:                 version,
 		assistantConversationId: conversationId,
+
+		//
+		inputAudioBuffer:  new(bytes.Buffer),
+		outputAudioBuffer: new(bytes.Buffer),
+		encoder:           base64.StdEncoding,
 	}
 }
 
@@ -94,24 +108,7 @@ func (exotel *exotelWebsocketStreamer) Recv() (*protos.AssistantMessagingRequest
 		return nil, nil
 
 	case "media":
-		payloadBytes, err := base64.StdEncoding.DecodeString(mediaEvent.Media.Payload)
-		if err != nil {
-			exotel.logger.Warn("Failed to decode media payload", "error", err.Error())
-			return nil, nil
-		}
-
-		request := &protos.AssistantMessagingRequest{
-			Request: &protos.AssistantMessagingRequest_Message{
-				Message: &protos.AssistantConversationUserMessage{
-					Message: &protos.AssistantConversationUserMessage_Audio{
-						Audio: &protos.AssistantConversationMessageAudioContent{
-							Content: payloadBytes,
-						},
-					},
-				},
-			},
-		}
-		return request, nil
+		return exotel.handleMediaEvent(mediaEvent)
 
 	case "dtmf":
 		// Handle DTMF if needed
@@ -127,63 +124,142 @@ func (exotel *exotelWebsocketStreamer) Recv() (*protos.AssistantMessagingRequest
 		return nil, nil
 	}
 }
+func (exotel *exotelWebsocketStreamer) handleMediaEvent(mediaEvent ExotelMediaEvent) (*protos.AssistantMessagingRequest, error) {
+	payloadBytes, err := exotel.encoder.DecodeString(mediaEvent.Media.Payload)
+	if err != nil {
+		exotel.logger.Warn("Failed to decode media payload", "error", err.Error())
+		return nil, nil
+	}
+
+	exotel.audioBufferLock.Lock()
+	defer exotel.audioBufferLock.Unlock()
+
+	// 1ms 8 bytes @ 8kHz µ-law mono 60ms of audio as silero can't process smaller chunk for mulaw
+	exotel.inputAudioBuffer.Write(payloadBytes)
+	const bufferSizeThreshold = 32 * 60
+
+	if exotel.inputAudioBuffer.Len() >= bufferSizeThreshold {
+		audioRequest := exotel.BuildVoiceRequest(exotel.inputAudioBuffer.Bytes())
+		exotel.inputAudioBuffer.Reset()
+		return audioRequest, nil
+	}
+
+	return nil, nil
+}
+
+func (exotel *exotelWebsocketStreamer) BuildVoiceRequest(audioData []byte) *protos.AssistantMessagingRequest {
+	return &protos.AssistantMessagingRequest{
+		Request: &protos.AssistantMessagingRequest_Message{
+			Message: &protos.AssistantConversationUserMessage{
+				Message: &protos.AssistantConversationUserMessage_Audio{
+					Audio: &protos.AssistantConversationMessageAudioContent{
+						Content: audioData,
+					},
+				},
+			},
+		},
+	}
+}
 
 func (exotel *exotelWebsocketStreamer) Send(response *protos.AssistantMessagingResponse) error {
-	if response.GetMessage() == nil || exotel.conn == nil {
-		return nil
-	}
-	if exotel.streamSid == "" {
-		exotel.logger.Warn("StreamSid is empty, cannot send message")
-		return nil
-	}
 
-	switch response.GetData().(type) {
-	case *protos.AssistantMessagingResponse_Message:
-		for _, content := range response.GetMessage().GetResponse().GetContents() {
-			twilioMessageJSON, err := json.Marshal(map[string]interface{}{
-				"event":      "media",
-				"stream_sid": exotel.streamSid,
-				"media": map[string]interface{}{
-					"payload": base64.StdEncoding.EncodeToString(content.GetContent()),
-				},
-			})
-			if err != nil {
-				exotel.logger.Error("Failed to marshal Twilio message", "error", err.Error())
-				return err
+	switch data := response.GetData().(type) {
+	case *protos.AssistantMessagingResponse_Assistant:
+		switch content := data.Assistant.Message.(type) {
+		case *protos.AssistantConversationAssistantMessage_Audio:
+			//1ms 32  10ms 320byte @ 16000Hz, 16-bit mono PCM = 640 bytes
+			// Each message needs to be a 20ms sample of audio.
+			// At 8kHz the message should be 320 bytes.
+			// At 16kHz the message should be 640 bytes.
+			bufferSizeThreshold := 32 * 20
+			audioData := content.Audio.GetContent()
+
+			// Use vng.audioBuffer to handle pending data across calls
+			exotel.audioBufferLock.Lock()
+			defer exotel.audioBufferLock.Unlock()
+
+			// Append incoming audio data to the buffer
+			exotel.outputAudioBuffer.Write(audioData)
+			// Process and send chunks of 640 bytes
+			for exotel.outputAudioBuffer.Len() >= bufferSizeThreshold && exotel.streamSid != "" {
+				chunk := exotel.outputAudioBuffer.Next(bufferSizeThreshold) // Get and remove the next 640 bytes
+				if err := exotel.sendingExotelMessage("media", map[string]interface{}{
+					"payload": exotel.encoder.EncodeToString(chunk),
+				}); err != nil {
+					exotel.logger.Error("Failed to send audio chunk", "error", err.Error())
+					return err
+				}
 			}
 
-			err = exotel.conn.WriteMessage(websocket.TextMessage, twilioMessageJSON)
-			if err != nil {
-				exotel.logger.Error("Failed to send message to Twilio", "error", err.Error())
-				return err
+			// If response is marked as completed, flush any remaining audio in the buffer
+			if data.Assistant.GetCompleted() && exotel.outputAudioBuffer.Len() > 0 {
+				remainingChunk := exotel.outputAudioBuffer.Bytes()
+				if err := exotel.sendingExotelMessage("media", map[string]interface{}{
+					"payload": exotel.encoder.EncodeToString(remainingChunk),
+				}); err != nil {
+					exotel.logger.Errorf("Failed to send final audio chunk", "error", err.Error())
+					return err
+				}
+				exotel.outputAudioBuffer.Reset() // Clear the buffer after flushing
 			}
 		}
 	case *protos.AssistantMessagingResponse_Interruption:
-		exotelClearJson, err := json.Marshal(map[string]interface{}{
-			"event":     "clear",
-			"streamSid": exotel.streamSid,
-		})
+		exotel.logger.Debugf("clearing action")
+		exotel.audioBufferLock.Lock()
+		defer exotel.audioBufferLock.Unlock()
+		exotel.outputAudioBuffer.Reset() // Clear the buffer after flushing
+		err := exotel.sendingExotelMessage("clear", nil)
 		if err != nil {
-			exotel.logger.Error("Failed to marshal Twilio message", "error", err.Error())
-			return err
+			exotel.logger.Errorf("Error sending clear command:", err)
 		}
-		err = exotel.conn.WriteMessage(websocket.TextMessage, exotelClearJson)
+	case *protos.AssistantMessagingResponse_DisconnectAction:
+		exotel.logger.Debugf("ending call action")
+		err := exotel.conn.Close()
 		if err != nil {
-			exotel.logger.Error("Failed to send clear event to Twilio", "error", err.Error())
-			return err
+			exotel.logger.Errorf("Error disconnecting command:", err)
 		}
-
 	}
 	return nil
 }
 
+func (exotel *exotelWebsocketStreamer) sendingExotelMessage(
+	eventType string,
+	mediaData map[string]interface{}) error {
+	if exotel.conn == nil || exotel.streamSid == "" {
+		return nil
+	}
+	message := map[string]interface{}{
+		"event":     eventType,
+		"streamSid": exotel.streamSid,
+	}
+	if mediaData != nil {
+		message["media"] = mediaData
+	}
+
+	exotelMessageJSON, err := json.Marshal(message)
+	if err != nil {
+		return exotel.handleError("Failed to marshal Exotel message", err)
+	}
+
+	if err := exotel.conn.WriteMessage(websocket.TextMessage, exotelMessageJSON); err != nil {
+		return exotel.handleError("Failed to send message to Exotel", err)
+	}
+
+	return nil
+}
+
+func (exo *exotelWebsocketStreamer) handleError(message string, err error) error {
+	exo.logger.Error(message, "error", err.Error())
+	return err
+}
+
 func (extl *exotelWebsocketStreamer) Config() *internal_streamers.StreamAttribute {
 	return internal_streamers.NewStreamAttribute(
-		internal_streamers.NewStreamConfig(internal_audio.NewMulaw8khzMonoAudioConfig(),
+		internal_streamers.NewStreamConfig(internal_audio.NewLinear8khzMonoAudioConfig(),
 			&internal_text.TextConfig{
 				Charset: "UTF-8",
 			},
-		), internal_streamers.NewStreamConfig(internal_audio.NewMulaw8khzMonoAudioConfig(),
+		), internal_streamers.NewStreamConfig(internal_audio.NewLinear8khzMonoAudioConfig(),
 			&internal_text.TextConfig{
 				Charset: "UTF-8",
 			},

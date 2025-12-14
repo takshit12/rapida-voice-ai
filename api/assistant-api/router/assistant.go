@@ -77,6 +77,7 @@ func TalkCallbackApiRoute(
 		apiv1.GET("/:telephony/event/:assistantId", talkRpcApi.UnviersalCallback)
 		apiv1.POST("/:telephony/event/:assistantId", talkRpcApi.UnviersalCallback)
 
+		// session event
 		apiv1.GET("/:telephony/usr/event/:assistantId/:conversationId/:authorization/:x-auth-id/:x-project-id", talkRpcApi.Callback)
 		apiv1.POST("/:telephony/usr/event/:assistantId/:conversationId/:authorization/:x-auth-id/:x-project-id", talkRpcApi.Callback)
 		apiv1.GET("/:telephony/prj/event/:assistantId/:conversationId/:x-api-key", talkRpcApi.Callback)

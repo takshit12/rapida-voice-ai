@@ -60,3 +60,11 @@ func NewLinear16khzMonoAudioConfig() *AudioConfig {
 		Channels:   1,
 	}
 }
+
+func NewLinear8khzMonoAudioConfig() *AudioConfig {
+	return &AudioConfig{
+		SampleRate: 8000,
+		Format:     Linear16,
+		Channels:   1,
+	}
+}

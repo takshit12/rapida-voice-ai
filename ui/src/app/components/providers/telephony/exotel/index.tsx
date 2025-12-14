@@ -51,18 +51,33 @@ export const ConfigureExotelTelephony: React.FC<{
 
   return (
     <>
-      <FieldSet className="col-span-2">
+      <FieldSet className="col-span-1">
         <FormLabel>Phone</FormLabel>
         <Input
           className="bg-light-background"
           value={getParamValue('phone')}
-          placeholder="Enter your phone number"
+          placeholder="Enter exotel phone number"
           onChange={v => {
             updateParameter('phone', v.target.value);
           }}
         />
         <InputHelper>
           Phone to recieve inbound or make outbound call.
+        </InputHelper>
+      </FieldSet>
+      <FieldSet className="col-span-1">
+        <FormLabel>App ID</FormLabel>
+        <Input
+          className="bg-light-background"
+          value={getParamValue('app_id')}
+          placeholder="Enter exotel applet app_id"
+          onChange={v => {
+            updateParameter('app_id', v.target.value);
+          }}
+        />
+        <InputHelper>
+          Exotel app_id is the identiﬁer of the flow (or applet) that you want
+          to connect to once the From number picks up the call.
         </InputHelper>
       </FieldSet>
     </>
