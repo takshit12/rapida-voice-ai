@@ -86,11 +86,11 @@ func (tpc *exotelTelephony) AppUrl(
 	if !ok {
 		return nil, fmt.Errorf("illegal vault config accountSid is not found")
 	}
-	app_id, ok := vaultCredential.GetValue().AsMap()["app_id"]
-	if !ok {
-		return nil, fmt.Errorf("illegal vault config")
+	app_id, err := opts.GetString("app_id")
+	if err != nil {
+		return nil, fmt.Errorf("illegal app_id option is not found")
 	}
-	return utils.Ptr(fmt.Sprintf("http://my.exotel.com/%s/exoml/start_voice/%s", accountSid.(string), app_id.(string))), nil
+	return utils.Ptr(fmt.Sprintf("http://my.exotel.com/%s/exoml/start_voice/%s", accountSid.(string), app_id)), nil
 
 }
 
