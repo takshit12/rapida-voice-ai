@@ -210,7 +210,6 @@ func (executor *modelAssistantExecutor) chat(
 }
 
 func (executor *modelAssistantExecutor) llm(messageid string, communication internal_adapter_requests.Communication, in, out *types.Message, metrics []*types.Metric) error {
-	// build local history
 	if in != nil {
 		executor.history = append(executor.history, in.ToProto())
 	}
