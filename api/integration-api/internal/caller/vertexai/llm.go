@@ -57,10 +57,14 @@ func (llc *largeLanguageCaller) BuildHistory(allMessages []*protos.Message) (*ge
 				}
 			}
 			for _, tc := range msg.GetToolCalls() {
+				var argumentMap map[string]any
+				if err := json.Unmarshal([]byte(tc.GetFunction().GetArguments()), &argumentMap); err != nil {
+					argumentMap = make(map[string]any)
+				}
 				content.Parts = append(content.Parts, &genai.Part{
 					FunctionCall: &genai.FunctionCall{
-						ID: tc.GetId(),
-						// Args: tc.GetFunction().GetArguments().AsMap(),
+						ID:   tc.GetId(),
+						Args: argumentMap,
 						Name: tc.GetFunction().GetName(),
 					},
 				})
@@ -158,9 +162,7 @@ func (llc *largeLanguageCaller) GetContentConfig(
 ) (mdl string, config *genai.GenerateContentConfig) {
 	config = &genai.GenerateContentConfig{}
 	if len(opts.ToolDefinitions) > 0 {
-		// config.Tools = []*genai.Tool{{
-		// 	FunctionDeclarations: make([]*genai.FunctionDeclaration, len(opts.ToolDefinitions)),
-		// }}
+
 		fd := make([]*genai.FunctionDeclaration, len(opts.ToolDefinitions))
 		for idx, tl := range opts.ToolDefinitions {
 			switch tl.Type {
@@ -178,7 +180,7 @@ func (llc *largeLanguageCaller) GetContentConfig(
 				}
 			}
 		}
-		// config.Tools = tools
+
 		config.Tools = []*genai.Tool{{
 			FunctionDeclarations: fd,
 		}}
@@ -221,6 +223,18 @@ func (llc *largeLanguageCaller) GetContentConfig(
 		case "model.seed":
 			if seed, err := utils.AnyToInt32(value); err == nil {
 				config.Seed = utils.Ptr(seed)
+			}
+
+		case "model.thinking":
+			if format, err := utils.AnyToJSON(value); err == nil {
+				config.ThinkingConfig = &genai.ThinkingConfig{}
+				if enabled, ok := format["include_thoughts"].(bool); ok && enabled {
+					config.ThinkingConfig.IncludeThoughts = enabled
+
+					if budgetTokens, ok := format["thinking_budget"].(int32); ok {
+						config.ThinkingConfig.ThinkingBudget = utils.Ptr(int32(budgetTokens))
+					}
+				}
 			}
 		case "model.response_format":
 			if format, err := utils.AnyToJSON(value); err == nil {

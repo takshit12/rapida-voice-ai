@@ -62,7 +62,6 @@ func (geminiRPC *geminiIntegrationRPCApi) Chat(c *gin.Context) {
 
 // StreamChat implements protos.GoogleServiceServer.
 func (geminiGRPc *geminiIntegrationGRPCApi) StreamChat(irRequest *integration_api.ChatRequest, stream integration_api.GeminiService_StreamChatServer) error {
-	geminiGRPc.logger.Debugf("request for streaming chat gemini with request %+v", irRequest)
 	return geminiGRPc.integrationApi.StreamChat(
 		irRequest,
 

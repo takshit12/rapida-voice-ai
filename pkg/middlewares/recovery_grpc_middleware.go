@@ -7,6 +7,7 @@ package middlewares
 
 import (
 	"context"
+	"runtime/debug"
 
 	"github.com/rapidaai/pkg/commons"
 	"go.uber.org/zap"
@@ -20,7 +21,12 @@ func NewRecoveryUnaryServerMiddleware(logger commons.Logger) grpc.UnaryServerInt
 	) (resp interface{}, err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("panic recovered in unary", zap.Any("panic", r), zap.String("method", info.FullMethod))
+				stackTrace := string(debug.Stack())
+				logger.Error("panic recovered in stream",
+					zap.Any("panic", r),
+					zap.String("method", info.FullMethod),
+					zap.String("stackTrace", stackTrace),
+				)
 				err = status.Errorf(codes.Internal, "internal server error")
 			}
 		}()
@@ -36,7 +42,12 @@ func NewRecoveryStreamServerMiddleware(logger commons.Logger) grpc.StreamServerI
 	) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("panic recovered in stream", zap.Any("panic", r), zap.String("method", info.FullMethod))
+				stackTrace := string(debug.Stack())
+				logger.Error("panic recovered in stream",
+					zap.Any("panic", r),
+					zap.String("method", info.FullMethod),
+					zap.String("stackTrace", stackTrace),
+				)
 				err = status.Errorf(codes.Internal, "internal server error")
 			}
 		}()

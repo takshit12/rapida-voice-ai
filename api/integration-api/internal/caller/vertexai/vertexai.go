@@ -5,6 +5,7 @@ package internal_vertexai_callers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -53,13 +54,34 @@ func (goog *VertexAi) GetClient() (*genai.Client, error) {
 		return nil, errors.New("unable to resolve the credential")
 	}
 	serviceCrdJSON := []byte(serviceCrd.(string))
+
+	var googleServiceJSON struct {
+		ProjectID   string `json:"project_id"`
+		PrivateKey  string `json:"private_key"`
+		ClientEmail string `json:"client_email"`
+		TokenURI    string `json:"token_uri"`
+	}
+
+	if err := json.Unmarshal(serviceCrdJSON, &googleServiceJSON); err != nil {
+		return nil, fmt.Errorf("failed to parse service account JSON: %w", err)
+	}
+
+	tp, err := auth.New2LOTokenProvider(&auth.Options2LO{
+		Email:      googleServiceJSON.ClientEmail,
+		PrivateKey: []byte(googleServiceJSON.PrivateKey),
+		TokenURL:   googleServiceJSON.TokenURI,
+		Scopes:     []string{"https://www.googleapis.com/auth/cloud-platform"},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create token provider: %w", err)
+	}
 	return genai.NewClient(ctx, &genai.ClientConfig{
 		Backend:  genai.BackendVertexAI,
 		Project:  prj.(string),
 		Location: region.(string),
 		Credentials: auth.NewCredentials(&auth.CredentialsOptions{
-			JSON: serviceCrdJSON,
-		}),
+			TokenProvider: tp,
+			JSON:          serviceCrdJSON}),
 	})
 
 }

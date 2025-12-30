@@ -7,6 +7,7 @@ toolchain go1.24.9
 replace github.com/vonage/vonage-go-sdk => github.com/iamprashant/vonage-go-sdk v0.0.0-20251001095859-c473c1750cbd
 
 require (
+	cloud.google.com/go/auth v0.16.4
 	cloud.google.com/go/speech v1.28.1
 	cloud.google.com/go/texttospeech v1.16.0
 	github.com/Microsoft/cognitive-services-speech-sdk-go v1.43.0
@@ -48,7 +49,7 @@ require (
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.16.0
 	google.golang.org/api v0.247.0
-	google.golang.org/genai v1.33.0
+	google.golang.org/genai v1.40.0
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.7
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -58,8 +59,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.120.0 // indirect
-	cloud.google.com/go/auth v0.16.4 // indirect
+	cloud.google.com/go v0.121.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect

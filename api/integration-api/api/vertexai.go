@@ -62,7 +62,6 @@ func (vertexaiRPC *vertexaiIntegrationRPCApi) Chat(c *gin.Context) {
 
 // StreamChat implements protos.VertexaiServiceServer.
 func (vertexaiGRPc *vertexaiIntegrationGRPCApi) StreamChat(irRequest *protos.ChatRequest, stream protos.VertexAiService_StreamChatServer) error {
-	vertexaiGRPc.logger.Debugf("request for streaming chat vertexai with request %+v", irRequest)
 	return vertexaiGRPc.integrationApi.StreamChat(
 		irRequest,
 		stream.Context(),
