@@ -15,13 +15,21 @@ type PromptMap map[string]interface{}
 
 // Value Marshal
 func (jsonField PromptMap) Value() (driver.Value, error) {
-	return json.Marshal(jsonField)
+	b, err := json.Marshal(jsonField)
+	if err != nil {
+		return nil, err
+	}
+	return string(b), nil
 }
 
 // Scan Unmarshal
 func (jsonField *PromptMap) Scan(value interface{}) error {
 	if value == nil {
-		*jsonField = nil
+		*jsonField = make(PromptMap)
+		return nil
+	}
+	if isEmpty(value) {
+		*jsonField = make(PromptMap)
 		return nil
 	}
 	switch v := value.(type) {
@@ -77,8 +85,8 @@ func (jsonField *PromptMap) GetTextChatCompleteTemplate() (template *TextChatCom
 		return
 	}
 
-	if len(template.Variables) > 0 {
-		return
+	if len(template.Variables) == 0 {
+		return nil
 	}
 	return
 }

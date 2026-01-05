@@ -23,10 +23,6 @@ func NewPaginated(page int, pageSize int, count *int64, db *gorm.DB) *Paginated 
 }
 
 func Paginate(r *Paginated) func(db *gorm.DB) *gorm.DB {
-	// i don't know the lifecycle of gorm scope but quick fix
-	dx := make(chan bool, 1)
-	go r.count(dx)
-	<-dx
 	return func(db *gorm.DB) *gorm.DB {
 		if r.PageSize == 0 {
 			return db
@@ -48,9 +44,4 @@ func Paginate(r *Paginated) func(db *gorm.DB) *gorm.DB {
 		result := db.Offset(offset).Limit(pageSize)
 		return result
 	}
-}
-
-func (r *Paginated) count(dx chan bool) {
-	r.DB.Count(r.Count)
-	dx <- true
 }

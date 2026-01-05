@@ -32,14 +32,14 @@ func (a *StringArray) Scan(value interface{}) error {
 
 // Value converts IntArray into a format suitable for the database
 func (a StringArray) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return nil, nil
-	}
 	return json.Marshal(a)
 }
 
 // String converts IntArray into a string representation
 func (a StringArray) String() string {
 	str := make([]string, len(a))
+	for i, v := range a {
+		str[i] = v
+	}
 	return fmt.Sprintf("{%s}", strings.Join(str, ","))
 }

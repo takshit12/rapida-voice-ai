@@ -15,13 +15,21 @@ type DocumentMap map[string]interface{}
 
 // Value Marshal
 func (jsonField DocumentMap) Value() (driver.Value, error) {
-	return json.Marshal(jsonField)
+	b, err := json.Marshal(jsonField)
+	if err != nil {
+		return nil, err
+	}
+	return string(b), nil
 }
 
 // Scan Unmarshal
 func (jsonField *DocumentMap) Scan(value interface{}) error {
 	if value == nil {
-		*jsonField = nil
+		*jsonField = make(DocumentMap)
+		return nil
+	}
+	if isEmpty(value) {
+		*jsonField = make(DocumentMap)
 		return nil
 	}
 	switch v := value.(type) {

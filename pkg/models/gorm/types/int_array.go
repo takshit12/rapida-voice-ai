@@ -18,6 +18,11 @@ type IntArray []uint64
 // Scan converts JSON data into IntArray
 func (a *IntArray) Scan(value interface{}) error {
 	if value == nil {
+		*a = make(IntArray, 0)
+		return nil
+	}
+	if isEmpty(value) {
+		*a = make(IntArray, 0)
 		return nil
 	}
 	switch v := value.(type) {

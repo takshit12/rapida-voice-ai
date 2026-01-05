@@ -18,7 +18,11 @@ type InterfaceMap map[string]interface{}
 // Scan converts JSON data into InterfaceMap
 func (a *InterfaceMap) Scan(value interface{}) error {
 	if value == nil {
-		*a = nil
+		*a = make(InterfaceMap)
+		return nil
+	}
+	if isEmpty(value) {
+		*a = make(InterfaceMap)
 		return nil
 	}
 	switch v := value.(type) {
@@ -33,17 +37,18 @@ func (a *InterfaceMap) Scan(value interface{}) error {
 
 // Value converts InterfaceMap into a format suitable for the database
 func (a InterfaceMap) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return "{}", nil // Return an empty JSON object instead of NULL
+	b, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
 	}
-	return json.Marshal(a)
+	return string(b), nil
 }
 
 // String converts InterfaceMap into a string representation
 func (a InterfaceMap) String() string {
 	str := make([]string, 0, len(a))
 	for k, v := range a {
-		str = append(str, fmt.Sprintf("%s:%s", k, v))
+		str = append(str, fmt.Sprintf("%s:%v", k, v))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(str, ","))
 }

@@ -227,9 +227,9 @@ func TestErrorWithCode_BasicFunctionality(t *testing.T) {
 
 func TestErrorWithCode_DifferentCodes(t *testing.T) {
 	testCases := []struct {
-		code       int32
-		errorMsg   string
-		humanMsg   string
+		code     int32
+		errorMsg string
+		humanMsg string
 	}{
 		{200, "ok error", "Everything is fine"},
 		{404, "not found", "Resource missing"},
@@ -426,7 +426,9 @@ func TestIntegration_AllErrorFunctions(t *testing.T) {
 		func() (interface{}, error) { return APIAuthenticationError[map[string]interface{}]() },
 		func() (interface{}, error) { return AuthenticationError[map[string]interface{}]() },
 		func() (interface{}, error) { return BadRequestError[map[string]interface{}]("test") },
-		func() (interface{}, error) { return InternalServerError[map[string]interface{}](errors.New("test"), "test") },
+		func() (interface{}, error) {
+			return InternalServerError[map[string]interface{}](errors.New("test"), "test")
+		},
 	}
 
 	for i, fn := range functions {

@@ -23,6 +23,9 @@ func NewDynamic(in interface{}) Dynamic {
 
 // Value converts the data to a format suitable for database storage
 func (d Dynamic) Value() (driver.Value, error) {
+	if d.Data == nil {
+		return nil, nil
+	}
 	switch v := d.Data.(type) {
 	case string, int, float64, bool:
 		return v, nil
@@ -35,6 +38,10 @@ func (d Dynamic) Value() (driver.Value, error) {
 func (d *Dynamic) Scan(src interface{}) error {
 	if src == nil {
 		d.Data = nil
+		return nil
+	}
+	if isEmpty(src) {
+		d.Data = make(map[string]interface{})
 		return nil
 	}
 
@@ -80,4 +87,14 @@ func (d Dynamic) GetInt() (int, bool) {
 func (d Dynamic) GetMap() (map[string]interface{}, bool) {
 	m, ok := d.Data.(map[string]interface{})
 	return m, ok
+}
+
+func isEmpty(src interface{}) bool {
+	if s, ok := src.(string); ok {
+		return s == ""
+	}
+	if b, ok := src.([]byte); ok {
+		return len(b) == 0
+	}
+	return false
 }

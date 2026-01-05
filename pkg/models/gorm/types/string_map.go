@@ -18,7 +18,11 @@ type StringMap map[string]string
 // Scan converts JSON data into StringMap
 func (a *StringMap) Scan(value interface{}) error {
 	if value == nil {
-		*a = nil
+		*a = make(StringMap)
+		return nil
+	}
+	if isEmpty(value) {
+		*a = make(StringMap)
 		return nil
 	}
 	switch v := value.(type) {
@@ -33,9 +37,6 @@ func (a *StringMap) Scan(value interface{}) error {
 
 // Value converts StringMap into a format suitable for the database
 func (a StringMap) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return nil, nil
-	}
 	return json.Marshal(a)
 }
 
@@ -43,7 +44,7 @@ func (a StringMap) Value() (driver.Value, error) {
 func (a StringMap) String() string {
 	str := make([]string, 0, len(a))
 	for k, v := range a {
-		str = append(str, fmt.Sprintf("%s:%s", k, v))
+		str = append(str, fmt.Sprintf("%s=%s", k, v))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(str, ","))
 }

@@ -17,6 +17,11 @@ type MapArray []map[string]string
 // Scan converts JSON data into MapArray
 func (a *MapArray) Scan(value interface{}) error {
 	if value == nil {
+		*a = make(MapArray, 0)
+		return nil
+	}
+	if isEmpty(value) {
+		*a = make(MapArray, 0)
 		return nil
 	}
 	switch v := value.(type) {
@@ -34,7 +39,11 @@ func (a MapArray) Value() (driver.Value, error) {
 	if len(a) == 0 {
 		return nil, nil
 	}
-	return json.Marshal(a)
+	data, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
 }
 
 // String converts MapArray into a string representation
@@ -49,9 +58,14 @@ func (a MapArray) String() string {
 // MapArray is a custom type to represent an array of maps
 type MapInterfaceArray []map[string]interface{}
 
-// Scan converts JSON data into MapArray
+// Scan converts JSON data into MapInterfaceArray
 func (a *MapInterfaceArray) Scan(value interface{}) error {
 	if value == nil {
+		*a = make(MapInterfaceArray, 0)
+		return nil
+	}
+	if isEmpty(value) {
+		*a = make(MapInterfaceArray, 0)
 		return nil
 	}
 	switch v := value.(type) {
@@ -69,7 +83,11 @@ func (a MapInterfaceArray) Value() (driver.Value, error) {
 	if len(a) == 0 {
 		return nil, nil
 	}
-	return json.Marshal(a)
+	data, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
 }
 
 // String converts MapInterfaceArray into a string representation
