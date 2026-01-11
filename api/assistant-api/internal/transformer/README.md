@@ -5,7 +5,9 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 ## 📚 Documentation Files
 
 ### 1. [QUICKSTART.md](QUICKSTART.md) - Start Here! 🚀
+
 **5-minute overview for experienced developers**
+
 - Quick 5-step guide to add a new provider
 - Common patterns and code snippets
 - File structure template
@@ -13,7 +15,9 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 - Quick reference for all existing providers
 
 ### 2. [DEVELOPMENT.md](DEVELOPMENT.md) - Comprehensive Guide
+
 **Complete step-by-step implementation guide**
+
 - Architecture overview
 - Interface definitions with detailed explanations
 - Full Step-by-Step Guide (6 steps)
@@ -23,7 +27,9 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 - Troubleshooting section
 
 ### 3. [ARCHITECTURE.md](ARCHITECTURE.md) - Deep Dive 🏗️
+
 **Visual diagrams and detailed design patterns**
+
 - System architecture diagrams
 - Sequence diagrams (STT/TTS flows)
 - Component structure
@@ -34,7 +40,9 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 - Configuration hierarchy
 
 ### 4. [PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md) - Implementation Checklist ✅
+
 **Comprehensive checklist for production-ready implementation**
+
 - 80+ checkpoints across all phases
 - Pre-implementation planning
 - Directory setup
@@ -48,6 +56,7 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 - Go-live checklist
 
 ### 5. This File (INDEX.md)
+
 **Navigation and overview of all documentation**
 
 ---
@@ -57,26 +66,31 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 ### I want to...
 
 **Add a new speech-to-text provider**
+
 1. Start with [QUICKSTART.md](QUICKSTART.md) to understand the basics
 2. Follow [DEVELOPMENT.md](DEVELOPMENT.md) step-by-step
 3. Refer to [ARCHITECTURE.md](ARCHITECTURE.md) for design patterns
 4. Use [PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md) to verify completeness
 
 **Add a new text-to-speech provider**
+
 1. Same as above, but focus on the TTS section
 2. Review [google/tts.go](google/tts.go) or [azure/tts.go](azure/tts.go) as examples
 
 **Understand the architecture**
+
 1. Read [ARCHITECTURE.md](ARCHITECTURE.md) for diagrams and patterns
 2. Review sequence diagrams for data flow
 3. Check component structure and concurrency model
 
 **Debug a transformer issue**
+
 1. Check [DEVELOPMENT.md](DEVELOPMENT.md) Troubleshooting section
 2. Review error handling patterns in [ARCHITECTURE.md](ARCHITECTURE.md)
 3. Look at similar provider's implementation for comparison
 
 **Implement proper error handling**
+
 1. See Error Handling Flow in [ARCHITECTURE.md](ARCHITECTURE.md)
 2. Review best practices in [DEVELOPMENT.md](DEVELOPMENT.md)
 3. Check existing providers for patterns
@@ -86,6 +100,7 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 ## 📖 Learning Path
 
 ### For Complete Beginners
+
 1. **QUICKSTART.md** → Overview and 5-step summary
 2. **ARCHITECTURE.md** → Visual diagrams and flows
 3. **DEVELOPMENT.md** → Detailed implementation guide
@@ -93,12 +108,14 @@ Welcome to the Rapida Voice AI Transformer Package documentation. This guide wil
 5. **PROVIDER_CHECKLIST.md** → Verify your implementation
 
 ### For Experienced Go Developers
+
 1. **QUICKSTART.md** → 5-minute overview
 2. **ARCHITECTURE.md** → Review design patterns
 3. **DEVELOPMENT.md** → Reference as needed
 4. **PROVIDER_CHECKLIST.md** → Pre-submission verification
 
 ### For Code Reviewers
+
 1. **PROVIDER_CHECKLIST.md** → Review against checklist
 2. **ARCHITECTURE.md** → Verify design patterns
 3. **DEVELOPMENT.md** → Check best practices
@@ -157,35 +174,45 @@ transformer/
 ## 🔑 Key Concepts
 
 ### Transformer Interface
+
 Generic interface that defines the transformation pipeline:
+
 - `Initialize()` - Setup connection and resources
 - `Transform(ctx, input, options)` - Process input and deliver via callbacks
 - `Close(ctx)` - Cleanup resources
 - See [DEVELOPMENT.md](DEVELOPMENT.md) for details
 
 ### Speech-to-Text Transformer
+
 Converts audio ([]byte) to transcribed text via `OnTranscript` callback:
+
 - Receives audio data in chunks
 - Returns transcript with confidence and language
 - Indicates completion with `isCompleted` flag
 - Example: [google/stt.go](google/stt.go)
 
 ### Text-to-Speech Transformer
+
 Converts text (string) to audio ([]byte) via callbacks:
+
 - Receives text to synthesize
 - Returns audio chunks via `OnSpeech` callback
 - Signals completion via `OnComplete` callback
 - Example: [google/tts.go](google/tts.go)
 
 ### Callback Pattern
+
 Results delivered through callbacks instead of return values:
+
 - Enables streaming and real-time processing
 - Allows multiple results from single Transform() call
 - Supports error handling in callback execution
 - See [ARCHITECTURE.md](ARCHITECTURE.md) for callback flow
 
 ### Thread Safety
+
 All shared state protected by mutex:
+
 - Provider client/connection
 - Active streams
 - Context tracking (contextId for TTS)
@@ -209,6 +236,7 @@ All shared state protected by mutex:
 ## 📝 Code Examples
 
 ### Basic STT Provider Skeleton
+
 ```go
 // 1. Create myprovider/myprovider.go
 type myproviderOption struct {
@@ -253,10 +281,10 @@ func TestNewMyproviderOption(t *testing.T) {
 func TestTransform(t *testing.T) {
     transformer, _ := NewMyproviderSpeechToText(ctx, logger, credential, opts)
     transformer.Initialize()
-    
+
     err := transformer.Transform(ctx, audioData, &SpeechToTextOption{})
     require.NoError(t, err)
-    
+
     transformer.Close(ctx)
 }
 ```
@@ -285,21 +313,25 @@ Before submitting your new provider:
 ## 📖 Reference Implementations
 
 ### Google Cloud (Recommended for learning)
+
 - **Location**: [google/](google/)
 - **Strength**: Well-structured, comprehensive error handling
 - **Use For**: Architecture reference
 
 ### Deepgram (WebSocket example)
+
 - **Location**: [deepgram/](deepgram/)
 - **Strength**: WebSocket streaming, callback patterns
 - **Use For**: WebSocket implementation reference
 
 ### Azure (Event-driven example)
+
 - **Location**: [azure/](azure/)
 - **Strength**: Event-driven callbacks, lifecycle management
 - **Use For**: Event-based integration patterns
 
 ### AssemblyAI (WebSocket with headers)
+
 - **Location**: [assembly-ai/](assembly-ai/)
 - **Strength**: Custom headers, query parameters
 - **Use For**: WebSocket configuration patterns
@@ -309,23 +341,30 @@ Before submitting your new provider:
 ## ❓ FAQ
 
 ### Q: What's the difference between STT and TTS?
-**A:** 
+
+**A:**
+
 - **STT** (Speech-to-Text): Converts audio input to text output
 - **TTS** (Text-to-Speech): Converts text input to audio output
 
 ### Q: Do I need to implement both STT and TTS?
+
 **A:** No, implement only what the provider supports. Some only provide one.
 
 ### Q: How do callbacks work?
+
 **A:** Results are delivered via callback functions rather than return values. This enables streaming and real-time results. See [ARCHITECTURE.md](ARCHITECTURE.md) Callback Delivery Pattern.
 
 ### Q: What if the provider doesn't support streaming?
+
 **A:** You can batch/buffer the entire input and return all results at once via callback.
 
 ### Q: How do I handle provider-specific configuration?
+
 **A:** Use `ModelOptions` (utils.Option) to access dynamic configuration. See [DEVELOPMENT.md](DEVELOPMENT.md) Configuration Handling section.
 
 ### Q: What about error handling?
+
 **A:** Always log errors with provider prefix, wrap with context, and propagate to caller. See [ARCHITECTURE.md](ARCHITECTURE.md) Error Handling Flow.
 
 ---

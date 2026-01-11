@@ -5,6 +5,7 @@ The Transformer package provides a pluggable architecture for integrating multip
 ## 🎯 What is a Transformer?
 
 A Transformer is a provider-agnostic adapter that:
+
 - Converts audio streams into transcribed text (STT)
 - Converts text into audio streams (TTS)
 - Manages connection lifecycle and error handling
@@ -13,28 +14,28 @@ A Transformer is a provider-agnostic adapter that:
 
 ## 🏗️ Supported Providers
 
-| Provider | STT | TTS | Status | Notes |
-|----------|-----|-----|--------|-------|
-| **Google Cloud** | ✅ | ✅ | Production | Recommended for learning |
-| **Azure Cognitive Services** | ✅ | ✅ | Production | Event-driven |
-| **Deepgram** | ✅ | ❌ | Production | WebSocket streaming |
-| **AssemblyAI** | ✅ | ❌ | Production | WebSocket with headers |
-| **ElevenLabs** | ❌ | ✅ | Production | TTS only |
-| **Cartesia** | ❌ | ✅ | Development | Experimental |
-| **Sarvam** | ✅ | ✅ | Development | Limited support |
-| **AWS** | ⚠️ | ⚠️ | Unimplemented | Placeholder only |
+| Provider                     | STT | TTS | Status        | Notes                    |
+| ---------------------------- | --- | --- | ------------- | ------------------------ |
+| **Google Cloud**             | ✅  | ✅  | Production    | Recommended for learning |
+| **Azure Cognitive Services** | ✅  | ✅  | Production    | Event-driven             |
+| **Deepgram**                 | ✅  | ❌  | Production    | WebSocket streaming      |
+| **AssemblyAI**               | ✅  | ❌  | Production    | WebSocket with headers   |
+| **ElevenLabs**               | ❌  | ✅  | Production    | TTS only                 |
+| **Cartesia**                 | ❌  | ✅  | Development   | Experimental             |
+| **Sarvam**                   | ✅  | ✅  | Development   | Limited support          |
+| **AWS**                      | ⚠️  | ⚠️  | Unimplemented | Placeholder only         |
 
 ## 📚 Documentation
 
 Start here for adding a new provider:
 
-| Document | Time | Purpose |
-|----------|------|---------|
-| **[INDEX.md](INDEX.md)** | 5 min | Overview & navigation |
-| **[QUICKSTART.md](QUICKSTART.md)** | 5 min | 5-step quick reference |
-| **[ARCHITECTURE.md](ARCHITECTURE.md)** | 20 min | Diagrams & design patterns |
-| **[DEVELOPMENT.md](DEVELOPMENT.md)** | 60 min | Step-by-step implementation |
-| **[PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md)** | Review | 80+ verification points |
+| Document                                           | Time   | Purpose                     |
+| -------------------------------------------------- | ------ | --------------------------- |
+| **[INDEX.md](INDEX.md)**                           | 5 min  | Overview & navigation       |
+| **[QUICKSTART.md](QUICKSTART.md)**                 | 5 min  | 5-step quick reference      |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)**             | 20 min | Diagrams & design patterns  |
+| **[DEVELOPMENT.md](DEVELOPMENT.md)**               | 60 min | Step-by-step implementation |
+| **[PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md)** | Review | 80+ verification points     |
 
 **Total Documentation**: 2,122 lines of comprehensive guides with diagrams, code examples, and checklists.
 
@@ -52,6 +53,7 @@ See [QUICKSTART.md](QUICKSTART.md) for the complete 5-step guide.
 ## 📖 Learning Paths
 
 ### First Time? (2 hours)
+
 1. Read [INDEX.md](INDEX.md) (10 min)
 2. Read [QUICKSTART.md](QUICKSTART.md) (10 min)
 3. Read [ARCHITECTURE.md](ARCHITECTURE.md) (20 min)
@@ -59,12 +61,14 @@ See [QUICKSTART.md](QUICKSTART.md) for the complete 5-step guide.
 5. Use [PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md) (verification)
 
 ### Experienced Go Dev? (30-45 min)
+
 1. Skim [QUICKSTART.md](QUICKSTART.md)
 2. Review [ARCHITECTURE.md](ARCHITECTURE.md) patterns
 3. Use [DEVELOPMENT.md](DEVELOPMENT.md) templates
 4. Check [PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md)
 
 ### Just Want Reference Implementations?
+
 - [google/](google/) - Comprehensive, well-structured
 - [deepgram/](deepgram/) - WebSocket streaming
 - [azure/](azure/) - Event-driven callbacks
@@ -73,6 +77,7 @@ See [QUICKSTART.md](QUICKSTART.md) for the complete 5-step guide.
 ## 🔧 Core Concepts
 
 ### Transformer Interface
+
 ```go
 // All transformers implement this generic interface
 type Transformers[IN any, opts TransformOption] interface {
@@ -83,12 +88,14 @@ type Transformers[IN any, opts TransformOption] interface {
 ```
 
 ### Speech-to-Text (STT)
+
 ```
 Input: []byte (audio data)
 Output: Callback with OnTranscript(text, confidence, language, isFinal)
 ```
 
 ### Text-to-Speech (TTS)
+
 ```
 Input: string (text to synthesize)
 Output: Callbacks with OnSpeech(contextId, audioData) and OnComplete(contextId)
@@ -153,6 +160,7 @@ See [PROVIDER_CHECKLIST.md](PROVIDER_CHECKLIST.md) for comprehensive 80-point ch
 ## 🧪 Testing
 
 Each provider should have:
+
 - Unit tests for initialization
 - Unit tests for Transform() method
 - Unit tests for callback handling
@@ -160,6 +168,7 @@ Each provider should have:
 - Concurrency tests (run with `go test -race`)
 
 Example from [DEVELOPMENT.md](DEVELOPMENT.md):
+
 ```go
 func TestNewMyproviderOption(t *testing.T) {
     credential := &protos.VaultCredential{...}
@@ -171,51 +180,59 @@ func TestNewMyproviderOption(t *testing.T) {
 ## 🚨 Common Issues
 
 ### "Provider not initialized"
+
 → Call `Initialize()` before `Transform()`
 
 ### Callbacks not triggered
+
 → Check if callback is nil, verify listening goroutine is running
 
 ### Memory leaks
+
 → Ensure `Close()` cancels context and stops goroutines
 
 ### Race conditions
+
 → Run `go test -race ./...` to detect
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) Troubleshooting for more.
 
 ## 📊 Code Statistics
 
-| Aspect | Count |
-|--------|-------|
-| Documentation Files | 6 |
-| Documentation Lines | 2,122 |
-| Code Diagrams | 8+ |
-| Code Examples | 10+ |
-| Supported Providers | 8 |
-| Reference Implementations | 4 |
-| Checklist Points | 80+ |
+| Aspect                    | Count |
+| ------------------------- | ----- |
+| Documentation Files       | 6     |
+| Documentation Lines       | 2,122 |
+| Code Diagrams             | 8+    |
+| Code Examples             | 10+   |
+| Supported Providers       | 8     |
+| Reference Implementations | 4     |
+| Checklist Points          | 80+   |
 
 ## 🎓 Reference Implementations
 
 Learn from existing providers:
 
 ### Google Cloud (Recommended)
+
 - **Use for**: Architecture reference, comprehensive example
 - **Features**: Well-documented, error handling, streaming
 - **Files**: [google/](google/)
 
 ### Deepgram (WebSocket Example)
+
 - **Use for**: WebSocket implementation patterns
 - **Features**: Real-time streaming, callback patterns
 - **Files**: [deepgram/](deepgram/)
 
 ### Azure (Event-driven)
+
 - **Use for**: Event-based callback patterns
 - **Features**: Session management, event lifecycle
 - **Files**: [azure/](azure/)
 
 ### AssemblyAI (Advanced WebSocket)
+
 - **Use for**: Custom headers and authentication
 - **Features**: WebSocket with query parameters
 - **Files**: [assembly-ai/](assembly-ai/)
@@ -268,11 +285,11 @@ All providers use vault for credentials:
 
 ```json
 {
-    "key": "api-key-value",
-    "project_id": "project-identifier",
-    "subscription_key": "subscription-key",
-    "endpoint": "https://api.example.com",
-    "service_account_key": "json-string"
+  "key": "api-key-value",
+  "project_id": "project-identifier",
+  "subscription_key": "subscription-key",
+  "endpoint": "https://api.example.com",
+  "service_account_key": "json-string"
 }
 ```
 
@@ -282,6 +299,6 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for provider-specific credential requiremen
 
 **Last Updated**: 2025-01-11  
 **Documentation Version**: 1.0  
-**Total Documentation**: 2,122 lines across 6 files  
+**Total Documentation**: 2,122 lines across 6 files
 
 Start with [INDEX.md](INDEX.md) or [QUICKSTART.md](QUICKSTART.md) 👈
