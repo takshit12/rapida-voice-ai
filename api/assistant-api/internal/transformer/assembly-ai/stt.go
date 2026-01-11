@@ -28,12 +28,12 @@ type assemblyaiSTT struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	// mutex
-	mu sync.Mutex
-
-	logger     commons.Logger
+	// mutex for thread-safe access
+	mu         sync.Mutex
 	connection *websocket.Conn
-	options    *internal_transformer.SpeechToTextInitializeOptions
+
+	logger  commons.Logger
+	options *internal_transformer.SpeechToTextInitializeOptions
 }
 
 func NewAssemblyaiSpeechToText(
@@ -73,64 +73,81 @@ func (aai *assemblyaiSTT) Initialize() error {
 		Proxy:            nil,              // Skip proxy for direct connection
 		HandshakeTimeout: 10 * time.Second, // Reduced handshake timeout for quick failover
 	}
-	conenction, _, err := dialer.Dial(aai.GetSpeechToTextConnectionString(), headers)
+
+	connection, _, err := dialer.Dial(aai.GetSpeechToTextConnectionString(), headers)
 	if err != nil {
-		aai.logger.Errorf("assembly-ai-stt: key from credential failed %v", err)
+		aai.logger.Errorf("assembly-ai-stt: failed to connect to websocket: %v", err)
 		return fmt.Errorf("failed to connect to assemblyai websocket: %w", err)
 	}
-	aai.connection = conenction
-	go aai.speechToTextCallback(aai.ctx)
+
+	aai.mu.Lock()
+	aai.connection = connection
+	aai.mu.Unlock()
+
+	aai.logger.Debugf("assembly-ai-stt: connection established")
+	go aai.speechToTextCallback(connection, aai.ctx)
 	return nil
 }
 
-func (aai *assemblyaiSTT) speechToTextCallback(ctx context.Context) {
+func (aai *assemblyaiSTT) speechToTextCallback(conn *websocket.Conn, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			aai.logger.Info("assembly-ai-stt: read goroutine exiting due to context cancellation")
+			aai.logger.Infof("assembly-ai-stt: read goroutine exiting due to context cancellation")
 			return
 		default:
-			if aai.connection == nil {
-				aai.logger.Errorf("assembly-ai-stt: WebSocket connection is either closed or not connected")
-				return
-			}
-			_, msg, err := aai.connection.ReadMessage()
-			if err != nil {
-				aai.logger.Error("assembly-ai-stt: read error: ", err)
-				return
-			}
-			var transcript assemblyai_internal.TranscriptMessage
-			if err := json.Unmarshal(msg, &transcript); err != nil {
+		}
+
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			aai.logger.Errorf("assembly-ai-stt: read error: %v", err)
+			return
+		}
+
+		var transcript assemblyai_internal.TranscriptMessage
+		if err := json.Unmarshal(msg, &transcript); err != nil {
+			aai.logger.Errorf("assembly-ai-stt: error unmarshalling transcript: %v", err)
+			continue
+		}
+
+		switch transcript.Type {
+		case "Turn":
+			if len(transcript.Words) == 0 {
+				aai.logger.Warnf("assembly-ai-stt: received Turn message with no words")
 				continue
 			}
-			switch transcript.Type {
-			case "Turn":
-				confidence := 0.0
-				for _, v := range transcript.Words {
-					confidence += v.Confidence
-				}
-				averageConfidence := confidence / float64(len(transcript.Words))
-				if transcript.EndOfTurn {
-					aai.options.OnTranscript(
-						transcript.Transcript,
-						averageConfidence,
-						"en",
-						true,
-					)
-				} else {
-					aai.options.OnTranscript(
-						transcript.Transcript,
-						averageConfidence,
-						"en",
-						false,
-					)
-				}
-			case "Begin":
-			default:
+
+			confidence := 0.0
+			for _, v := range transcript.Words {
+				confidence += v.Confidence
 			}
+			averageConfidence := confidence / float64(len(transcript.Words))
+
+			if transcript.EndOfTurn {
+				aai.options.OnTranscript(
+					transcript.Transcript,
+					averageConfidence,
+					"en",
+					true,
+				)
+			} else {
+				aai.options.OnTranscript(
+					transcript.Transcript,
+					averageConfidence,
+					"en",
+					false,
+				)
+			}
+
+		case "Begin":
+			aai.logger.Debugf("assembly-ai-stt: received Begin message")
+
+		default:
+			aai.logger.Debugf("assembly-ai-stt: received unknown message type: %s", transcript.Type)
 		}
 	}
 }
+
 func (aai *assemblyaiSTT) Transform(ctx context.Context, in []byte, opts *internal_transformer.SpeechToTextOption) error {
 	aai.mu.Lock()
 	defer aai.mu.Unlock()
@@ -138,16 +155,27 @@ func (aai *assemblyaiSTT) Transform(ctx context.Context, in []byte, opts *intern
 	if aai.connection == nil {
 		return fmt.Errorf("assembly-ai-stt: websocket connection is not initialized")
 	}
+
 	if err := aai.connection.WriteMessage(websocket.BinaryMessage, in); err != nil {
+		aai.logger.Errorf("assembly-ai-stt: error sending audio: %v", err)
 		return fmt.Errorf("error sending audio: %w", err)
 	}
+
 	return nil
 }
 
 func (aai *assemblyaiSTT) Close(ctx context.Context) error {
 	aai.ctxCancel()
+
+	aai.mu.Lock()
+	defer aai.mu.Unlock()
+
 	if aai.connection != nil {
-		return aai.connection.Close()
+		aai.logger.Debugf("assembly-ai-stt: closing websocket connection")
+		err := aai.connection.Close()
+		aai.connection = nil
+		return err
 	}
+
 	return nil
 }

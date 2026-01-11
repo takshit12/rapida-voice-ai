@@ -1,8 +1,6 @@
 module github.com/rapidaai
 
-go 1.24.0
-
-toolchain go1.24.9
+go 1.25
 
 replace github.com/vonage/vonage-go-sdk => github.com/iamprashant/vonage-go-sdk v0.0.0-20251001095859-c473c1750cbd
 
@@ -25,6 +23,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-gorm/caches/v4 v4.0.5
 	github.com/go-playground/validator/v10 v10.11.1
+	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/golang-migrate/migrate/v4 v4.19.0
@@ -43,9 +42,11 @@ require (
 	github.com/spf13/viper v1.13.0
 	github.com/streamer45/silero-vad-go v0.2.1
 	github.com/stretchr/testify v1.11.1
+	github.com/tphakala/go-audio-resampler v1.1.0
 	github.com/twilio/twilio-go v1.28.5
 	github.com/vonage/vonage-go-sdk v0.14.0
 	github.com/weaviate/weaviate-go-client/v4 v4.14.0
+	github.com/zaf/g711 v0.0.0-20190814101024-76a4a538f52b
 	go.uber.org/zap v1.23.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.16.0
@@ -103,7 +104,6 @@ require (
 	github.com/go-openapi/validate v0.21.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-redis/redismock/v9 v9.2.0 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/golang/mock v1.6.0 // indirect
@@ -151,6 +151,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
+	github.com/tphakala/simd v1.0.14 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/vincent-petithory/dataurl v1.0.0 // indirect
 	github.com/weaviate/weaviate v1.25.1 // indirect
@@ -166,9 +167,10 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
+	gonum.org/v1/gonum v0.16.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect

@@ -8,6 +8,7 @@ package internal_transformer_deepgram
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	commons "github.com/rapidaai/pkg/commons"
@@ -58,7 +59,6 @@ func (dgOpt *deepgramOption) GetKey() string {
 }
 
 func (dgOpt *deepgramOption) SpeechToTextOptions() *interfaces.LiveTranscriptionOptions {
-
 	opts := &interfaces.LiveTranscriptionOptions{
 		Model:          "nova",
 		Language:       "en-US",
@@ -129,16 +129,12 @@ func (dgOpt *deepgramOption) SpeechToTextOptions() *interfaces.LiveTranscription
 	return opts
 }
 
-func (dgOpt *deepgramOption) TextToSpeechOptions() *interfaces.WSSpeakOptions {
-	opts := &interfaces.WSSpeakOptions{
-		Model:      "aura-asteria-en",
-		Encoding:   dgOpt.GetEncoding(),
-		SampleRate: int(dgOpt.audioConfig.SampleRate),
+func (dgOpt *deepgramOption) GetTextToSpeechConnectionString() string {
+	params := url.Values{}
+	params.Add("encoding", dgOpt.GetEncoding())
+	params.Add("sample_rate", fmt.Sprintf("%d", dgOpt.audioConfig.GetSampleRate()))
+	if model, err := dgOpt.mdlOpts.GetString("speak.voice.id"); err == nil {
+		params.Add("model", model)
 	}
-
-	if voiceIDValue, err := dgOpt.mdlOpts.GetString("speak.voice.id"); err == nil {
-		opts.Model = voiceIDValue
-	}
-
-	return opts
+	return fmt.Sprintf("wss://api.deepgram.com/v1/speak?%s", params.Encode())
 }

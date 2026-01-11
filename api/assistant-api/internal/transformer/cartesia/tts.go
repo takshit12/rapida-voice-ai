@@ -32,15 +32,8 @@ type cartesiaTTS struct {
 	options    *internal_transformer.TextToSpeechInitializeOptions
 }
 
-func NewCartesiaTextToSpeech(
-	ctx context.Context,
-	logger commons.Logger,
-	credential *protos.VaultCredential,
-	opts *internal_transformer.TextToSpeechInitializeOptions,
-) (internal_transformer.TextToSpeechTransformer, error) {
-	cartesiaOpts, err := NewCartesiaOption(logger, credential,
-		opts.AudioConfig,
-		opts.ModelOptions)
+func NewCartesiaTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+	cartesiaOpts, err := NewCartesiaOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("intializing cartesia failed %+v", err)
 		return nil, err
@@ -62,24 +55,23 @@ func (ct *cartesiaTTS) Initialize() error {
 		ct.logger.Errorf("cartesia-stt: unable to dial %v", err)
 		return err
 	}
+	ct.mu.Lock()
 	ct.connection = conn
-	go ct.textToSpeechCallback(ct.ctx)
+	ct.mu.Unlock()
+
+	go ct.textToSpeechCallback(ct.connection, ct.ctx)
 	ct.logger.Debugf("cartesia-stt: connection established")
 	return nil
 }
 
-func (cst *cartesiaTTS) textToSpeechCallback(ctx context.Context) {
+func (cst *cartesiaTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			cst.logger.Infof("cartesia-tts: context cancelled, stopping response listener")
 			return
 		default:
-			if cst.connection == nil {
-				cst.logger.Errorf("cartesia-tts: WebSocket connection is either closed or not connected")
-				return
-			}
-			_, msg, err := cst.connection.ReadMessage()
+			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
@@ -112,19 +104,14 @@ func (*cartesiaTTS) Name() string {
 
 func (ct *cartesiaTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
 	ct.mu.Lock()
-	defer ct.mu.Unlock()
+	conn := ct.connection
+	ct.mu.Unlock()
 
-	if ct.connection == nil {
+	if conn == nil {
 		return fmt.Errorf("cartesia-tts: websocket connection is not initialized")
 	}
-	message := ct.GetTextToSpeechInput(
-		in,
-		map[string]interface{}{
-			"continue":   !opts.IsComplete,
-			"context_id": opts.ContextId,
-		})
-
-	if err := ct.connection.WriteJSON(message); err != nil {
+	message := ct.GetTextToSpeechInput(in, map[string]interface{}{"continue": !opts.IsComplete, "context_id": opts.ContextId})
+	if err := conn.WriteJSON(message); err != nil {
 		return err
 	}
 	return nil
@@ -132,6 +119,10 @@ func (ct *cartesiaTTS) Transform(ctx context.Context, in string, opts *internal_
 
 func (ct *cartesiaTTS) Close(ctx context.Context) error {
 	ct.ctxCancel()
+
+	ct.mu.Lock()
+	defer ct.mu.Unlock()
+
 	if ct.connection != nil {
 		_ = ct.connection.Close()
 	}

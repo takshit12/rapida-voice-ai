@@ -15,6 +15,7 @@ import (
 
 	"github.com/dvonthenen/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	sarvam_internal "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam/internal"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -25,18 +26,18 @@ type sarvamTextToSpeech struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	mu        sync.Mutex
-	contextId string
-
-	logger     commons.Logger
+	mu         sync.Mutex
 	connection *websocket.Conn
-	options    *internal_transformer.TextToSpeechInitializeOptions
+	contextId  string
+
+	logger  commons.Logger
+	options *internal_transformer.TextToSpeechInitializeOptions
 }
 
 func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
 	sarvamOpts, err := NewSarvamOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
-		logger.Errorf("sarvam-stt: intializing sarvam failed %+v", err)
+		logger.Errorf("sarvam-tts: initializing sarvam failed %+v", err)
 		return nil, err
 	}
 	ct, ctxCancel := context.WithCancel(ctx)
@@ -51,9 +52,6 @@ func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credentia
 
 // Initialize implements internal_transformer.OutputAudioTransformer.
 func (rt *sarvamTextToSpeech) Initialize() error {
-	rt.mu.Lock()
-	defer rt.mu.Unlock()
-
 	headers := map[string][]string{
 		"Api-Subscription-Key": {rt.GetKey()},
 	}
@@ -62,14 +60,19 @@ func (rt *sarvamTextToSpeech) Initialize() error {
 		rt.logger.Errorf("sarvam-tts: unable to connect to websocket err: %v", err)
 		return err
 	}
-	rt.connection = conn
-	if err := rt.connection.WriteJSON(rt.configureTextToSpeech()); err != nil {
+
+	if err := conn.WriteJSON(rt.configureTextToSpeech()); err != nil {
 		rt.logger.Errorf("sarvam-tts: error sending configuration: %v", err)
+		conn.Close()
 		return err
 	}
 
+	rt.mu.Lock()
+	rt.connection = conn
+	rt.mu.Unlock()
+
 	rt.logger.Debugf("sarvam-tts: connection established")
-	go rt.textToSpeechCallback(rt.ctx)
+	go rt.textToSpeechCallback(conn, rt.ctx)
 	return nil
 }
 
@@ -78,89 +81,106 @@ func (*sarvamTextToSpeech) Name() string {
 	return "sarvam-text-to-speech"
 }
 
-func (rt *sarvamTextToSpeech) textToSpeechCallback(ctx context.Context) {
+func (rt *sarvamTextToSpeech) textToSpeechCallback(conn *websocket.Conn, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			rt.logger.Infof("sarvam-tts: context cancelled, stopping response listener")
 			return
 		default:
-			_, audioChunk, err := rt.connection.ReadMessage()
-			if err != nil {
-				rt.logger.Errorf("sarvam-tts: error reading from WebSocket: %v", err)
-				return
-			}
+		}
 
-			var response map[string]interface{}
-			if err := json.Unmarshal(audioChunk, &response); err != nil {
-				rt.logger.Errorf("sarvam-tts: error parsing response chunk: %v", err)
+		_, audioChunk, err := conn.ReadMessage()
+		if err != nil {
+			rt.logger.Errorf("sarvam-tts: error reading from WebSocket: %v", err)
+			return
+		}
+
+		var response sarvam_internal.SarvamTextToSpeechResponse
+		if err := json.Unmarshal(audioChunk, &response); err != nil {
+			rt.logger.Errorf("sarvam-tts: error parsing response chunk: %v", err)
+			continue
+		}
+
+		// Handle different message types based on AsyncAPI spec
+		switch response.Type {
+		case "audio":
+			audioData, err := response.Audio()
+			if err != nil {
+				rt.logger.Errorf("sarvam-tts: invalid audio data format")
 				continue
 			}
-
-			// Handle different message types based on AsyncAPI spec
-			switch response["type"] {
-			case "audio":
-				audioData, ok := response["data"].(map[string]interface{})
-				if !ok {
-					rt.logger.Errorf("sarvam-tts: invalid audio data format")
-					continue
+			payload := audioData.Audio
+			rawAudioData, err := base64.StdEncoding.DecodeString(payload)
+			if err != nil {
+				rt.logger.Errorf("sarvam-tts: error decoding audio data: %v", err)
+				continue
+			}
+			rt.options.OnSpeech(rt.contextId, rawAudioData)
+		case "event":
+			eventData, err := response.AsEvent()
+			if err != nil {
+				rt.logger.Errorf("sarvam-tts: invalid event data format")
+				continue
+			}
+			rt.logger.Infof("sarvam-tts: received event data: %v", eventData)
+		case "error":
+			errData, err := response.AsError()
+			if err != nil {
+				rt.logger.Errorf("sarvam-tts: invalid error data format")
+				continue
+			}
+			if errData.Code != nil && *errData.Code == 408 {
+				if err := rt.Initialize(); err != nil {
+					rt.logger.Errorf("sarvam-tts: failed to re-initialize after 408 timeout: %v", err)
 				}
-				payload, ok := audioData["audio"].(string)
-				if !ok {
-					continue
-				}
-				rawAudioData, err := base64.StdEncoding.DecodeString(payload)
-				if err != nil {
-					rt.logger.Errorf("sarvam-tts: error decoding audio data: %v", err)
-					continue
-				}
-				rt.options.OnSpeech(rt.contextId, rawAudioData)
-			case "event":
-				eventData := response["data"]
-				rt.logger.Infof("sarvam-tts: received event data: %v", eventData)
-			case "error":
-				rt.logger.Errorf("sarvam-tts: received error response: %v", response)
 			}
 		}
 	}
 }
 
 func (rt *sarvamTextToSpeech) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
-	rt.mu.Lock()
-	defer rt.mu.Unlock()
 
-	if rt.connection == nil {
+	rt.mu.Lock()
+	rt.contextId = opts.ContextId
+	connection := rt.connection
+	rt.mu.Unlock()
+
+	if connection == nil {
 		return fmt.Errorf("sarvam-tts: websocket connection is not initialized")
 	}
-	rt.contextId = opts.ContextId
 	if opts.IsComplete {
-		flushMsg := map[string]interface{}{
+		if err := connection.WriteJSON(map[string]interface{}{
 			"type": "flush",
-		}
-		rt.logger.Debugf("sending request flush %v", flushMsg)
-		if err := rt.connection.WriteJSON(flushMsg); err != nil {
+		}); err != nil {
 			rt.logger.Errorf("sarvam-tts: error sending flush signal to websocket: %v", err)
 			return err
 		}
 		return nil
 	}
-	textMsg := map[string]interface{}{
+
+	if err := connection.WriteJSON(map[string]interface{}{
 		"type": "text",
 		"data": map[string]interface{}{
 			"text": in,
 		},
-	}
-	if err := rt.connection.WriteJSON(textMsg); err != nil {
+	}); err != nil {
 		rt.logger.Errorf("sarvam-tts: error writing text message to websocket: %v", err)
 		return err
 	}
+
 	return nil
 }
 
 func (rt *sarvamTextToSpeech) Close(ctx context.Context) error {
 	rt.ctxCancel()
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+
 	if rt.connection != nil {
 		rt.connection.Close()
+		rt.connection = nil
 	}
+
 	return nil
 }

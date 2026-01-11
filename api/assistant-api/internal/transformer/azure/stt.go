@@ -20,7 +20,12 @@ import (
 
 type azureSpeechToText struct {
 	*azureOption
-	mu                sync.Mutex
+	mu sync.Mutex
+
+	// context management
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
 	logger            commons.Logger
 	client            *speech.SpeechRecognizer
 	azureAudioConfig  *audio.AudioConfig
@@ -29,16 +34,13 @@ type azureSpeechToText struct {
 }
 
 func (azure *azureSpeechToText) Initialize() (err error) {
-	azure.mu.Lock()
-	defer azure.mu.Unlock()
-
-	azure.inputstream, err = audio.CreatePushAudioInputStreamFromFormat(azure.GetAudioStreamFormat())
+	inputstream, err := audio.CreatePushAudioInputStreamFromFormat(azure.GetAudioStreamFormat())
 	if err != nil {
 		azure.logger.Errorf("azure-stt: failed to create push audio input stream: %v", err)
 		return fmt.Errorf("failed to create push audio input stream: %w", err)
 	}
 
-	azure.azureAudioConfig, err = audio.NewAudioConfigFromStreamInput(azure.inputstream)
+	azureAudioConfig, err := audio.NewAudioConfigFromStreamInput(inputstream)
 	if err != nil {
 		azure.logger.Errorf("azure-stt: failed to create audio config from stream input: %v", err)
 		return fmt.Errorf("failed to create audio config from stream input: %w", err)
@@ -50,11 +52,17 @@ func (azure *azureSpeechToText) Initialize() (err error) {
 		return fmt.Errorf("failed to create speech config from subscription: %w", err)
 	}
 
-	azure.client, err = speech.NewSpeechRecognizerFromConfig(speechConfig, azure.azureAudioConfig)
+	client, err := speech.NewSpeechRecognizerFromConfig(speechConfig, azureAudioConfig)
 	if err != nil {
 		azure.logger.Errorf("azure-stt: failed to create speech recognizer from config: %v", err)
 		return fmt.Errorf("failed to create speech recognizer from config: %w", err)
 	}
+
+	azure.mu.Lock()
+	azure.client = client
+	azure.azureAudioConfig = azureAudioConfig
+	azure.inputstream = inputstream
+	azure.mu.Unlock()
 
 	azure.client.SessionStarted(azure.OnSessionStarted)
 	azure.client.SessionStopped(azure.OnSessionStopped)
@@ -62,6 +70,7 @@ func (azure *azureSpeechToText) Initialize() (err error) {
 	azure.client.Recognized(azure.OnRecognized)
 	azure.client.Canceled(azure.OnCancelled)
 	azure.client.StartContinuousRecognitionAsync()
+
 	return nil
 }
 
@@ -73,33 +82,31 @@ func (a *azureSpeechToText) Name() string {
 // Transform implements internal_transformer.SpeechToTextTransformer.
 func (azure *azureSpeechToText) Transform(ctx context.Context, ad []byte, opts *internal_transformer.SpeechToTextOption) (err error) {
 	azure.mu.Lock()
-	defer azure.mu.Unlock()
+	stream := azure.inputstream
+	azure.mu.Unlock()
 
-	if azure.inputstream == nil {
-		return fmt.Errorf("azure-stt: you are calling transform without initilize")
+	if stream == nil {
+		return fmt.Errorf("azure-stt: transform called before initialize")
 	}
 
-	if err := azure.inputstream.Write(ad); err != nil {
-		azure.logger.Debugf("azure-stt: error writing audio bytes %v", err)
-		return fmt.Errorf("failed to write audio data to push stream: %w", err)
+	if err := stream.Write(ad); err != nil {
+		return fmt.Errorf("failed to write audio data: %w", err)
 	}
 	return nil
 }
 
-func NewAzureSpeechToText(
-	ctx context.Context,
-	logger commons.Logger,
-	credential *protos.VaultCredential,
-	iOptions *internal_transformer.SpeechToTextInitializeOptions) (internal_transformer.SpeechToTextTransformer, error) {
-	azure, err := NewAzureOption(logger,
-		credential,
-		iOptions.AudioConfig,
-		iOptions.ModelOptions)
+func NewAzureSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOptions *internal_transformer.SpeechToTextInitializeOptions) (internal_transformer.SpeechToTextTransformer, error) {
+	azure, err := NewAzureOption(logger, credential, iOptions.AudioConfig, iOptions.ModelOptions)
 	if err != nil {
 		logger.Errorf("azure-stt: Unable to initilize azure option", err)
 		return nil, err
 	}
+
+	ct, ctxCancel := context.WithCancel(ctx)
 	return &azureSpeechToText{
+		ctx:       ct,
+		ctxCancel: ctxCancel,
+
 		logger:            logger,
 		transformerOption: iOptions,
 		azureOption:       azure,
@@ -114,23 +121,20 @@ func (azCallback *azureSpeechToText) OnSessionStopped(event speech.SessionEventA
 	defer event.Close()
 }
 
-func (azCallback *azureSpeechToText) OnRecognizing(event speech.SpeechRecognitionEventArgs) {
+func (az *azureSpeechToText) OnRecognizing(event speech.SpeechRecognitionEventArgs) {
 	defer event.Close()
-	azCallback.transformerOption.OnTranscript(
-		event.Result.Text,
-		0.9,
-		"en",
-		false,
-	)
+	cb := az.transformerOption
+	if cb != nil {
+		cb.OnTranscript(event.Result.Text, 0.9, "en", false)
+	}
 }
 
-func (azCallback *azureSpeechToText) OnRecognized(event speech.SpeechRecognitionEventArgs) {
+func (az *azureSpeechToText) OnRecognized(event speech.SpeechRecognitionEventArgs) {
 	defer event.Close()
-	azCallback.transformerOption.OnTranscript(
-		event.Result.Text,
-		0.9,
-		"en",
-		true)
+	cb := az.transformerOption
+	if cb != nil {
+		cb.OnTranscript(event.Result.Text, 0.9, "en", true)
+	}
 }
 
 func (azCallback *azureSpeechToText) OnCancelled(event speech.SpeechRecognitionCanceledEventArgs) {
@@ -139,6 +143,11 @@ func (azCallback *azureSpeechToText) OnCancelled(event speech.SpeechRecognitionC
 
 // Cancel implements internal_transformer.SpeechToTextTransformer.
 func (azure *azureSpeechToText) Close(ctx context.Context) error {
+	azure.ctxCancel()
+
+	azure.mu.Lock()
+	defer azure.mu.Unlock()
+
 	if azure.client != nil {
 		azure.client.StopContinuousRecognitionAsync()
 		azure.client.Close()

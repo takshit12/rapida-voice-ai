@@ -105,7 +105,7 @@ export const ConfigureAudioInputProvider: React.FC<
             onChangeVADProvider={v => {
               updateParameter('microphone.vad.provider', v);
             }}
-            vadThreshold={getParamValue('microphone.vad.threshold', '0,5')}
+            vadThreshold={getParamValue('microphone.vad.threshold', '0.8')}
             onChangeVadThreshold={(timeout: string) => {
               updateParameter('microphone.vad.threshold', timeout);
             }}

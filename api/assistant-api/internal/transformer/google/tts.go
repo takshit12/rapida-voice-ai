@@ -49,9 +49,7 @@ func NewGoogleTextToSpeech(
 	}
 
 	// Create Google TTS client with options.
-	client, err := texttospeech.NewClient(
-		ctx,
-		googleOption.GetClientOptions()...)
+	client, err := texttospeech.NewClient(ctx, googleOption.GetClientOptions()...)
 	if err != nil {
 		// Log and return error if client creation fails.
 		logger.Errorf("error while creating client for google tts %+v", err)
@@ -61,8 +59,9 @@ func NewGoogleTextToSpeech(
 	xctx, contextCancel := context.WithCancel(ctx)
 	// Return configured TTS instance.
 	return &googleTextToSpeech{
-		ctx:                xctx,
-		ctxCancel:          contextCancel,
+		ctx:       xctx,
+		ctxCancel: contextCancel,
+
 		logger:             logger,
 		transformerOptions: opts,
 		client:             client,
@@ -70,36 +69,8 @@ func NewGoogleTextToSpeech(
 	}, nil
 }
 
-// Close safely shuts down the TTS client and streaming client.
-func (g *googleTextToSpeech) Close(ctx context.Context) error {
-	g.ctxCancel()
-	var combinedErr error
-	if g.streamClient != nil {
-		// Attempt to close the streaming client.
-		err := g.streamClient.CloseSend()
-		if err != nil {
-			// Log the error if closure fails.
-			combinedErr = fmt.Errorf("error closing StreamClient: %v", err)
-			g.logger.Errorf(combinedErr.Error())
-		}
-	}
-
-	if g.client != nil {
-		// Attempt to close the client.
-		err := g.client.Close()
-		if err != nil {
-			// Log the error if closure fails.
-			combinedErr = fmt.Errorf("error closing Client: %v", err)
-			g.logger.Errorf(combinedErr.Error())
-		}
-	}
-	return combinedErr
-}
-
 // Initialize sets up the streaming synthesis functionality.
 func (google *googleTextToSpeech) Initialize() error {
-	google.mu.Lock()
-	defer google.mu.Unlock()
 
 	// Start a streaming synthesis session.
 	stream, err := google.client.StreamingSynthesize(google.ctx)
@@ -115,7 +86,13 @@ func (google *googleTextToSpeech) Initialize() error {
 			StreamingConfig: google.TextToSpeechOptions(),
 		},
 	}
+	google.mu.Lock()
+	if google.streamClient != nil {
+		_ = google.streamClient.CloseSend()
+	}
 	google.streamClient = stream
+	google.mu.Unlock()
+
 	// Send the initial configuration request.
 	if err = stream.Send(&req); err != nil {
 		// Log errors in sending initialization request.
@@ -123,7 +100,7 @@ func (google *googleTextToSpeech) Initialize() error {
 		return err
 	}
 	// Launch callback goroutine for processing streaming responses.
-	go google.textToSpeechCallback(google.ctx)
+	go google.textToSpeechCallback(stream, google.ctx)
 	google.logger.Debugf("google-tts: connection established")
 	return nil
 }
@@ -135,14 +112,23 @@ func (*googleTextToSpeech) Name() string {
 
 // Transform handles streaming synthesis requests for input text.
 func (google *googleTextToSpeech) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
-	google.logger.Infof("google-tts: speak %s with context id = %s and completed = %t", in, opts.ContextId, opts.IsComplete)
-	google.mu.Lock()
-	defer google.mu.Unlock()
 
-	if google.streamClient == nil {
+	google.mu.Lock()
+	if opts.ContextId != google.contextId {
+		google.contextId = opts.ContextId
+	}
+	sCli := google.streamClient
+	google.mu.Unlock()
+
+	if sCli == nil {
 		return fmt.Errorf("you are calling transform without initilize")
 	}
-	google.contextId = opts.ContextId
+
+	// no need to do anything if the input is marked complete
+	// this is usually for flushing the stream
+	if opts.IsComplete {
+		return nil
+	}
 	// Construct synthesis request with input text.
 	req := texttospeechpb.StreamingSynthesizeRequest{
 		StreamingRequest: &texttospeechpb.StreamingSynthesizeRequest_Input{
@@ -152,7 +138,7 @@ func (google *googleTextToSpeech) Transform(ctx context.Context, in string, opts
 		},
 	}
 	// Send synthesis request to the streaming client.
-	if err := google.streamClient.Send(&req); err != nil {
+	if err := sCli.Send(&req); err != nil {
 		// Log any errors during synthesis.
 		google.logger.Errorf("unable to Synthesize text %v", err)
 	}
@@ -160,7 +146,8 @@ func (google *googleTextToSpeech) Transform(ctx context.Context, in string, opts
 }
 
 // textToSpeechCallback processes streaming responses asynchronously.
-func (g *googleTextToSpeech) textToSpeechCallback(ctx context.Context) {
+func (g *googleTextToSpeech) textToSpeechCallback(streamClient texttospeechpb.TextToSpeech_StreamingSynthesizeClient, ctx context.Context) {
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -168,26 +155,50 @@ func (g *googleTextToSpeech) textToSpeechCallback(ctx context.Context) {
 			return
 		default:
 			// Receive audio content from the stream.
-			resp, err := g.streamClient.Recv()
+			resp, err := streamClient.Recv()
 			if err != nil {
 				if err == io.EOF {
-					// Handle end-of-file scenario gracefully.
 					g.logger.Infof("google-tts: stream ended (EOF)")
-					continue
-				}
-				if strings.Contains(err.Error(), "Stream aborted due to long duration elapsed without input sent") {
-					// Restart initialization if stream is aborted.
-					g.Initialize()
 					return
 				}
-				// Log errors during response retrieval.
+				if strings.Contains(err.Error(), "Stream aborted due to long duration elapsed without input sent") {
+					go g.Initialize()
+					return
+				}
 			}
 			if resp != nil {
-				// Pass audio content to the speech handler.
-				g.transformerOptions.OnSpeech(
-					g.contextId,
-					resp.GetAudioContent())
+				g.mu.Lock()
+				ctxId := g.contextId
+				g.mu.Unlock()
+				g.transformerOptions.OnSpeech(ctxId, resp.GetAudioContent())
 			}
 		}
 	}
+}
+
+// Close safely shuts down the TTS client and streaming client.
+func (g *googleTextToSpeech) Close(ctx context.Context) error {
+	g.ctxCancel()
+
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	var combinedErr error
+	if g.streamClient != nil {
+		// Attempt to close the streaming client.
+		if err := g.streamClient.CloseSend(); err != nil {
+			// Log the error if closure fails.
+			combinedErr = fmt.Errorf("error closing StreamClient: %v", err)
+			g.logger.Errorf(combinedErr.Error())
+		}
+	}
+
+	if g.client != nil {
+		// Attempt to close the client.
+		if err := g.client.Close(); err != nil {
+			// Log the error if closure fails.
+			combinedErr = fmt.Errorf("error closing Client: %v", err)
+			g.logger.Errorf(combinedErr.Error())
+		}
+	}
+	return combinedErr
 }

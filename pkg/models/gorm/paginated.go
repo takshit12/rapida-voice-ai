@@ -23,6 +23,9 @@ func NewPaginated(page int, pageSize int, count *int64, db *gorm.DB) *Paginated 
 }
 
 func Paginate(r *Paginated) func(db *gorm.DB) *gorm.DB {
+	if r.Count != nil {
+		r.DB.Count(r.Count)
+	}
 	return func(db *gorm.DB) *gorm.DB {
 		if r.PageSize == 0 {
 			return db
@@ -44,4 +47,9 @@ func Paginate(r *Paginated) func(db *gorm.DB) *gorm.DB {
 		result := db.Offset(offset).Limit(pageSize)
 		return result
 	}
+}
+
+func (r *Paginated) count(dx chan bool) {
+	r.DB.Count(r.Count)
+	dx <- true
 }

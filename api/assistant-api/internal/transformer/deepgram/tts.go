@@ -8,126 +8,187 @@ package internal_transformer_deepgram
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"sync"
 
-	"github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
+	"github.com/gorilla/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
-	internal_transformer_deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
+	deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
 	"github.com/rapidaai/pkg/commons"
-	protos "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 )
 
-type DeepgramSpeaking interface {
-	Speak(string) error
-	Flush() error
-	Reset() error
-	Connect() bool
-}
+/*
+Deepgram Continuous Streaming TTS
+Reference: https://developers.deepgram.com/reference/text-to-speech/speak-streaming
+*/
 
 type deepgramTTS struct {
 	*deepgramOption
+	// context management
 	ctx       context.Context
-	mu        sync.Mutex
+	ctxCancel context.CancelFunc
 	contextId string
-	logger    commons.Logger
-	client    DeepgramSpeaking
-	options   *internal_transformer.TextToSpeechInitializeOptions
+
+	// mutex
+	mu sync.Mutex
+
+	logger     commons.Logger
+	connection *websocket.Conn
+	options    *internal_transformer.TextToSpeechInitializeOptions
 }
 
 func NewDeepgramTextToSpeech(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+	opts *internal_transformer.TextToSpeechInitializeOptions,
+) (internal_transformer.TextToSpeechTransformer, error) {
 
-	//create deepgram option
-	dGoptions, err := NewDeepgramOption(
-		logger,
-		credential,
-		opts.AudioConfig,
-		opts.ModelOptions,
-	)
+	dGoptions, err := NewDeepgramOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("deepgram-tts: error while intializing deepgram text to speech")
 		return nil, err
 	}
+	ctx2, cancel := context.WithCancel(ctx)
+
 	return &deepgramTTS{
-		ctx:            ctx,
+		deepgramOption: dGoptions,
+		ctx:            ctx2,
+		ctxCancel:      cancel,
 		logger:         logger,
 		options:        opts,
-		deepgramOption: dGoptions,
 	}, nil
 }
 
-func (dg *deepgramTTS) Name() string {
-	return "deepgram-text-to-speech"
-}
+// Initialize implements internal_transformer.OutputAudioTransformer.
+func (t *deepgramTTS) Initialize() error {
 
-// Deepgram service using the WebSocket client `dg.client`.
-func (dg *deepgramTTS) Initialize() error {
-	dg.mu.Lock()
-	defer dg.mu.Unlock()
-
-	client, err := client.NewWSUsingCallback(dg.ctx,
-		dg.GetKey(),
-		&interfaces.ClientOptions{
-			APIKey:          dg.GetKey(),
-			EnableKeepAlive: true,
-		},
-		dg.TextToSpeechOptions(),
-		internal_transformer_deepgram_internal.NewDeepgramSpeakCallback(dg.logger, dg.onspeech, dg.oncomplete),
-	)
-
+	header := http.Header{}
+	header.Set("Authorization", fmt.Sprintf("token %s", t.GetKey()))
+	conn, resp, err := websocket.DefaultDialer.Dial(t.GetTextToSpeechConnectionString(), header)
 	if err != nil {
-		dg.logger.Errorf("deepgram-tts: unable create dg client with error %+v", err.Error())
+		t.logger.Errorf("deepgram-tts: websocket dial failed err=%v resp=%v", err, resp)
 		return err
 	}
 
-	if !client.Connect() {
-		dg.logger.Errorf("deepgram-tts: unable to connect to deepgram service")
-		return fmt.Errorf("deepgram-tts: connection failed")
-	}
-	dg.client = client
-	dg.logger.Debugf("deepgram-tts: connection established")
+	t.mu.Lock()
+	t.connection = conn
+	t.mu.Unlock()
+
+	go t.textToSpeechCallback(conn, t.ctx)
 	return nil
 }
 
-func (dg *deepgramTTS) onspeech(b []byte) error {
-	return dg.options.OnSpeech(dg.contextId, b)
+// Name implements internal_transformer.OutputAudioTransformer.
+func (*deepgramTTS) Name() string {
+	return "deepgram-text-to-speech"
 }
 
-func (dg *deepgramTTS) oncomplete() error {
-	return dg.options.OnComplete(dg.contextId)
-}
+// readLoop handles server → client messages
+func (t *deepgramTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			t.logger.Infof("deepgram-tts: context cancelled, stopping read loop")
+			return
+		default:
+			msgType, data, err := conn.ReadMessage()
+			if err != nil {
+				if errors.Is(err, io.EOF) || websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+					t.logger.Infof("deepgram-tts: websocket closed gracefully")
+					return
+				}
+				t.logger.Errorf("deepgram-tts: read error %v", err)
+				return
+			}
 
-func (dg *deepgramTTS) Transform(
-	ctx context.Context,
-	sentence string,
-	opts *internal_transformer.TextToSpeechOption) error {
-	dg.mu.Lock()
-	defer dg.mu.Unlock()
+			if msgType == websocket.BinaryMessage {
+				t.options.OnSpeech(t.contextId, data)
+				continue
+			}
 
-	if dg.client == nil {
-		return fmt.Errorf("deepgram-tts: connection is not initialized")
+			var envelope *deepgram_internal.DeepgramTextToSpeechResponse
+			if err := json.Unmarshal(data, &envelope); err != nil {
+				continue
+			}
+
+			switch envelope.Type {
+			case "Metadata":
+				// ignoreing metadata for now
+				continue
+
+			case "Flushed":
+				// ignoreing metadata for now
+				continue
+
+			case "Cleared":
+				// ignoreing metadata for now
+				continue
+
+			case "Warning":
+				t.logger.Warnf("deepgram-tts warning code=%s message=%s", envelope.Code, envelope.Message)
+			}
+		}
 	}
-	dg.contextId = opts.ContextId
-	err := dg.client.Speak(sentence)
-	if err != nil {
-		dg.logger.Errorf("deepgram-tts: unable to speak with error: %v", err)
+}
+
+// Transform streams text into Deepgram
+func (t *deepgramTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
+	t.mu.Lock()
+	conn := t.connection
+	t.mu.Unlock()
+
+	if conn == nil {
+		return fmt.Errorf("deepgram-tts: websocket not initialized")
+	}
+
+	if t.contextId != opts.ContextId && t.contextId != "" {
+		_ = conn.WriteJSON(map[string]interface{}{
+			"type": "Clear",
+		})
+	}
+
+	t.mu.Lock()
+	t.contextId = opts.ContextId
+	t.mu.Unlock()
+
+	if opts.IsComplete {
+		if err := conn.WriteJSON(map[string]string{"type": "Flush"}); err != nil {
+			t.logger.Errorf("deepgram-tts: failed to send Flush %v", err)
+			return err
+		}
 		return nil
 	}
-	if opts.IsComplete {
-		dg.client.Flush()
+	// if the request is for complete then we just flush the stream
+	if err := conn.WriteJSON(map[string]interface{}{
+		"type": "Speak",
+		"text": in,
+	}); err != nil {
+		t.logger.Errorf("deepgram-tts: failed to send Speak message %v", err)
+		return err
 	}
-	return nil
 
+	return nil
 }
 
-func (dg *deepgramTTS) Close(ctx context.Context) error {
-	if dg.client != nil {
-		dg.client.Reset()
+// Close gracefully closes the Deepgram connection
+func (t *deepgramTTS) Close(ctx context.Context) error {
+	t.ctxCancel()
+
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.connection != nil {
+		_ = t.connection.WriteJSON(map[string]string{
+			"type": "Close",
+		})
+		t.connection.Close()
+		t.connection = nil
 	}
 	return nil
 }

@@ -96,7 +96,7 @@ func (communication *GenericRequestor) OnGreet(ctx context.Context) error {
 	communication.AssistantCallback(ctx, greetings.GetId(), greetings, nil)
 	// audio processing
 	if communication.messaging.GetInputMode().Audio() {
-		if err := communication.Speak(greetings.GetId(), greetingCnt); err != nil {
+		if err := communication.Speak(greetings.GetId(), greetingCnt); err == nil {
 			communication.FinishSpeaking(greetings.GetId())
 		}
 	}

@@ -10,7 +10,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"sync"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
@@ -23,8 +25,11 @@ import (
 
 type deepgramSTT struct {
 	*deepgramOption
-	mu      sync.Mutex
-	ctx     context.Context
+	mu sync.Mutex
+	// context management
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
 	logger  commons.Logger
 	client  *client.WSCallback
 	options *internal_transformer.SpeechToTextInitializeOptions
@@ -34,25 +39,19 @@ func (*deepgramSTT) Name() string {
 	return "deepgram-speech-to-text"
 }
 
-func NewDeepgramSpeechToText(ctx context.Context,
-	logger commons.Logger,
-	vaultCredential *protos.VaultCredential,
-	opts *internal_transformer.SpeechToTextInitializeOptions,
-) (internal_transformer.SpeechToTextTransformer, error) {
-	deepgramOpts, err := NewDeepgramOption(
-		logger,
-		vaultCredential,
-		opts.AudioConfig,
-		opts.ModelOptions,
-	)
+func NewDeepgramSpeechToText(ctx context.Context, logger commons.Logger, vaultCredential *protos.VaultCredential, opts *internal_transformer.SpeechToTextInitializeOptions) (internal_transformer.SpeechToTextTransformer, error) {
+	deepgramOpts, err := NewDeepgramOption(logger, vaultCredential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("deepgram-stt: Key from credential failed %+v", err)
 		return nil, err
 	}
 
 	//
+	ct, ctxCancel := context.WithCancel(ctx)
 	return &deepgramSTT{
-		ctx:            ctx,
+		ctx:       ct,
+		ctxCancel: ctxCancel,
+
 		options:        opts,
 		logger:         logger,
 		deepgramOption: deepgramOpts,
@@ -62,19 +61,9 @@ func NewDeepgramSpeechToText(ctx context.Context,
 // The `Initialize` method in the `deepgram` struct is responsible for establishing a connection to the
 // Deepgram service using the WebSocket client `dg.client`.
 func (dg *deepgramSTT) Initialize() error {
-	dg.mu.Lock()
-	defer dg.mu.Unlock()
 
-	dgClient, err := client.NewWSUsingCallback(
-		dg.ctx,
-		dg.GetKey(),
-		&interfaces.ClientOptions{
-			APIKey:          dg.GetKey(),
-			EnableKeepAlive: true,
-		},
-		dg.SpeechToTextOptions(),
-		internal_transformer_deepgram_internal.
-			NewDeepgramSttCallback(dg.logger, dg.options.OnTranscript))
+	dgClient, err := client.NewWSUsingCallback(dg.ctx, dg.GetKey(), &interfaces.ClientOptions{APIKey: dg.GetKey(), EnableKeepAlive: true}, dg.SpeechToTextOptions(), internal_transformer_deepgram_internal.
+		NewDeepgramSttCallback(dg.logger, dg.options.OnTranscript))
 
 	if err != nil {
 		dg.logger.Errorf("deepgram-stt: unable create dg client with error %+v", err.Error())
@@ -84,7 +73,11 @@ func (dg *deepgramSTT) Initialize() error {
 		dg.logger.Errorf("deepgram-stt: unable to connect to deepgram service")
 		return fmt.Errorf("deepgram-stt: connection failed")
 	}
+
+	dg.mu.Lock()
 	dg.client = dgClient
+	defer dg.mu.Unlock()
+
 	dg.logger.Debugf("deepgram-stt: connection established")
 	return nil
 }
@@ -97,14 +90,15 @@ func (dg *deepgramSTT) Initialize() error {
 // the method.
 func (dg *deepgramSTT) Transform(ctx context.Context, in []byte, opts *internal_transformer.SpeechToTextOption) error {
 	dg.mu.Lock()
+	client := dg.client
 	defer dg.mu.Unlock()
 
-	if dg.client == nil {
+	if client == nil {
 		return fmt.Errorf("deepgram-stt: connection is not initialized")
 	}
-	err := dg.client.Stream(bufio.NewReader(bytes.NewReader(in)))
+	err := client.Stream(bufio.NewReader(bytes.NewReader(in)))
 	if err != nil {
-		if err.Error() == "EOF" {
+		if errors.Is(err, io.EOF) {
 			return nil
 		}
 		dg.logger.Errorf("deepgram-stt: error while calling deepgram: %v", err)
@@ -114,6 +108,11 @@ func (dg *deepgramSTT) Transform(ctx context.Context, in []byte, opts *internal_
 }
 
 func (dg *deepgramSTT) Close(ctx context.Context) error {
+	dg.ctxCancel()
+
+	dg.mu.Lock()
+	defer dg.mu.Unlock()
+
 	if dg.client != nil {
 		dg.client.Stop()
 	}

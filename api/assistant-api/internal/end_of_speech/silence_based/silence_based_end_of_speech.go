@@ -8,6 +8,7 @@ package internal_silence_based_end_of_speech
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
@@ -20,9 +21,24 @@ type silenceBasedEndOfSpeech struct {
 	logger            commons.Logger
 	onCallback        internal_end_of_speech.EndOfSpeechCallback
 	thresholdDuration time.Duration
-	activities        []internal_end_of_speech.EndOfSpeechInput
-	currentCtx        context.Context
-	currentCancel     context.CancelFunc
+
+	// worker coordination
+	inputCh chan workerEvent
+	stopCh  chan struct{}
+
+	// protected state
+	mutex         sync.Mutex
+	callbackFired bool
+	generation    uint64
+	inputSpeech   string
+}
+
+type workerEvent struct {
+	ctx     context.Context
+	timeout time.Duration
+	speech  string
+	fireNow bool
+	reset   bool
 }
 
 func NewSilenceBasedEndOfSpeech(
@@ -30,114 +46,201 @@ func NewSilenceBasedEndOfSpeech(
 	onCallback internal_end_of_speech.EndOfSpeechCallback,
 	opts utils.Option,
 ) (internal_end_of_speech.EndOfSpeech, error) {
-	duration := time.Duration(1000) * time.Millisecond
-	timeOut, err := opts.GetFloat64("microphone.eos.timeout")
-	if err == nil {
-		logger.Debugf("overriding default duration of timeout for silence based eos.")
-		duration = time.Duration(timeOut) * time.Millisecond
+
+	duration := 1000 * time.Millisecond
+	if v, err := opts.GetFloat64("microphone.eos.timeout"); err == nil {
+		duration = time.Duration(v) * time.Millisecond
 	}
-	uea := &silenceBasedEndOfSpeech{
+
+	a := &silenceBasedEndOfSpeech{
 		logger:            logger,
 		onCallback:        onCallback,
 		thresholdDuration: duration,
+		inputCh:           make(chan workerEvent, 16),
+		stopCh:            make(chan struct{}),
 	}
-	return uea, nil
+
+	go a.worker()
+	return a, nil
 }
 
 func (a *silenceBasedEndOfSpeech) Name() string {
 	return "silenceBasedEndOfSpeech"
 }
 
-func (alyzer *silenceBasedEndOfSpeech) Analyze(ctx context.Context, msg internal_end_of_speech.EndOfSpeechInput) error {
+func (a *silenceBasedEndOfSpeech) Analyze(
+	ctx context.Context,
+	msg internal_end_of_speech.EndOfSpeechInput,
+) error {
+
 	switch input := msg.(type) {
+
 	case *internal_end_of_speech.UserEndOfSpeechInput:
-		alyzer.triggerExtension(ctx, input.GetMessage(), alyzer.thresholdDuration)
+		a.enqueue(workerEvent{
+			ctx:     ctx,
+			speech:  input.GetMessage(),
+			fireNow: true,
+		})
 
 	case *internal_end_of_speech.SystemEndOfSpeechInput:
-		alyzer.triggerExtension(ctx, input.GetMessage(), alyzer.thresholdDuration)
+		a.enqueue(workerEvent{
+			ctx:     ctx,
+			speech:  input.GetMessage(),
+			timeout: a.thresholdDuration,
+		})
 
 	case *internal_end_of_speech.STTEndOfSpeechInput:
-		alyzer.handleSTTInput(ctx, input)
+		a.handleSTT(ctx, input)
 	}
-	alyzer.activities = append(alyzer.activities, msg)
+
 	return nil
 }
 
-func (a *silenceBasedEndOfSpeech) handleSTTInput(ctx context.Context, input *internal_end_of_speech.STTEndOfSpeechInput) error {
-	if (len(a.activities)) == 0 || !input.IsComplete {
-		return a.triggerExtension(ctx, input.GetMessage(), a.thresholdDuration)
-	}
-	recentActivity := a.activities[len(a.activities)-1]
-	// if last activity is not stt's activity then skip
-	sActivity, ok := recentActivity.(*internal_end_of_speech.STTEndOfSpeechInput)
-	if !ok {
-		return a.triggerExtension(ctx, input.GetMessage(), a.thresholdDuration)
+func (a *silenceBasedEndOfSpeech) handleSTT(
+	ctx context.Context,
+	input *internal_end_of_speech.STTEndOfSpeechInput,
+) {
+	a.mutex.Lock()
+
+	timeout := a.thresholdDuration
+	text := input.GetMessage()
+
+	if input.IsComplete && a.inputSpeech != "" {
+		if normalizeSTTText(a.inputSpeech) == normalizeSTTText(text) {
+			timeout = a.thresholdDuration / 2
+		}
 	}
 
-	if normalizeMessage(sActivity.GetMessage()) != normalizeMessage(input.GetMessage()) {
-		return a.triggerExtension(ctx, input.GetMessage(), a.thresholdDuration)
-	}
-	adjustedThreshold := a.thresholdDuration - 200
-	if adjustedThreshold < 0 {
-		adjustedThreshold = 100
-	}
-	return a.triggerExtension(ctx, input.GetMessage(), adjustedThreshold)
+	a.inputSpeech = text
+	a.mutex.Unlock()
+
+	a.enqueue(workerEvent{
+		ctx:     ctx,
+		speech:  text,
+		timeout: timeout,
+	})
 }
 
-func (alyzer *silenceBasedEndOfSpeech) triggerExtension(ctx context.Context, speech string, duration time.Duration) error {
-	if alyzer.currentCtx != nil {
-		alyzer.currentCancel()
-	}
-	alyzer.currentCtx, alyzer.currentCancel = context.WithCancel(ctx)
-
-	// cancle existing context as it is not required to push the activity to upstream services
+func (a *silenceBasedEndOfSpeech) enqueue(evt workerEvent) {
 	select {
-	case <-alyzer.currentCtx.Done():
-		return alyzer.currentCtx.Err()
+	case a.inputCh <- evt:
 	default:
-		alyzer.extendTimer(alyzer.currentCtx, speech, duration)
-		return nil
+		// avoid deadlock under load
+		go func() { a.inputCh <- evt }()
 	}
 }
 
-func (a *silenceBasedEndOfSpeech) extendTimer(ctx context.Context, speech string, duration time.Duration) {
-	start := time.Now()
-	timer := time.NewTimer(duration)
+func (a *silenceBasedEndOfSpeech) worker() {
+	var (
+		timer      *time.Timer
+		timerC     <-chan time.Time
+		generation uint64
+		ctx        context.Context
+		speech     string
+	)
 
-	select {
-	case <-ctx.Done():
-		timer.Stop()
-		return
-	case <-timer.C:
-		end := time.Now()
-		if speech != "" {
-			seg := buildSpeechSegment(start, end, speech)
-			a.logger.Debugf("Analyzer interrupted. Detected silence. Speech segment: '%s', Silence duration: %.2f ms", speech, seg.GetDuration()*1000)
-			if err := a.onCallback(ctx, seg); err != nil {
-				a.logger.Errorf("interrupt: Error in onAnalyze: %v", err)
+	stopTimer := func() {
+		if timer != nil {
+			timer.Stop()
+			timer = nil
+			timerC = nil
+		}
+	}
+
+	for {
+		select {
+		case <-a.stopCh:
+			stopTimer()
+			return
+
+		case evt := <-a.inputCh:
+
+			// --- RESET EVENT (after callback) ---
+			if evt.reset {
+				a.mutex.Lock()
+				a.callbackFired = false
+				a.generation++
+				a.inputSpeech = ""
+				a.mutex.Unlock()
+				continue
 			}
+
+			a.mutex.Lock()
+			if a.callbackFired {
+				a.mutex.Unlock()
+				continue
+			}
+
+			a.generation++
+			generation = a.generation
+
+			if evt.fireNow {
+				a.callbackFired = true
+				stopTimer()
+				a.mutex.Unlock()
+				a.invokeCallback(evt.ctx, evt.speech)
+				// Reset is enqueued by invokeCallback
+				continue
+			}
+
+			ctx = evt.ctx
+			speech = evt.speech
+
+			stopTimer()
+			timer = time.NewTimer(evt.timeout)
+			timerC = timer.C
+
+			a.mutex.Unlock()
+
+		case <-timerC:
+			a.mutex.Lock()
+			if a.callbackFired || generation != a.generation {
+				a.mutex.Unlock()
+				continue
+			}
+
+			a.callbackFired = true
+			text := speech
+			cbCtx := ctx
+			stopTimer()
+			a.mutex.Unlock()
+
+			a.invokeCallback(cbCtx, text)
+			// Reset is enqueued by invokeCallback
 		}
 	}
 }
 
-func buildSpeechSegment(start, end time.Time, speech string) *internal_end_of_speech.EndOfSpeechResult {
-	return &internal_end_of_speech.EndOfSpeechResult{
-		StartAt: float64(start.UnixNano()) / 1e9,
-		EndAt:   float64(end.UnixNano()) / 1e9,
+func (a *silenceBasedEndOfSpeech) invokeCallback(
+	ctx context.Context,
+	speech string,
+) {
+	if speech == "" || ctx.Err() != nil {
+		return
+	}
+
+	now := time.Now()
+	seg := &internal_end_of_speech.EndOfSpeechResult{
+		StartAt: float64(now.UnixNano()) / 1e9,
+		EndAt:   float64(now.UnixNano()) / 1e9,
 		Speech:  speech,
 	}
+
+	a.logger.Debugf("End of speech detected: '%s'", speech)
+	_ = a.onCallback(ctx, seg)
+	a.enqueue(workerEvent{reset: true})
 }
 
-// Utility function for normalizing messages by removing punctuation and symbols
-func normalizeMessage(message string) string {
+func normalizeSTTText(s string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsPunct(r) || unicode.IsSymbol(r) {
 			return -1
 		}
 		return unicode.ToLower(r)
-	}, message)
+	}, s)
 }
 
 func (a *silenceBasedEndOfSpeech) Close() error {
+	close(a.stopCh)
 	return nil
 }

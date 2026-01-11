@@ -48,7 +48,6 @@ func (talking *GenericRequestor) OnGeneration(ctx context.Context, messageid str
 
 // after finish assistant message the assistant callback will be triggered
 func (talking *GenericRequestor) AssistantCallback(ctx context.Context, messageid string, msg *types.Message, metrics []*types.Metric) error {
-
 	utils.Go(talking.Context(), func() {
 		if err := talking.OnUpdateMessage(talking.Context(), messageid, msg, type_enums.RECORD_COMPLETE); err != nil {
 			talking.logger.Errorf("Error in OnUpdateMessage: %v", err)

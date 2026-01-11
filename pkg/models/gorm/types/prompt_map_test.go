@@ -184,7 +184,14 @@ func TestPromptMap_GetTextChatCompleteTemplate(t *testing.T) {
 					},
 				},
 			},
-			expected: nil, // because len(Variables) == 0
+			expected: &TextChatCompletePromptTemplate{
+				Prompt: []*PromptTemplate{
+					{
+						Role:    "user",
+						Content: "Hello",
+					},
+				},
+			},
 		},
 		{
 			name: "invalid JSON",

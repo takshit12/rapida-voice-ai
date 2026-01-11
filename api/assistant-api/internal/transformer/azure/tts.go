@@ -15,12 +15,16 @@ import (
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	"github.com/rapidaai/pkg/commons"
-	protos "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 )
 
 type azureTextToSpeech struct {
 	*azureOption
-	mu          sync.Mutex
+	mu sync.Mutex
+	// context management
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
 	contextId   string
 	logger      commons.Logger
 	audioConfig *audio.AudioConfig
@@ -28,19 +32,17 @@ type azureTextToSpeech struct {
 	options     *internal_transformer.TextToSpeechInitializeOptions
 }
 
-func NewAzureTextToSpeech(
-	ctx context.Context,
-	logger commons.Logger,
-	credential *protos.VaultCredential,
-	iOption *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
-	azureOption, err := NewAzureOption(logger, credential,
-		iOption.AudioConfig,
-		iOption.ModelOptions)
+func NewAzureTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+	azureOption, err := NewAzureOption(logger, credential, iOption.AudioConfig, iOption.ModelOptions)
 	if err != nil {
 		logger.Errorf("azure-tts: Unable to initilize azure option", err)
 		return nil, err
 	}
+	ct, ctxCancel := context.WithCancel(ctx)
 	return &azureTextToSpeech{
+		ctx:       ct,
+		ctxCancel: ctxCancel,
+
 		azureOption: azureOption,
 		logger:      logger,
 		options:     iOption,
@@ -52,6 +54,10 @@ func (azure *azureTextToSpeech) Name() string {
 }
 
 func (azure *azureTextToSpeech) Close(ctx context.Context) error {
+	azure.ctxCancel()
+	azure.mu.Lock()
+	defer azure.mu.Unlock()
+
 	if azure.client != nil {
 		azure.client.Close()
 	}
@@ -62,15 +68,12 @@ func (azure *azureTextToSpeech) Close(ctx context.Context) error {
 }
 
 func (azure *azureTextToSpeech) Initialize() (err error) {
-	azure.mu.Lock()
-	defer azure.mu.Unlock()
-
 	stream, err := audio.CreatePullAudioOutputStream()
 	if err != nil {
 		azure.logger.Errorf("azure-tts: failed to create audio stream:", err)
 		return fmt.Errorf("azure-tts: failed to create audio stream: %w", err)
 	}
-	azure.audioConfig, err = audio.NewAudioConfigFromStreamOutput(stream)
+	audioConfig, err := audio.NewAudioConfigFromStreamOutput(stream)
 	if err != nil {
 		azure.logger.Errorf("azure-tts: failed to create audio config:", err)
 		return fmt.Errorf("azure-tts: failed to create audio config: %w", err)
@@ -82,11 +85,17 @@ func (azure *azureTextToSpeech) Initialize() (err error) {
 		return fmt.Errorf("azure-tts: failed to get speech configuration: %w", err)
 	}
 
-	azure.client, err = speech.NewSpeechSynthesizerFromConfig(speechConfig, azure.audioConfig)
+	client, err := speech.NewSpeechSynthesizerFromConfig(speechConfig, audioConfig)
 	if err != nil {
 		azure.logger.Errorf("azure-tts: failed to initialize speech synthesizer:", err)
 		return fmt.Errorf("azure-tts: failed to initialize speech synthesizer: %w", err)
 	}
+
+	azure.mu.Lock()
+	azure.client = client
+	azure.audioConfig = audioConfig
+	azure.mu.Unlock()
+
 	azure.client.SynthesisStarted(azure.OnStart)
 	azure.client.Synthesizing(azure.OnSpeech)
 	azure.client.SynthesisCompleted(azure.OnComplete)
@@ -96,14 +105,27 @@ func (azure *azureTextToSpeech) Initialize() (err error) {
 
 func (azure *azureTextToSpeech) Transform(ctx context.Context, text string, opts *internal_transformer.TextToSpeechOption) error {
 	azure.mu.Lock()
-	defer azure.mu.Unlock()
+	cl := azure.client
+	azure.mu.Unlock()
 
-	azure.contextId = opts.ContextId
-	if azure.client == nil {
+	if azure.contextId != opts.ContextId && azure.contextId != "" {
+		// change of context, stop previous speech and send the notifiction
+		<-cl.StopSpeakingAsync()
+	}
+
+	azure.mu.Lock()
+	if azure.contextId != opts.ContextId {
+		azure.contextId = opts.ContextId
+	}
+	azure.mu.Unlock()
+	if cl == nil {
 		return fmt.Errorf("azure-tts: you are calling transform without initilize")
 	}
 
-	res := <-azure.client.SpeakTextAsync(text)
+	if opts.IsComplete {
+		return nil
+	}
+	res := <-cl.StartSpeakingTextAsync(text)
 	if res.Error != nil {
 		return res.Error
 	}

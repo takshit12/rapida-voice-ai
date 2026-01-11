@@ -13,6 +13,7 @@ import (
 	"runtime"
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
 	internal_vad "github.com/rapidaai/api/assistant-api/internal/vad"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
@@ -22,12 +23,13 @@ import (
 
 // SileroVAD implements Vad using silero-vad-go
 type SileroVAD struct {
-	logger       commons.Logger
-	inputConfig  *protos.AudioConfig
-	detector     *speech.Detector
-	onActivity   func(*internal_vad.VadResult) error
-	audioSampler *internal_audio.AudioResampler
-	vadConfig    *protos.AudioConfig
+	logger         commons.Logger
+	inputConfig    *protos.AudioConfig
+	detector       *speech.Detector
+	onActivity     func(*internal_vad.VadResult) error
+	audioSampler   internal_audio.AudioResampler
+	audioConverter internal_audio.AudioConverter
+	vadConfig      *protos.AudioConfig
 }
 
 // NewSileroVAD creates a new SileroVAD
@@ -57,11 +59,13 @@ func NewSileroVAD(logger commons.Logger,
 		return nil, err
 	}
 	return &SileroVAD{
-		detector:    detector,
-		inputConfig: inputAudio,
-		vadConfig:   vadAudioConfig,
-		onActivity:  callback,
-		logger:      logger,
+		detector:       detector,
+		inputConfig:    inputAudio,
+		vadConfig:      vadAudioConfig,
+		onActivity:     callback,
+		logger:         logger,
+		audioSampler:   default_resampler.NewDefaultAudioResampler(logger),
+		audioConverter: default_resampler.NewDefaultAudioConverter(logger),
 	}, nil
 }
 
@@ -77,7 +81,7 @@ func (svad *SileroVAD) Process(input []byte) error {
 		return err
 	}
 
-	floatSample, err := svad.audioSampler.ConvertToFloat32Samples(idi, svad.vadConfig)
+	floatSample, err := svad.audioConverter.ConvertToFloat32Samples(idi, svad.vadConfig)
 	if err != nil {
 		svad.logger.Debugf("Sample conversion failed: %+v", err) // Improved logging
 		return err
@@ -109,6 +113,9 @@ func (svad *SileroVAD) Process(input []byte) error {
 	return nil
 }
 func (s *SileroVAD) Close() error {
-	s.detector.Destroy()
+	if s.detector != nil {
+		s.detector.Destroy()
+		s.detector = nil
+	}
 	return nil
 }

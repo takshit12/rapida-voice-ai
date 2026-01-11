@@ -225,10 +225,7 @@ func (listening *GenericRequestor) initializeEndOfSpeech(
 	return nil
 }
 
-func (listening *GenericRequestor) initializeDenoiser(
-	ctx context.Context,
-	audioConfig *protos.AudioConfig,
-	options utils.Option) error {
+func (listening *GenericRequestor) initializeDenoiser(ctx context.Context, audioConfig *protos.AudioConfig, options utils.Option) error {
 	provider, err := options.GetString("microphone.denoising.provider")
 	if err != nil {
 		listening.logger.Errorf("denoising.provider is not set, please check the configuration")
@@ -242,10 +239,7 @@ func (listening *GenericRequestor) initializeDenoiser(
 	return nil
 }
 
-func (listening *GenericRequestor) initializeVAD(
-	ctx context.Context,
-	audioConfig *protos.AudioConfig,
-	options utils.Option,
+func (listening *GenericRequestor) initializeVAD(ctx context.Context, audioConfig *protos.AudioConfig, options utils.Option,
 ) error {
 	start := time.Now()
 	provider, err := options.GetString("microphone.vad.provider")
@@ -367,7 +361,7 @@ func (listening *GenericRequestor) ListenAudio(
 	if listening.vad != nil {
 		utils.Go(ctx, func() {
 			if err := listening.vad.Process(in); err != nil {
-				listening.logger.Warnf("error while processing with vad")
+				listening.logger.Warnf("error while processing with vad error %+v", err)
 			}
 		})
 	}

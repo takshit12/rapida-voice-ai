@@ -60,7 +60,7 @@ export const VADProvider: React.FC<VADProviderProps> = ({
           <FormLabel>VAD Threshold</FormLabel>
           <div className="flex space-x-2 justify-center items-center">
             <Slider
-              min={0.1}
+              min={0.5}
               max={1}
               step={0.01}
               value={parseFloat(vadThreshold)}
@@ -78,7 +78,7 @@ export const VADProvider: React.FC<VADProviderProps> = ({
           </div>
           <InputHelper>
             The probability threshold above which we detect speech. A good
-            default is 0.5.
+            default is 0.8.
           </InputHelper>
         </FieldSet>
       </div>

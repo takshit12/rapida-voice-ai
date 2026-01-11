@@ -83,14 +83,35 @@ export const ValidateSpeechToTextIfInvalid = (
  */
 export const GetDefaultMicrophoneConfig = (
   existing: Metadata[] = [],
+  defaults?: {
+    'microphone.eos.timeout'?: string;
+    'microphone.eos.provider'?: string;
+    'microphone.denoising.provider'?: string;
+    'microphone.vad.provider'?: string;
+    'microphone.vad.threshold'?: string;
+  },
 ): Metadata[] => {
   const defaultConfig = [
-    // end of speech
-    { key: 'microphone.eos.timeout', value: '1000' },
-    { key: 'microphone.eos.provider', value: 'silence_based_eos' },
-    { key: 'microphone.denoising.provider', value: 'rn_noise' },
-    { key: 'microphone.vad.provider', value: 'silero_vad' },
-    { key: 'microphone.vad.threshold', value: '0.5' },
+    {
+      key: 'microphone.eos.timeout',
+      value: defaults?.['microphone.eos.timeout'] ?? '1000',
+    },
+    {
+      key: 'microphone.eos.provider',
+      value: defaults?.['microphone.eos.provider'] ?? 'silence_based_eos',
+    },
+    {
+      key: 'microphone.denoising.provider',
+      value: defaults?.['microphone.denoising.provider'] ?? 'rn_noise',
+    },
+    {
+      key: 'microphone.vad.provider',
+      value: defaults?.['microphone.vad.provider'] ?? 'silero_vad',
+    },
+    {
+      key: 'microphone.vad.threshold',
+      value: defaults?.['microphone.vad.threshold'] ?? '0.8',
+    },
   ];
 
   const existingKeys = new Set(existing.map(m => m.getKey()));

@@ -9,6 +9,7 @@ import (
 	"context"
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
 	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
@@ -20,21 +21,22 @@ type rnnoiseDenoiser struct {
 	logger         commons.Logger
 	denoiserConfig *protos.AudioConfig
 	inputConfig    *protos.AudioConfig
-	audioSampler   *internal_audio.AudioResampler
+	audioSampler   internal_audio.AudioResampler
+	audioConverter internal_audio.AudioConverter
 }
 
 // NewDenoiser creates a new denoiser instance
 func NewRnnoiseDenoiser(
 	logger commons.Logger, inputConfig *protos.AudioConfig, options utils.Option,
 ) (internal_denoiser.Denoiser, error) {
-
 	rn, err := NewRNNoise()
 	if err != nil {
 		return nil, err
 	}
 	return &rnnoiseDenoiser{
-		audioSampler: internal_audio.NewAudioResampler(),
-		rnNoise:      rn,
+		audioSampler:   default_resampler.NewDefaultAudioResampler(logger),
+		audioConverter: default_resampler.NewDefaultAudioConverter(logger),
+		rnNoise:        rn,
 		denoiserConfig: &protos.AudioConfig{
 			SampleRate:  48000,
 			AudioFormat: protos.AudioConfig_LINEAR16,
@@ -49,7 +51,8 @@ func (rnd *rnnoiseDenoiser) Denoise(ctx context.Context, input []byte) ([]byte, 
 	if err != nil {
 		return nil, 0, err
 	}
-	floatSample, err := rnd.audioSampler.ConvertToFloat32Samples(idi, rnd.denoiserConfig)
+
+	floatSample, err := rnd.audioConverter.ConvertToFloat32Samples(idi, rnd.denoiserConfig)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -85,7 +88,7 @@ func (rnd *rnnoiseDenoiser) Denoise(ctx context.Context, input []byte) ([]byte, 
 		combinedCnf /= float64((len(floatSample)-1)/480 + 1)
 	}
 
-	ido, err := rnd.audioSampler.ConvertToByteSamples(combinedCleanedAudio, rnd.denoiserConfig)
+	ido, err := rnd.audioConverter.ConvertToByteSamples(combinedCleanedAudio, rnd.denoiserConfig)
 	if err != nil {
 		return nil, 0, err
 	}

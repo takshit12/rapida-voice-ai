@@ -10,12 +10,15 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	elevenlabs_internal "github.com/rapidaai/api/assistant-api/internal/transformer/elevenlabs/internal"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -35,19 +38,15 @@ type elevenlabsTTS struct {
 	options    *internal_transformer.TextToSpeechInitializeOptions
 }
 
-func NewElevenlabsTextToSpeech(
-	ctx context.Context,
-	logger commons.Logger,
-	credential *protos.VaultCredential,
-	opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+func NewElevenlabsTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
 	eleOpts, err := NewElevenLabsOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("elevenlabs-tts: intializing elevenlabs failed %+v", err)
 		return nil, err
 	}
-	context, contextCancel := context.WithCancel(ctx)
+	ctx2, contextCancel := context.WithCancel(ctx)
 	return &elevenlabsTTS{
-		ctx:              context,
+		ctx:              ctx2,
 		ctxCancel:        contextCancel,
 		options:          opts,
 		logger:           logger,
@@ -57,9 +56,6 @@ func NewElevenlabsTextToSpeech(
 
 // Initialize implements internal_transformer.OutputAudioTransformer.
 func (ct *elevenlabsTTS) Initialize() error {
-	ct.mu.Lock()
-	defer ct.mu.Unlock()
-
 	header := http.Header{}
 	header.Set("xi-api-key", ct.GetKey())
 	conn, resp, err := websocket.DefaultDialer.Dial(ct.GetTextToSpeechConnectionString(), header)
@@ -68,8 +64,11 @@ func (ct *elevenlabsTTS) Initialize() error {
 		return err
 	}
 
+	ct.mu.Lock()
 	ct.connection = conn
-	go ct.textToSpeechCallback(ct.ctx)
+	defer ct.mu.Unlock()
+
+	go ct.textToSpeechCallback(conn, ct.ctx)
 	return nil
 }
 
@@ -78,45 +77,40 @@ func (*elevenlabsTTS) Name() string {
 	return "elevenlabs-text-to-speech"
 }
 
-func (elt *elevenlabsTTS) textToSpeechCallback(ctx context.Context) {
+func (elt *elevenlabsTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			elt.logger.Infof("elevenlabs-tts: context cancelled, stopping response listener")
 			return
 		default:
-			if elt.connection == nil {
-				elt.logger.Errorf("elevenlabs-tts: WebSocket connection is either closed or not connected")
+			_, audioChunk, err := conn.ReadMessage()
+			if err != nil {
+				if errors.Is(err, io.EOF) || websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+					elt.logger.Infof("elevenlabs-tts: websocket closed gracefully")
+					return
+				}
+
+				elt.logger.Errorf("elevenlabs-tts: websocket read error: %v", err)
 				return
 			}
-			_, audioChunk, err := elt.connection.ReadMessage()
-			if err != nil {
-				elt.logger.Errorf("elevenlab-tts: Error reading from TTS WebSocket: %v", err)
-			}
-
-			var audioData map[string]interface{}
+			var audioData elevenlabs_internal.ElevenlabTextToSpeechResponse
 			if err := json.Unmarshal(audioChunk, &audioData); err != nil {
 				elt.logger.Errorf("elevenlab-tts: Error parsing audio chunk: %v", err)
-				break
+				continue
 			}
 
-			contextId, ok := audioData["contextId"].(string)
-			if !ok {
-				continue
+			if rawAudioData, err := base64.StdEncoding.DecodeString(audioData.Audio); err == nil {
+				if audioData.ContextId != nil {
+					elt.options.OnSpeech(*audioData.ContextId, rawAudioData)
+				}
 			}
-			done, ok := audioData["isFinal"].(bool)
-			if ok && done {
-				elt.options.OnComplete(contextId)
+
+			if audioData.IsFinal != nil && *audioData.IsFinal {
+				if audioData.ContextId != nil {
+					elt.options.OnComplete(*audioData.ContextId)
+				}
 			}
-			payload, ok := audioData["audio"].(string)
-			if !ok {
-				continue
-			}
-			rawAudioData, err := base64.StdEncoding.DecodeString(payload)
-			if err != nil {
-				elt.logger.Errorf("elevenlab-tts: Error decoding base64 string: %v", err)
-			}
-			elt.options.OnSpeech(contextId, rawAudioData)
 		}
 	}
 
@@ -124,10 +118,11 @@ func (elt *elevenlabsTTS) textToSpeechCallback(ctx context.Context) {
 
 func (t *elevenlabsTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
 	t.mu.Lock()
-	defer t.mu.Unlock()
+	cnn := t.connection
+	t.mu.Unlock()
 
-	if t.connection == nil {
-		return fmt.Errorf("cartesia-stt: websocket connection is not initialized")
+	if cnn == nil {
+		return fmt.Errorf("elevenlabs-tts: websocket connection is not initialized")
 	}
 	ttsMessage := map[string]interface{}{
 		"text":       in,
@@ -135,7 +130,7 @@ func (t *elevenlabsTTS) Transform(ctx context.Context, in string, opts *internal
 		"flush":      !opts.IsComplete,
 	}
 
-	if err := t.connection.WriteJSON(ttsMessage); err != nil {
+	if err := cnn.WriteJSON(ttsMessage); err != nil {
 		t.logger.Errorf("elevenlab-tts: unable to write json for text to speech: %v", err)
 		return err
 	}
@@ -144,8 +139,12 @@ func (t *elevenlabsTTS) Transform(ctx context.Context, in string, opts *internal
 
 func (t *elevenlabsTTS) Close(ctx context.Context) error {
 	t.ctxCancel()
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	if t.connection != nil {
 		t.connection.Close()
+		t.connection = nil
 	}
 	return nil
 }
