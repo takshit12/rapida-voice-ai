@@ -82,9 +82,10 @@ const ConfigureAssistantApiDeployment: FC<{ assistantId: string }> = ({
   const [experienceConfig, setExperienceConfig] = useState<ExperienceConfig>({
     greeting: undefined,
     messageOnError: undefined,
-    idealTimeout: '5000',
+    idealTimeout: '5',
     idealMessage: 'Are you there?',
-    maxCallDuration: '10000',
+    maxCallDuration: '10',
+    idleTimeoutBackoffTimes: '2',
   });
 
   /**
@@ -135,6 +136,7 @@ const ConfigureAssistantApiDeployment: FC<{ assistantId: string }> = ({
             idealTimeout: deployment?.getIdealtimeout(),
             idealMessage: deployment?.getIdealtimeoutmessage(),
             maxCallDuration: deployment?.getMaxsessionduration(),
+            idleTimeoutBackoffTimes: deployment?.getIdealtimeoutbackoff(),
           });
 
           // Audio providers configuration
@@ -231,6 +233,11 @@ const ConfigureAssistantApiDeployment: FC<{ assistantId: string }> = ({
       deployment.setMistake(experienceConfig?.messageOnError);
     if (experienceConfig?.idealTimeout)
       deployment.setIdealtimeout(experienceConfig?.idealTimeout);
+    if (experienceConfig?.idleTimeoutBackoffTimes)
+      deployment.setIdealtimeoutbackoff(
+        experienceConfig?.idleTimeoutBackoffTimes,
+      );
+
     if (experienceConfig?.idealMessage)
       deployment.setIdealtimeoutmessage(experienceConfig?.idealMessage);
     if (experienceConfig?.maxCallDuration)

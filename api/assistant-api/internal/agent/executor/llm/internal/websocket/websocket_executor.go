@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_agent_executor
+package internal_websocket
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
+	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
@@ -106,7 +107,7 @@ func (a *websocketExecutor) Close(
 
 func NewWebsocketAssistantExecutor(
 	logger commons.Logger,
-) AssistantExecutor {
+) internal_agent_executor.AssistantExecutor {
 	return &websocketExecutor{
 		logger: logger,
 	}

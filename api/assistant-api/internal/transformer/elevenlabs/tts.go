@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	elevenlabs_internal "github.com/rapidaai/api/assistant-api/internal/transformer/elevenlabs/internal"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -115,23 +116,36 @@ func (elt *elevenlabsTTS) textToSpeechCallback(conn *websocket.Conn, ctx context
 
 }
 
-func (t *elevenlabsTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
+func (t *elevenlabsTTS) Transform(ctx context.Context, in internal_type.Packet) error {
 	t.mu.Lock()
 	cnn := t.connection
+	currentCtx := in.ContextId()
 	t.mu.Unlock()
 
 	if cnn == nil {
 		return fmt.Errorf("elevenlabs-tts: websocket connection is not initialized")
 	}
-	ttsMessage := map[string]interface{}{
-		"text":       in,
-		"context_id": opts.ContextId,
-		"flush":      !opts.IsComplete,
-	}
 
-	if err := cnn.WriteJSON(ttsMessage); err != nil {
-		t.logger.Errorf("elevenlab-tts: unable to write json for text to speech: %v", err)
-		return err
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		if err := cnn.WriteJSON(map[string]interface{}{
+			"text":       input.Text,
+			"context_id": currentCtx,
+			"flush":      false,
+		}); err != nil {
+			t.logger.Errorf("elevenlab-tts: unable to write json for text to speech: %v", err)
+		}
+		if err := cnn.WriteJSON(map[string]interface{}{
+			"context_id": currentCtx,
+			"flush":      true,
+		}); err != nil {
+			t.logger.Errorf("elevenlab-tts: unable to write json for text to speech: %v", err)
+			return err
+		}
+	case internal_type.FlushPacket:
+		return nil
+	default:
+		return fmt.Errorf("elevenlab-tts: unsupported input type %T", in)
 	}
 	return nil
 }

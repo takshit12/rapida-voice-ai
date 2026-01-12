@@ -14,6 +14,7 @@ import (
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -103,33 +104,38 @@ func (azure *azureTextToSpeech) Initialize() (err error) {
 	return nil
 }
 
-func (azure *azureTextToSpeech) Transform(ctx context.Context, text string, opts *internal_transformer.TextToSpeechOption) error {
+func (azure *azureTextToSpeech) Transform(ctx context.Context, in internal_type.Packet) error {
 	azure.mu.Lock()
 	cl := azure.client
 	azure.mu.Unlock()
 
-	if azure.contextId != opts.ContextId && azure.contextId != "" {
-		// change of context, stop previous speech and send the notifiction
-		<-cl.StopSpeakingAsync()
+	if cl == nil {
+		return fmt.Errorf("azure-tts: client not initialized")
 	}
 
 	azure.mu.Lock()
-	if azure.contextId != opts.ContextId {
-		azure.contextId = opts.ContextId
-	}
+	currentCtx := azure.contextId
+	azure.contextId = in.ContextId()
 	azure.mu.Unlock()
-	if cl == nil {
-		return fmt.Errorf("azure-tts: you are calling transform without initilize")
+
+	if currentCtx != azure.contextId && currentCtx != "" {
+		<-cl.StopSpeakingAsync()
 	}
 
-	if opts.IsComplete {
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		res := <-cl.StartSpeakingTextAsync(input.Text)
+		if res.Error != nil {
+			return res.Error
+		}
+
 		return nil
+	case internal_type.FlushPacket:
+		return nil
+	default:
+		return fmt.Errorf("azure-tts: unsupported input type %T", in)
 	}
-	res := <-cl.StartSpeakingTextAsync(text)
-	if res.Error != nil {
-		return res.Error
-	}
-	return nil
+
 }
 
 func (azCallback *azureTextToSpeech) OnStart(event speech.SpeechSynthesisEventArgs) {

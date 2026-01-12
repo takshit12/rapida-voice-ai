@@ -71,6 +71,7 @@ func main() {
 	}
 
 	// interservice communication is authenticated now
+	authClient := web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)
 	appRunner.S = grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			middlewares.NewRequestLoggerUnaryServerMiddleware(appRunner.Cfg.Name, appRunner.Logger),
@@ -80,8 +81,7 @@ func main() {
 				appRunner.Logger,
 			),
 			middlewares.NewProjectAuthenticatorUnaryServerMiddleware(
-				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger,
-					web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)),
+				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, authClient),
 				appRunner.Logger,
 			),
 		),
@@ -93,8 +93,7 @@ func main() {
 				appRunner.Logger,
 			),
 			middlewares.NewProjectAuthenticatorStreamServerMiddleware(
-				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger,
-					web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)),
+				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, authClient),
 				appRunner.Logger,
 			),
 		),

@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 )
 
@@ -19,7 +20,7 @@ type sentenceFormattingSynthesizer struct {
 	opts   SynthesizerOptions
 }
 
-func NewSentenceFormattingSynthesizer(logger commons.Logger, opts SynthesizerOptions) (SentenceSynthesizer, error) {
+func NewSentenceFormattingSynthesizer(logger commons.Logger, opts SynthesizerOptions) (Synthesizer, error) {
 	return &sentenceFormattingSynthesizer{
 		logger: logger,
 		opts:   opts,
@@ -28,11 +29,11 @@ func NewSentenceFormattingSynthesizer(logger commons.Logger, opts SynthesizerOpt
 
 func (ess *sentenceFormattingSynthesizer) Synthesize(
 	ctx context.Context,
-	contextId string,
-	text string,
-) string {
-	text = ess.RemoveMarkdown(text)
-	return ess.AddConjectionPause(text)
+	in internal_type.TextPacket,
+) internal_type.TextPacket {
+	in.Text = ess.RemoveMarkdown(in.Text)
+	in.Text = ess.AddConjectionPause(in.Text)
+	return in
 }
 
 func (ess *sentenceFormattingSynthesizer) AddConjectionPause(text string) string {

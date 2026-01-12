@@ -3,20 +3,24 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_agent_tool
+package internal_agent_executor_tool
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
+	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
-	internal_agent_tools "github.com/rapidaai/api/assistant-api/internal/agent/tool/local"
+	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
+	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
+	internal_tool_local "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal/local"
+	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 
-	internal_tool_factory "github.com/rapidaai/api/assistant-api/internal/factory/tool"
 	"github.com/rapidaai/protos"
 
 	"github.com/rapidaai/pkg/commons"
@@ -27,32 +31,44 @@ import (
 
 type toolExecutor struct {
 	logger                 commons.Logger
-	tools                  map[string]internal_agent_tools.ToolCaller
+	tools                  map[string]internal_tool.ToolCaller
 	availableToolFunctions []*protos.FunctionDefinition
 }
 
 func NewToolExecutor(
 	logger commons.Logger,
-) ToolExecutor {
+) internal_agent_executor.ToolExecutor {
 	return &toolExecutor{
 		logger:                 logger,
-		tools:                  make(map[string]internal_agent_tools.ToolCaller, 0),
+		tools:                  make(map[string]internal_tool.ToolCaller, 0),
 		availableToolFunctions: make([]*protos.FunctionDefinition, 0),
 	}
 }
 
-func (executor *toolExecutor) Initialize(
-	ctx context.Context,
-	communication internal_requests.Communication,
-) error {
+func (executor *toolExecutor) GetLocalTool(logger commons.Logger, toolOpts *internal_assistant_entity.AssistantTool, communcation internal_adapter_requests.Communication) (internal_tool.ToolCaller, error) {
+	switch toolOpts.ExecutionMethod {
+	case "knowledge_retrieval":
+		return internal_tool_local.NewKnowledgeRetrievalToolCaller(logger, toolOpts, communcation)
+	case "api_request":
+		return internal_tool_local.NewApiRequestToolCaller(logger, toolOpts, communcation)
+	case "endpoint":
+		return internal_tool_local.NewEndpointToolCaller(logger, toolOpts, communcation)
+	case "put_on_hold":
+		return internal_tool_local.NewPutOnHoldToolCaller(logger, toolOpts, communcation)
+	case "end_of_conversation":
+		return internal_tool_local.NewEndOfConversationCaller(logger, toolOpts, communcation)
+	default:
+		return nil, errors.New("illegal tool action provided")
+	}
+}
+
+func (executor *toolExecutor) Initialize(ctx context.Context, communication internal_requests.Communication) error {
 	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantToolConnectStage)
 	defer span.EndSpan(ctx, utils.AssistantToolConnectStage)
 
 	start := time.Now()
 	for _, tool := range communication.Assistant().AssistantTools {
-		caller, err := internal_tool_factory.GetToolAction(
-			executor.logger,
-			tool, communication)
+		caller, err := executor.GetLocalTool(executor.logger, tool, communication)
 		if err != nil {
 			executor.logger.Errorf("error while initialize tool action %s", err)
 			continue
@@ -88,19 +104,12 @@ func (executor *toolExecutor) tool(
 	metrics []*types.Metric,
 	communication internal_requests.Communication) error {
 	utils.Go(communication.Context(), func() {
-		communication.
-			CreateConversationToolLog(
-				messageId, in, out, metrics,
-			)
+		communication.CreateConversationToolLog(messageId, in, out, metrics)
 	})
 	return nil
 }
 
-func (executor *toolExecutor) Execute(
-	ctx context.Context,
-	messageid string,
-	call *protos.ToolCall,
-	communication internal_requests.Communication) *types.Content {
+func (executor *toolExecutor) Execute(ctx context.Context, messageid string, call *protos.ToolCall, communication internal_requests.Communication) *types.Content {
 	ctx, span, _ := communication.Tracer().StartSpan(
 		ctx,
 		utils.AssistantToolExecuteStage,
@@ -190,7 +199,7 @@ func (executor *toolExecutor) ExecuteAll(
 
 func (executor *toolExecutor) Log(
 	ctx context.Context,
-	toolCaller internal_agent_tools.ToolCaller,
+	toolCaller internal_tool.ToolCaller,
 	communication internal_requests.Communication,
 	assistantConversationMessageId string,
 	recordStatus type_enums.RecordState,

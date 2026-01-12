@@ -4,7 +4,7 @@ import {
 } from '@rapidaai/react';
 import { Tab } from '@/app/components/tab';
 import { cn } from '@/utils';
-import { ChevronRight, Speaker, Speech } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { ModalProps } from '@/app/components/base/modal';
 import { RightSideModal } from '@/app/components/base/modal/right-side-modal';
 import { FieldSet } from '@/app/components/form/fieldset';

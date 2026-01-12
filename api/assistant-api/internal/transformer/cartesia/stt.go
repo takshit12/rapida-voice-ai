@@ -92,7 +92,7 @@ func (cst *cartesiaSpeechToText) speechToTextCallback(conn *websocket.Conn, ctx 
 	}
 }
 
-func (cst *cartesiaSpeechToText) Transform(ctx context.Context, in []byte, opts *internal_transformer.SpeechToTextOption) error {
+func (cst *cartesiaSpeechToText) Transform(ctx context.Context, in []byte) error {
 	cst.mu.Lock()
 	conn := cst.connection
 	defer cst.mu.Unlock()

@@ -88,7 +88,7 @@ func (dg *deepgramSTT) Initialize() error {
 // WebSocket client. This method is responsible for streaming the audio data to the Deepgram service
 // for transcription. If there are any errors during the streaming process, they will be returned by
 // the method.
-func (dg *deepgramSTT) Transform(ctx context.Context, in []byte, opts *internal_transformer.SpeechToTextOption) error {
+func (dg *deepgramSTT) Transform(ctx context.Context, in []byte) error {
 	dg.mu.Lock()
 	client := dg.client
 	defer dg.mu.Unlock()

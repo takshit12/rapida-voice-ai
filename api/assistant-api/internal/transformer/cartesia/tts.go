@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	cartesia_internal "github.com/rapidaai/api/assistant-api/internal/transformer/cartesia/internal"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -26,6 +27,8 @@ type cartesiaTTS struct {
 	// context management
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+
+	contextId string
 
 	logger     commons.Logger
 	connection *websocket.Conn
@@ -102,19 +105,42 @@ func (*cartesiaTTS) Name() string {
 	return "cartesia-text-to-speech"
 }
 
-func (ct *cartesiaTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
+func (ct *cartesiaTTS) Transform(ctx context.Context, in internal_type.Packet) error {
 	ct.mu.Lock()
 	conn := ct.connection
+	currentCtx := ct.contextId
+	if in.ContextId() != ct.contextId {
+		ct.contextId = in.ContextId()
+	}
 	ct.mu.Unlock()
 
 	if conn == nil {
 		return fmt.Errorf("cartesia-tts: websocket connection is not initialized")
 	}
-	message := ct.GetTextToSpeechInput(in, map[string]interface{}{"continue": !opts.IsComplete, "context_id": opts.ContextId})
-	if err := conn.WriteJSON(message); err != nil {
-		return err
+
+	if currentCtx != in.ContextId() && currentCtx != "" {
+		_ = conn.WriteJSON(map[string]interface{}{
+			"context_id": currentCtx,
+			"cancel":     true,
+		})
+	}
+
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		message := ct.GetTextToSpeechInput(input.Text, map[string]interface{}{"continue": true, "context_id": ct.contextId, "max_buffer_delay_ms": "0ms"})
+		if err := conn.WriteJSON(message); err != nil {
+			return err
+		}
+	case internal_type.FlushPacket:
+		message := ct.GetTextToSpeechInput("", map[string]interface{}{"continue": false, "flush": true, "context_id": ct.contextId})
+		if err := conn.WriteJSON(message); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("azure-tts: unsupported input type %T", in)
 	}
 	return nil
+
 }
 
 func (ct *cartesiaTTS) Close(ctx context.Context) error {

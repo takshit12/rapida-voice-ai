@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"time"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_agent_embeddings "github.com/rapidaai/api/assistant-api/internal/agent/embedding"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/connectors"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
@@ -27,8 +27,8 @@ func (kr *GenericRequestor) RetriveToolKnowledge(
 	messageId string,
 	query string,
 	filter map[string]interface{},
-	kc *internal_adapter_requests.KnowledgeRetriveOption,
-) ([]internal_adapter_requests.KnowledgeContextResult, error) {
+	kc *internal_type.KnowledgeRetriveOption,
+) ([]internal_type.KnowledgeContextResult, error) {
 	start := time.Now()
 	result, err := kr.retrive(kr.Context(), knowledge, query, filter, kc)
 	utils.Go(context.Background(), func() {
@@ -72,8 +72,8 @@ func (kr *GenericRequestor) retrive(
 	knowledge *internal_knowledge_gorm.Knowledge,
 	query string,
 	filter map[string]interface{},
-	kc *internal_adapter_requests.KnowledgeRetriveOption,
-) ([]internal_adapter_requests.KnowledgeContextResult, error) {
+	kc *internal_type.KnowledgeRetriveOption,
+) ([]internal_type.KnowledgeContextResult, error) {
 	topK := int(DEFAULT_TOP_K)
 	if kc.TopK != 0 {
 		topK = int(kc.TopK)
@@ -82,7 +82,7 @@ func (kr *GenericRequestor) retrive(
 	if kc.ScoreThreshold != 0 {
 		minScore = float32(kc.ScoreThreshold)
 	}
-	Results := make([]internal_adapter_requests.KnowledgeContextResult, 0)
+	Results := make([]internal_type.KnowledgeContextResult, 0)
 	//
 	switch kc.RetrievalMethod {
 	case "hybrid-search", "hybrid":
@@ -119,7 +119,7 @@ func (kr *GenericRequestor) retrive(
 		}
 		for _, x := range matchedContents {
 			source := x["_source"].(map[string]interface{})
-			Results = append(Results, internal_adapter_requests.KnowledgeContextResult{
+			Results = append(Results, internal_type.KnowledgeContextResult{
 				ID:         x["_id"].(string),
 				DocumentID: source["document_id"].(string),
 				Metadata:   source["metadata"].(map[string]interface{}),
@@ -162,7 +162,7 @@ func (kr *GenericRequestor) retrive(
 
 		for _, x := range matchedContents {
 			source := x["_source"].(map[string]interface{})
-			Results = append(Results, internal_adapter_requests.KnowledgeContextResult{
+			Results = append(Results, internal_type.KnowledgeContextResult{
 				ID:         x["_id"].(string),
 				DocumentID: source["document_id"].(string),
 				Metadata:   source["metadata"].(map[string]interface{}),
@@ -188,7 +188,7 @@ func (kr *GenericRequestor) retrive(
 		}
 		for _, x := range matchedContents {
 			source := x["_source"].(map[string]interface{})
-			Results = append(Results, internal_adapter_requests.KnowledgeContextResult{
+			Results = append(Results, internal_type.KnowledgeContextResult{
 				ID:         x["_id"].(string),
 				DocumentID: source["document_id"].(string),
 				Metadata:   source["metadata"].(map[string]interface{}),

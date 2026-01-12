@@ -22,7 +22,6 @@ const (
 	AssistantToolConnectStage         RapidaStage = "talk.assistant.tool.connect"
 	AssistantToolExecuteStage         RapidaStage = "talk.assistant.tool.execute"
 	AssistantAgentTextGenerationStage RapidaStage = "talk.assistant.agent.text-generation"
-	AssistantTranscribeStage          RapidaStage = "talk.assistant.speak.transcribe"
 	AssistantSpeakingStage            RapidaStage = "talk.assistant.speak.speaking"
 	AssistantNotifyStage              RapidaStage = "talk.assistant.notify"
 	AssistantDisconnectStage          RapidaStage = "talk.assistant.disconnect"

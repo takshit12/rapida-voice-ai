@@ -68,11 +68,18 @@ func (talking *GenericRequestor) AssistantCallback(ctx context.Context, messagei
 		talking.OnError(ctx, messageid)
 		return nil
 	}
+
+	// Start the ideal timeout timer after the assistant has finished speaking
+	talking.StartIdealTimeoutTimer(ctx)
+
 	return nil
 }
 
 // after finish user message the user callback will be triggered
 func (talking *GenericRequestor) UserCallback(ctx context.Context, messageid string, in *types.Message, metrics []*types.Metric) error {
+	// Reset the ideal timeout timer since user has spoken
+	talking.ResetIdealTimeoutTimer(ctx)
+
 	in = talking.OnRecieveMessage(in)
 	utils.Go(ctx, func() {
 		if err := talking.OnCreateMessage(ctx, messageid, in); err != nil {

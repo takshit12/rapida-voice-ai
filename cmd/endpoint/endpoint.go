@@ -70,6 +70,7 @@ func main() {
 	}
 
 	// init
+	authClient := web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)
 	appRunner.S = grpc.NewServer(
 		grpc.ChainStreamInterceptor(
 			middlewares.NewRequestLoggerStreamServerMiddleware(appRunner.Cfg.Name, appRunner.Logger),
@@ -79,14 +80,11 @@ func main() {
 				appRunner.Logger,
 			),
 			middlewares.NewAuthenticationStreamServerMiddleware(
-				authenticators.NewUserAuthenticator(&appRunner.Cfg.AppConfig,
-					appRunner.Logger,
-					web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)),
+				authenticators.NewUserAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, authClient),
 				appRunner.Logger,
 			),
 			middlewares.NewProjectAuthenticatorStreamServerMiddleware(
-				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger,
-					web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)),
+				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, authClient),
 				appRunner.Logger,
 			),
 			middlewares.NewClientInformationStreamServerMiddleware(
@@ -97,14 +95,11 @@ func main() {
 			middlewares.NewRequestLoggerUnaryServerMiddleware(appRunner.Cfg.AppConfig.Name, appRunner.Logger),
 			middlewares.NewRecoveryUnaryServerMiddleware(appRunner.Logger),
 			middlewares.NewProjectAuthenticatorUnaryServerMiddleware(
-				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger,
-					web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)),
+				authenticators.NewProjectAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, authClient),
 				appRunner.Logger,
 			),
 			middlewares.NewAuthenticationUnaryServerMiddleware(
-				authenticators.NewUserAuthenticator(&appRunner.Cfg.AppConfig,
-					appRunner.Logger,
-					web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)),
+				authenticators.NewUserAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, authClient),
 				appRunner.Logger,
 			),
 			middlewares.NewServiceAuthenticatorUnaryServerMiddleware(

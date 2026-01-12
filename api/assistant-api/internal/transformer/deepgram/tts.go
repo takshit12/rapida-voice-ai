@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -138,48 +139,54 @@ func (t *deepgramTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Con
 }
 
 // Transform streams text into Deepgram
-func (t *deepgramTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
+func (t *deepgramTTS) Transform(ctx context.Context, in internal_type.Packet) error {
 	t.mu.Lock()
 	conn := t.connection
+	currentCtx := t.contextId
+	if in.ContextId() != t.contextId {
+		t.contextId = in.ContextId()
+	}
 	t.mu.Unlock()
 
 	if conn == nil {
 		return fmt.Errorf("deepgram-tts: websocket not initialized")
 	}
 
-	if t.contextId != opts.ContextId && t.contextId != "" {
+	if currentCtx != t.contextId && currentCtx != "" {
 		_ = conn.WriteJSON(map[string]interface{}{
 			"type": "Clear",
 		})
 	}
 
-	t.mu.Lock()
-	t.contextId = opts.ContextId
-	t.mu.Unlock()
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		t.logger.Debugf("speaking %s and ctx %s", input.Text, input.ContextID)
 
-	if opts.IsComplete {
+		// if the request is for complete then we just flush the stream
+		if err := conn.WriteJSON(map[string]interface{}{
+			"type": "Speak",
+			"text": input.Text,
+		}); err != nil {
+			t.logger.Errorf("deepgram-tts: failed to send Speak message %v", err)
+		}
+
+		return nil
+	case internal_type.FlushPacket:
+		t.logger.Debugf("flushing %s", input.ContextID)
 		if err := conn.WriteJSON(map[string]string{"type": "Flush"}); err != nil {
 			t.logger.Errorf("deepgram-tts: failed to send Flush %v", err)
 			return err
 		}
 		return nil
-	}
-	// if the request is for complete then we just flush the stream
-	if err := conn.WriteJSON(map[string]interface{}{
-		"type": "Speak",
-		"text": in,
-	}); err != nil {
-		t.logger.Errorf("deepgram-tts: failed to send Speak message %v", err)
-		return err
+	default:
+		return fmt.Errorf("deepgram-tts: unsupported input type %T", in)
 	}
 
-	return nil
 }
 
 // Close gracefully closes the Deepgram connection
 func (t *deepgramTTS) Close(ctx context.Context) error {
 	t.ctxCancel()
-
 	t.mu.Lock()
 	defer t.mu.Unlock()
 

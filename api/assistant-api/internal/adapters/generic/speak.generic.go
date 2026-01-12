@@ -13,61 +13,56 @@ import (
 	internal_adapter_transformer_factory "github.com/rapidaai/api/assistant-api/internal/factory/transformer"
 	internal_synthesizers "github.com/rapidaai/api/assistant-api/internal/synthesizes"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
-	internal_tokenizer "github.com/rapidaai/api/assistant-api/internal/tokenizer"
+	internal_sentence_tokenizer "github.com/rapidaai/api/assistant-api/internal/tokenizer/sentence"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
-func (spk *GenericRequestor) FinishSpeaking(
-	contextId string,
-) error {
-	if _, err := spk.GetTextToSpeechTransformer(); err != nil {
-		spk.logger.Warnf("no output transformer, skipping finish speak.")
-		return err
-	}
-
-	ctx, span, _ := spk.Tracer().StartSpan(spk.Context(), utils.AssistantSpeakingStage)
-	defer span.EndSpan(ctx, utils.AssistantSpeakingStage)
-
-	span.AddAttributes(ctx,
-		internal_adapter_telemetry.KV{
-			K: "messageId", V: internal_adapter_telemetry.StringValue(contextId),
-		},
-		internal_adapter_telemetry.KV{
-			K: "activity", V: internal_adapter_telemetry.StringValue("finish_speaking"),
-		},
-	)
-	spk.tokenizer.Tokenize(ctx, contextId, "", true)
-	// keep it sync or blocking
-	if spk.textToSpeechTransformer != nil {
-		spk.textToSpeechTransformer.Transform(ctx,
-			"",
-			&internal_transformer.TextToSpeechOption{
-				ContextId:  contextId,
-				IsComplete: true,
-			})
-	}
-	return nil
-
-}
-
-func (spk *GenericRequestor) Speak(contextId string, msg string) error {
+func (spk *GenericRequestor) Speak(packets ...internal_type.Packet) error {
 	if _, err := spk.GetTextToSpeechTransformer(); err != nil {
 		spk.logger.Warnf("no output transformer, skipping speak")
 		return err
 	}
-	ctx, span, _ := spk.Tracer().StartSpan(spk.Context(), utils.AssistantTranscribeStage)
-	defer span.EndSpan(ctx, utils.AssistantTranscribeStage)
-	span.AddAttributes(ctx,
-		internal_adapter_telemetry.KV{
-			K: "messageId", V: internal_adapter_telemetry.StringValue(contextId),
-		},
-		internal_adapter_telemetry.KV{
-			K: "chunk", V: internal_adapter_telemetry.StringValue(msg),
-		},
-	)
-	return spk.tokenizer.Tokenize(ctx, contextId, msg, false)
+	ctx, span, _ := spk.Tracer().StartSpan(spk.Context(), utils.AssistantSpeakingStage)
+	defer span.EndSpan(ctx, utils.AssistantSpeakingStage)
+
+	for _, packate := range packets {
+		switch pkt := packate.(type) {
+		case internal_type.TextPacket:
+
+			span.AddAttributes(ctx,
+				internal_adapter_telemetry.KV{
+					K: "messageId", V: internal_adapter_telemetry.StringValue(pkt.ContextID),
+				},
+				internal_adapter_telemetry.KV{
+					K: "chunk", V: internal_adapter_telemetry.StringValue(pkt.Text),
+				},
+				internal_adapter_telemetry.KV{
+					K: "activity", V: internal_adapter_telemetry.StringValue("speaking"),
+				},
+			)
+			return spk.tokenizer.Tokenize(ctx, pkt)
+		case internal_type.FlushPacket:
+			span.AddAttributes(ctx,
+				internal_adapter_telemetry.KV{
+					K: "messageId", V: internal_adapter_telemetry.StringValue(pkt.ContextID),
+				},
+				internal_adapter_telemetry.KV{
+					K: "activity", V: internal_adapter_telemetry.StringValue("finish_speaking"),
+				},
+			)
+			if err := spk.tokenizer.Tokenize(ctx, pkt); err != nil {
+				spk.logger.Warnf("unable to send finish speaking sentence to tokenizer %v", err)
+			}
+			return nil
+		default:
+			spk.logger.Warnf("unsupported packet type for speak: %T", packate)
+			return nil
+		}
+	}
+	return nil
 
 }
 
@@ -100,8 +95,9 @@ func (spk *GenericRequestor) ConnectSpeaker(ctx context.Context, audioOutConfig 
 	wg.Add(1)
 	utils.Go(context, func() {
 		defer wg.Done()
-		if tokenizer, err := internal_tokenizer.NewSentenceTokenizer(spk.logger, spk.OnCompleteSentence, speakerOpts); err == nil {
+		if tokenizer, err := internal_sentence_tokenizer.NewSentenceTokenizer(spk.logger, speakerOpts); err == nil {
 			spk.tokenizer = tokenizer
+			go spk.OnCompleteSentence(context)
 		}
 		if normalizer, err := internal_synthesizers.NewSentenceNormalizeSynthesizer(spk.logger, internal_synthesizers.SynthesizerOptions{SpeakerOptions: speakerOpts}); err == nil {
 			spk.synthesizers = append(spk.synthesizers, normalizer)
@@ -131,15 +127,12 @@ func (spk *GenericRequestor) ConnectSpeaker(ctx context.Context, audioOutConfig 
 			spk.logger.Errorf("unable to find credential from options %+v", err)
 			return
 		}
-		credential, err := spk.
-			VaultCaller().
-			GetCredential(context, spk.Auth(), credentialId)
+		credential, err := spk.VaultCaller().GetCredential(context, spk.Auth(), credentialId)
 		if err != nil {
 			spk.logger.Errorf("Api call to find credential failed %+v", err)
 			return
 		}
 
-		spk.logger.Debugf("creating output audio transformer with options %+v and name %v", opts, outputTransformer.GetName())
 		atransformer, err := internal_adapter_transformer_factory.GetTextToSpeechTransformer(internal_adapter_transformer_factory.AudioTransformer(outputTransformer.GetName()), context, spk.logger, credential, opts)
 		if err != nil {
 			spk.logger.Errorf("unable to create input audio transformer with error %v", err)
@@ -159,40 +152,63 @@ func (spk *GenericRequestor) ConnectSpeaker(ctx context.Context, audioOutConfig 
 	return nil
 }
 
-func (spk *GenericRequestor) OnCompleteSentence(
-	ctx context.Context,
-	contextId string, output string) error {
+func (spk *GenericRequestor) OnCompleteSentence(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			spk.logger.Debugf("OnCompleteSentence stopped due to context cancellation")
+			return
 
-	ctx, span, _ := spk.Tracer().StartSpan(spk.Context(), utils.AssistantSpeakingStage)
-	defer span.EndSpan(ctx, utils.AssistantSpeakingStage)
+		case result, ok := <-spk.tokenizer.Result():
+			if !ok {
+				spk.logger.Debugf("speak: OnCompleteSentence tokenizer channel closed")
+				return
+			}
+			//
+			switch res := result.(type) {
+			case internal_type.FlushPacket:
+				spk.logger.Debugf("OnCompleteSentence received flush for context %s", res.ContextID)
+				if spk.textToSpeechTransformer != nil {
+					if err := spk.textToSpeechTransformer.Transform(spk.Context(), res); err != nil {
+						spk.logger.Errorf("speak: failed to send flush to text to speech transformer error: %v", err)
+					}
+				}
+			case internal_type.TextPacket:
+				ctxSpan, span, _ := spk.Tracer().StartSpan(ctx, utils.AssistantSpeakingStage)
+				span.AddAttributes(ctxSpan,
+					internal_adapter_telemetry.KV{
+						K: "messageId", V: internal_adapter_telemetry.StringValue(res.ContextID),
+					},
+					internal_adapter_telemetry.KV{
+						K: "activity", V: internal_adapter_telemetry.StringValue("speak"),
+					},
+					internal_adapter_telemetry.KV{
+						K: "script", V: internal_adapter_telemetry.StringValue(res.Text),
+					},
+				)
 
-	span.AddAttributes(ctx,
-		internal_adapter_telemetry.KV{
-			K: "messageId", V: internal_adapter_telemetry.StringValue(contextId),
-		},
-		internal_adapter_telemetry.KV{
-			K: "activity", V: internal_adapter_telemetry.StringValue("speak"),
-		},
-		internal_adapter_telemetry.KV{
-			K: "script", V: internal_adapter_telemetry.StringValue(output),
-		},
-	)
-	for _, v := range spk.synthesizers {
-		output = v.Synthesize(spk.Context(), contextId, output)
+				for _, v := range spk.synthesizers {
+					res = v.Synthesize(spk.Context(), res)
+				}
+
+				span.AddAttributes(ctxSpan,
+					internal_adapter_telemetry.KV{
+						K: "synthesize_script",
+						V: internal_adapter_telemetry.StringValue(res.Text),
+					},
+				)
+
+				if spk.textToSpeechTransformer != nil {
+					if err := spk.textToSpeechTransformer.Transform(spk.Context(), res); err != nil {
+						spk.logger.Errorf("speak: failed to send sentence to text to speech transformer error: %v", err)
+					}
+				}
+				span.EndSpan(ctxSpan, utils.AssistantSpeakingStage)
+			default:
+			}
+
+		}
 	}
-	span.AddAttributes(ctx,
-		internal_adapter_telemetry.KV{
-			K: "synthesize_script", V: internal_adapter_telemetry.StringValue(output),
-		},
-	)
-	if spk.textToSpeechTransformer != nil {
-		spk.textToSpeechTransformer.Transform(spk.Context(), output, &internal_transformer.TextToSpeechOption{
-			ContextId:  contextId,
-			IsComplete: false,
-		})
-
-	}
-	return nil
 }
 
 func (spk *GenericRequestor) CloseSpeaker() error {
@@ -200,6 +216,10 @@ func (spk *GenericRequestor) CloseSpeaker() error {
 		if err := spk.textToSpeechTransformer.Close(spk.Context()); err != nil {
 			spk.logger.Errorf("cancel all output transformer with error %v", err)
 		}
+	}
+
+	if spk.tokenizer != nil {
+		spk.tokenizer.Close()
 	}
 	return nil
 }

@@ -133,7 +133,7 @@ func (aai *assemblyaiSTT) speechToTextCallback(conn *websocket.Conn, ctx context
 	}
 }
 
-func (aai *assemblyaiSTT) Transform(ctx context.Context, in []byte, opts *internal_transformer.SpeechToTextOption) error {
+func (aai *assemblyaiSTT) Transform(ctx context.Context, in []byte) error {
 	aai.mu.Lock()
 	defer aai.mu.Unlock()
 

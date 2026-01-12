@@ -28,7 +28,7 @@ import (
 // and composable transformation logic for various data types and
 // structures within an application.
 
-type Transformers[IN any, opts TransformOption] interface {
+type Transformers[IN any] interface {
 	// The `Initialize() error` method in the `Transformers` interface is defining a function signature
 	// for a method that initializes or sets up any necessary resources or configurations before the
 	// transformation process begins. This method is expected to return an error if any issues occur
@@ -40,7 +40,7 @@ type Transformers[IN any, opts TransformOption] interface {
 	// `SpeechToTextTransformer`. It is indicating that `SpeechToTextTransformer` extends the `Transformers`
 	// interface with the specific type parameters `[]byte` as the input type and `string` as the output
 	// type for the transformation.
-	Transform(context.Context, IN, opts) error
+	Transform(context.Context, IN) error
 
 	//
 	// The `Cancel() error` method in the `Transformers` interface defines a function signature for a
@@ -60,17 +60,7 @@ type SpeechToTextTransformer interface {
 	Name() string
 
 	//
-	Transformers[[]byte, *SpeechToTextOption]
-}
-
-// OutputAudioTransformer is an interface for transforming output audio data.
-// It extends the Transformers interface, specifying that it transforms
-// from string (processed audio representation) to []byte (raw audio data).
-type TextToSpeechTransformer interface {
-	Name() string
-
-	//
-	Transformers[string, *TextToSpeechOption]
+	Transformers[[]byte]
 }
 
 // SpeechToTextTransformerOptions defines the interface for handling audio transformation events.
@@ -91,44 +81,8 @@ type SpeechToTextInitializeOptions struct {
 
 	//
 	// on transcript
-	OnTranscript func(
-		transcript string,
-		confidence float64,
-		languages string,
-		isCompleted bool,
-	) error
+	OnTranscript func(transcript string, confidence float64, languages string, isCompleted bool) error
 
 	// options of model
 	ModelOptions utils.Option
-}
-
-// OutputAudioTransformerOptions defines the interface for handling audio output transformation
-type TextToSpeechInitializeOptions struct {
-
-	// audio config
-	AudioConfig *protos.AudioConfig
-
-	// OnSpeech is called when speech is detected in the audio stream
-	// It receives a byte slice containing the speech audio data
-	// Returns an error if there's an issue processing the speech
-	OnSpeech func(string, []byte) error
-
-	// OnComplete is called when the audio transformation is complete
-	// Returns an error if there's an issue finalizing the transformation
-	OnComplete func(string) error
-
-	// options of model
-	ModelOptions utils.Option
-}
-
-type TransformOption interface{}
-
-type TextToSpeechOption struct {
-	TransformOption
-	ContextId  string
-	IsComplete bool
-}
-
-type SpeechToTextOption struct {
-	TransformOption
 }

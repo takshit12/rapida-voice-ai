@@ -16,6 +16,7 @@ import (
 	"github.com/dvonthenen/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	sarvam_internal "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam/internal"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -139,17 +140,30 @@ func (rt *sarvamTextToSpeech) textToSpeechCallback(conn *websocket.Conn, ctx con
 	}
 }
 
-func (rt *sarvamTextToSpeech) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
-
+func (rt *sarvamTextToSpeech) Transform(ctx context.Context, in internal_type.Packet) error {
 	rt.mu.Lock()
-	rt.contextId = opts.ContextId
+	if in.ContextId() != rt.contextId {
+		rt.contextId = in.ContextId()
+	}
 	connection := rt.connection
 	rt.mu.Unlock()
 
 	if connection == nil {
 		return fmt.Errorf("sarvam-tts: websocket connection is not initialized")
 	}
-	if opts.IsComplete {
+
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		if err := connection.WriteJSON(map[string]interface{}{
+			"type": "text",
+			"data": map[string]interface{}{
+				"text": input.Text,
+			},
+		}); err != nil {
+			rt.logger.Errorf("sarvam-tts: error writing text message to websocket: %v", err)
+			return err
+		}
+	case internal_type.FlushPacket:
 		if err := connection.WriteJSON(map[string]interface{}{
 			"type": "flush",
 		}); err != nil {
@@ -157,19 +171,11 @@ func (rt *sarvamTextToSpeech) Transform(ctx context.Context, in string, opts *in
 			return err
 		}
 		return nil
+	default:
+		return fmt.Errorf("sarvam-tts: unsupported input type %T", in)
 	}
-
-	if err := connection.WriteJSON(map[string]interface{}{
-		"type": "text",
-		"data": map[string]interface{}{
-			"text": in,
-		},
-	}); err != nil {
-		rt.logger.Errorf("sarvam-tts: error writing text message to websocket: %v", err)
-		return err
-	}
-
 	return nil
+
 }
 
 func (rt *sarvamTextToSpeech) Close(ctx context.Context) error {

@@ -18,7 +18,6 @@ import (
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
-	"google.golang.org/grpc/status"
 )
 
 type googleSpeechToText struct {
@@ -41,8 +40,36 @@ func (g *googleSpeechToText) Name() string {
 	return "google-speech-to-text"
 }
 
+func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.SpeechToTextInitializeOptions,
+) (internal_transformer.SpeechToTextTransformer, error) {
+	start := time.Now()
+	googleOption, err := NewGoogleOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+	if err != nil {
+		logger.Errorf("google-stt: Error while GoogleOption err: %v", err)
+		return nil, err
+	}
+	client, err := speech.NewClient(ctx, googleOption.GetSpeechToTextClientOptions()...)
+
+	if err != nil {
+		logger.Errorf("google-stt: Error creating Google client: %v", err)
+		return nil, err
+	}
+
+	xctx, contextCancel := context.WithCancel(ctx)
+	// Context for callback management
+	logger.Benchmark("google.NewGoogleSpeechToText", time.Since(start))
+	return &googleSpeechToText{
+		ctx:          xctx,
+		ctxCancel:    contextCancel,
+		logger:       logger,
+		client:       client,
+		googleOption: googleOption,
+		options:      opts,
+	}, nil
+}
+
 // Transform implements internal_transformer.SpeechToTextTransformer.
-func (google *googleSpeechToText) Transform(c context.Context, byf []byte, opts *internal_transformer.SpeechToTextOption) error {
+func (google *googleSpeechToText) Transform(c context.Context, byf []byte) error {
 	google.mu.Lock()
 	strm := google.stream
 	google.mu.Unlock()
@@ -72,28 +99,23 @@ func (g *googleSpeechToText) speechToTextCallback(stram speechpb.Speech_Streamin
 				return
 			}
 			if err != nil {
-				g.logger.Errorf("google-stt: recv error: %v", err.Error())
-				if st, ok := status.FromError(err); ok {
-					for _, detail := range st.Details() {
-						g.logger.Errorf("google-stt: detailed error: %v", detail)
-					}
-				}
+				g.logger.Errorf("google-stt: recv error: %v", err)
+				// if resp.Error != nil {
+				// 	switch resp.Error.Code {
+				// 	case 3, 11:
+				// 		go g.Initialize()
+				// 		g.logger.Warnf("google-stt: stream duration limit reached (code=%d): %s", resp.Error.Code, resp.Error.Message)
+				// 	default:
+				// 		g.logger.Errorf("google-stt: recognition error: code=%d message=%s", resp.Error.Code, resp.Error.Message)
+				// 	}
+				// 	return
+				// }
 				return
 			}
 			if resp == nil {
 				g.logger.Warnf("google-stt: received nil response")
 				return
 			}
-			// if resp.Error != nil {
-			// 	switch resp.Error.Code {
-			// 	case 3, 11:
-			// 		g.Initialize()
-			// 		g.logger.Warnf("google-stt: stream duration limit reached (code=%d): %s", resp.Error.Code, resp.Error.Message)
-			// 	default:
-			// 		g.logger.Errorf("google-stt: recognition error: code=%d message=%s", resp.Error.Code, resp.Error.Message)
-			// 	}
-			// 	return
-			// }
 
 			for _, result := range resp.Results {
 				if len(result.Alternatives) == 0 {
@@ -101,39 +123,17 @@ func (g *googleSpeechToText) speechToTextCallback(stram speechpb.Speech_Streamin
 				}
 				alt := result.Alternatives[0]
 				if g.options.OnTranscript != nil && len(alt.GetTranscript()) > 0 {
+					if v, err := g.mdlOpts.GetFloat64("listen.threshold"); err == nil {
+						if alt.GetConfidence() < float32(v) {
+							g.logger.Warnf("google-stt: skipping low confidence transcript: %s (confidence: %f)", alt.GetTranscript(), alt.GetConfidence())
+							continue
+						}
+					}
 					g.options.OnTranscript(alt.GetTranscript(), float64(alt.GetConfidence()), result.GetLanguageCode(), result.GetIsFinal())
 				}
 			}
 		}
 	}
-}
-
-func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.SpeechToTextInitializeOptions,
-) (internal_transformer.SpeechToTextTransformer, error) {
-	start := time.Now()
-	googleOption, err := NewGoogleOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
-	if err != nil {
-		logger.Errorf("google-stt: Error while GoogleOption err: %v", err)
-		return nil, err
-	}
-	client, err := speech.NewClient(ctx, googleOption.GetSpeechToTextClientOptions()...)
-
-	if err != nil {
-		logger.Errorf("google-stt: Error creating Google client: %v", err)
-		return nil, err
-	}
-
-	xctx, contextCancel := context.WithCancel(ctx)
-	// Context for callback management
-	logger.Benchmark("google.NewGoogleSpeechToText", time.Since(start))
-	return &googleSpeechToText{
-		ctx:          xctx,
-		ctxCancel:    contextCancel,
-		logger:       logger,
-		client:       client,
-		googleOption: googleOption,
-		options:      opts,
-	}, nil
 }
 
 func (google *googleSpeechToText) Initialize() error {

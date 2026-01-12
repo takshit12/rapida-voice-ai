@@ -312,29 +312,38 @@ Before submitting your new provider:
 
 ## 📖 Reference Implementations
 
-### Google Cloud (Recommended for learning)
+### Recommended Learning Path
 
-- **Location**: [google/](google/)
-- **Strength**: Well-structured, comprehensive error handling
-- **Use For**: Architecture reference
+| Complexity   | Provider     | Location       | Best For Learning             |
+| ------------ | ------------ | -------------- | ----------------------------- |
+| Beginner     | Google Cloud | [google/]      | Architecture & best practices |
+| Beginner     | Azure        | [azure/]       | Event-driven patterns         |
+| Intermediate | Deepgram     | [deepgram/]    | WebSocket implementation      |
+| Intermediate | AssemblyAI   | [assembly-ai/] | WebSocket configuration       |
+| Advanced     | Cartesia     | [cartesia/]    | Real-time streaming           |
 
-### Deepgram (WebSocket example)
+### All Available Providers
 
-- **Location**: [deepgram/](deepgram/)
-- **Strength**: WebSocket streaming, callback patterns
-- **Use For**: WebSocket implementation reference
+#### Speech-to-Text (STT) Only
 
-### Azure (Event-driven example)
+- **[AssemblyAI](assembly-ai/)** - WebSocket streaming, real-time transcription
+- **[RevAI](revai/)** - High-accuracy transcription with rich metadata
+- **[Speechmatics](speechmatics/)** - Multilingual support with advanced features
 
-- **Location**: [azure/](azure/)
-- **Strength**: Event-driven callbacks, lifecycle management
-- **Use For**: Event-based integration patterns
+#### Text-to-Speech (TTS) Only
 
-### AssemblyAI (WebSocket with headers)
+- **[ElevenLabs](elevenlabs/)** - High-quality voice synthesis with voice cloning
+- **[Resemble](resemble/)** - Custom voice creation and synthesis
 
-- **Location**: [assembly-ai/](assembly-ai/)
-- **Strength**: Custom headers, query parameters
-- **Use For**: WebSocket configuration patterns
+#### Full Support (STT + TTS)
+
+- **[Google Cloud](google/)** ⭐ - Recommended for learning, comprehensive implementation
+- **[Azure](azure/)** - Event-driven architecture, natural voice synthesis
+- **[Deepgram](deepgram/)** - WebSocket streaming, real-time processing
+- **[Cartesia](cartesia/)** - Real-time synthesis, custom voice models
+- **[OpenAI](openai/)** - Integration with GPT models
+- **[AWS](aws/)** - Amazon's Polly and Transcribe services
+- **[Sarvam](sarvam/)** - Indian language support for both STT and TTS
 
 ---
 

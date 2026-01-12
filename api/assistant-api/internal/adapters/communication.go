@@ -12,6 +12,7 @@ import (
 	internal_conversation_gorm "github.com/rapidaai/api/assistant-api/internal/entity/conversations"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
 	internal_adapter_tracing "github.com/rapidaai/api/assistant-api/internal/telemetry"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	endpoint_client "github.com/rapidaai/pkg/clients/endpoint"
 	integration_client "github.com/rapidaai/pkg/clients/integration"
 	web_client "github.com/rapidaai/pkg/clients/web"
@@ -120,6 +121,6 @@ type Communication interface {
 		conversationMessageId string,
 		query string,
 		filter map[string]interface{},
-		kc *KnowledgeRetriveOption,
-	) ([]KnowledgeContextResult, error)
+		kc *internal_type.KnowledgeRetriveOption,
+	) ([]internal_type.KnowledgeContextResult, error)
 }

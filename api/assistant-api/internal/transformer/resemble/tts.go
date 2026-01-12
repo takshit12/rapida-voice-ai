@@ -11,10 +11,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	protos "github.com/rapidaai/protos"
 )
@@ -59,9 +61,8 @@ func NewResembleTextToSpeech(
 
 // Initialize implements internal_transformer.TextToSpeechTransformer.
 func (rt *resembleTTS) Initialize() error {
-	headers := map[string][]string{
-		"Authorization": {"Bearer " + rt.GetKey()},
-	}
+	headers := http.Header{}
+	headers.Set("Authorization", fmt.Sprintf("Bearer %s", rt.GetKey()))
 	conn, _, err := websocket.DefaultDialer.Dial("wss://websocket.cluster.resemble.ai/stream", headers)
 	if err != nil {
 		rt.logger.Errorf("resemble-tts: unable to connect to websocket err: %v", err)
@@ -141,22 +142,32 @@ func (rt *resembleTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Co
 	}
 }
 
-func (rt *resembleTTS) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
+func (rt *resembleTTS) Transform(ctx context.Context, in internal_type.Packet) error {
 	rt.mu.Lock()
-	defer rt.mu.Unlock()
+	currentCtx := rt.contextId
+	if in.ContextId() != rt.contextId {
+		rt.contextId = in.ContextId()
+	}
+	connection := rt.connection
+	rt.mu.Unlock()
 
 	if rt.connection == nil {
 		return fmt.Errorf("resemble-tts: connection is not initialized")
 	}
 
-	rt.contextId = opts.ContextId
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		if err := connection.WriteJSON(rt.GetTextToSpeechRequest(currentCtx, input.Text)); err != nil {
+			rt.logger.Errorf("resemble-tts: error while writing request to websocket: %v", err)
+			return err
+		}
 
-	if err := rt.connection.WriteJSON(rt.GetTextToSpeechRequest(opts.ContextId, in)); err != nil {
-		rt.logger.Errorf("resemble-tts: error while writing request to websocket: %v", err)
-		return err
+		return nil
+	case internal_type.FlushPacket:
+		return nil
+	default:
+		return fmt.Errorf("deepgram-tts: unsupported input type %T", in)
 	}
-
-	return nil
 }
 
 func (rt *resembleTTS) Close(ctx context.Context) error {

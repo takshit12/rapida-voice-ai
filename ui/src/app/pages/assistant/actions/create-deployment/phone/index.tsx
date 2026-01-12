@@ -74,9 +74,10 @@ const ConfigureAssistantCallDeployment: FC<{ assistantId: string }> = ({
   const [experienceConfig, setExperienceConfig] = useState<ExperienceConfig>({
     greeting: undefined,
     messageOnError: undefined,
-    idealTimeout: '5000',
+    idealTimeout: '3',
     idealMessage: 'Are you there?',
-    maxCallDuration: '10000',
+    maxCallDuration: '5',
+    idleTimeoutBackoffTimes: '2',
   });
 
   const [telephonyConfig, setTelephonyConfig] = useState<{
@@ -141,13 +142,19 @@ const ConfigureAssistantCallDeployment: FC<{ assistantId: string }> = ({
         hideLoader();
         if (response && response.getData()) {
           const deployment = response.getData();
-          setExperienceConfig({
-            greeting: deployment?.getGreeting(),
-            messageOnError: deployment?.getMistake(),
-            idealTimeout: deployment?.getIdealtimeout(),
-            idealMessage: deployment?.getIdealtimeoutmessage(),
-            maxCallDuration: deployment?.getMaxsessionduration(),
-          });
+
+          //
+          console.dir(deployment?.toObject());
+          if (deployment) {
+            setExperienceConfig({
+              greeting: deployment?.getGreeting(),
+              messageOnError: deployment?.getMistake(),
+              idealTimeout: deployment?.getIdealtimeout(),
+              idealMessage: deployment?.getIdealtimeoutmessage(),
+              maxCallDuration: deployment?.getMaxsessionduration(),
+              idleTimeoutBackoffTimes: deployment?.getIdealtimeoutbackoff(),
+            });
+          }
 
           // Audio providers configuration
 
@@ -282,6 +289,10 @@ const ConfigureAssistantCallDeployment: FC<{ assistantId: string }> = ({
       deployment.setMistake(experienceConfig?.messageOnError);
     if (experienceConfig?.idealTimeout)
       deployment.setIdealtimeout(experienceConfig?.idealTimeout);
+    if (experienceConfig?.idleTimeoutBackoffTimes)
+      deployment.setIdealtimeoutbackoff(
+        experienceConfig?.idleTimeoutBackoffTimes,
+      );
     if (experienceConfig?.idealMessage)
       deployment.setIdealtimeoutmessage(experienceConfig?.idealMessage);
     if (experienceConfig?.maxCallDuration)

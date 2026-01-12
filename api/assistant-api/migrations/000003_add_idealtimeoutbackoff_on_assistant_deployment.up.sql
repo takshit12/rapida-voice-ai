@@ -1,0 +1,4 @@
+ALTER TABLE public.assistant_api_deployments Add COLUMN ideal_timeout_backoff BIGINT;
+ALTER TABLE public.assistant_debugger_deployments Add COLUMN ideal_timeout_backoff BIGINT;
+ALTER TABLE public.assistant_whatsapp_deployments Add COLUMN ideal_timeout_backoff BIGINT;
+ALTER TABLE public.assistant_phone_deployments Add COLUMN ideal_timeout_backoff BIGINT;

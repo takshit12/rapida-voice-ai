@@ -120,10 +120,11 @@ const ConfigureAssistantWebDeployment: FC<{ assistantId: string }> = ({
     useState<WebWidgetExperienceConfig>({
       greeting: undefined,
       messageOnError: undefined,
-      idealTimeout: '5000',
+      idealTimeout: '3',
       idealMessage: 'Are you there?',
-      maxCallDuration: '10000',
+      maxCallDuration: '10',
       suggestions: [],
+      idleTimeoutBackoffTimes: '2',
     });
 
   const [featureConfig, setFeatureConfig] = useState<FeatureConfig>({
@@ -157,6 +158,7 @@ const ConfigureAssistantWebDeployment: FC<{ assistantId: string }> = ({
             idealTimeout: deployment?.getIdealtimeout(),
             idealMessage: deployment?.getIdealtimeoutmessage(),
             maxCallDuration: deployment?.getMaxsessionduration(),
+            idleTimeoutBackoffTimes: deployment?.getIdealtimeoutbackoff(),
           });
 
           // Audio providers configuration
@@ -263,8 +265,13 @@ const ConfigureAssistantWebDeployment: FC<{ assistantId: string }> = ({
       webDeployment.setMistake(experienceConfig?.messageOnError);
     if (experienceConfig?.idealTimeout)
       webDeployment.setIdealtimeout(experienceConfig?.idealTimeout);
+    if (experienceConfig?.idleTimeoutBackoffTimes)
+      webDeployment.setIdealtimeoutbackoff(
+        experienceConfig?.idleTimeoutBackoffTimes,
+      );
     if (experienceConfig?.idealMessage)
       webDeployment.setIdealtimeoutmessage(experienceConfig?.idealMessage);
+
     if (experienceConfig?.maxCallDuration)
       webDeployment.setMaxsessionduration(experienceConfig?.maxCallDuration);
 

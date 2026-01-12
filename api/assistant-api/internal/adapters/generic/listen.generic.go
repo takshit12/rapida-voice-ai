@@ -367,7 +367,7 @@ func (listening *GenericRequestor) ListenAudio(
 	}
 	if listening.speechToTextTransformer != nil {
 		utils.Go(ctx, func() {
-			if err := listening.speechToTextTransformer.Transform(ctx, in, nil); err != nil {
+			if err := listening.speechToTextTransformer.Transform(ctx, in); err != nil {
 				if !errors.Is(err, io.EOF) {
 					listening.logger.Tracef(ctx, "error while transforming input %s and error %v", listening.speechToTextTransformer.Name(), err)
 				}

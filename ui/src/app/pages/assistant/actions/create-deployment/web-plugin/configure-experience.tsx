@@ -59,6 +59,13 @@ export const ConfigureExperience: FC<{
     });
   };
 
+  const onChangeIdleTimeoutBackoffTimes = (no: string) => {
+    setExperienceConfig({
+      ...experienceConfig,
+      idleTimeoutBackoffTimes: no,
+    });
+  };
+
   return (
     <InputGroup
       title="General Experience"
@@ -129,6 +136,35 @@ export const ConfigureExperience: FC<{
               <InputHelper>
                 Duration of silence after which Rapida will interrupt the user
                 (3000-10000ms).
+              </InputHelper>
+            </FieldSet>
+            <FieldSet>
+              <FormLabel>Idle Timeout Backoff (Times)</FormLabel>
+              <div className="flex space-x-2 justify-center items-center">
+                <Slider
+                  min={0}
+                  max={5}
+                  step={1}
+                  value={
+                    experienceConfig.idleTimeoutBackoffTimes &&
+                    parseInt(experienceConfig.idleTimeoutBackoffTimes)
+                  }
+                  onSlide={(v: number) => {
+                    onChangeIdleTimeoutBackoffTimes(v.toString());
+                  }}
+                />
+                <Input
+                  className="bg-light-background w-16"
+                  value={experienceConfig.idleTimeoutBackoffTimes}
+                  onChange={e => {
+                    onChangeIdleTimeoutBackoffTimes(e.target.value);
+                  }}
+                />
+              </div>
+              <InputHelper>
+                Number of times the idle timeout duration increases after it
+                triggers. Each time adds the base timeout again (e.g. 3 → 6 → 9
+                minutes).
               </InputHelper>
             </FieldSet>
             <FieldSet className="relative col-span-1">

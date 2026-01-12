@@ -137,22 +137,22 @@ func (cst *sarvamSpeechToText) Initialize() error {
 	return nil
 }
 
-func (cst *sarvamSpeechToText) Transform(ctx context.Context, in []byte, opts *internal_transformer.SpeechToTextOption,
-) error {
+func (cst *sarvamSpeechToText) Transform(ctx context.Context, in []byte) error {
 
-	in, err := cst.speechToTextMessage(in, opts)
+	in, err := cst.speechToTextMessage(in)
 	if err != nil {
 		return fmt.Errorf("sarvam-stt: unable to encode byte to base64: %w", err)
 	}
 
 	cst.mu.Lock()
-	defer cst.mu.Unlock()
+	connection := cst.connection
+	cst.mu.Unlock()
 
-	if cst.connection == nil {
+	if connection == nil {
 		return fmt.Errorf("sarvam-stt: websocket connection is not initialized")
 	}
 
-	if err := cst.connection.WriteMessage(websocket.TextMessage, in); err != nil {
+	if err := connection.WriteMessage(websocket.TextMessage, in); err != nil {
 		return fmt.Errorf("sarvam-stt: failed to send audio data: %w", err)
 	}
 

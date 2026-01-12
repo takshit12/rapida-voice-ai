@@ -695,11 +695,197 @@ if m.options != nil && m.options.OnTranscript != nil {
 
 ---
 
+## Available Provider Implementations
+
+This section provides quick reference to all available providers in the transformer package.
+
+### Speech-to-Text (STT) Only Providers
+
+#### AssemblyAI
+
+- **Location**: [assembly-ai/](assembly-ai/)
+- **Type**: WebSocket-based streaming
+- **Key Features**: Real-time transcription, custom language models
+- **Configuration**: Requires API key, supports WebSocket headers
+- **Best For**: Learning WebSocket implementation patterns
+- **Files**:
+  - `assemblyai.go` - Configuration and client setup
+  - `stt.go` - STT implementation
+  - `internal/type.go` - Provider-specific types
+
+#### RevAI
+
+- **Location**: [revai/](revai/)
+- **Type**: REST API with polling
+- **Key Features**: High-accuracy transcription, speaker identification
+- **Configuration**: API token-based authentication
+- **Best For**: REST API patterns
+- **Files**:
+  - `stt.go` - STT implementation with polling
+
+#### Speechmatics
+
+- **Location**: [speechmatics/](speechmatics/)
+- **Type**: WebSocket-based streaming
+- **Key Features**: Multilingual support, entity recognition
+- **Configuration**: API token, region-based endpoints
+- **Best For**: Multilingual STT implementations
+- **Files**:
+  - `stt.go` - STT implementation
+
+### Text-to-Speech (TTS) Only Providers
+
+#### ElevenLabs
+
+- **Location**: [elevenlabs/](elevenlabs/)
+- **Type**: REST API with streaming response
+- **Key Features**: High-quality voices, voice cloning, emotion control
+- **Configuration**: API key with model selection
+- **Best For**: High-quality voice synthesis
+- **Files**:
+  - `elevenlabs.go` - Configuration and setup
+  - `tts.go` - TTS implementation
+  - `internal/type.go` - Provider-specific types
+
+#### Resemble
+
+- **Location**: [resemble/](resemble/)
+- **Type**: REST API
+- **Key Features**: Voice cloning, custom voice creation
+- **Configuration**: API token, project ID
+- **Best For**: Custom voice cloning implementations
+- **Files**:
+  - `resemble.go` - Configuration and setup
+  - `tts.go` - TTS implementation
+  - `internal/type.go` - Provider-specific types
+
+### Multi-Purpose Providers (STT + TTS)
+
+#### Google Cloud (Recommended for Learning) ⭐
+
+- **Location**: [google/](google/)
+- **Type**: gRPC and REST APIs
+- **Key Features**: Well-structured code, comprehensive error handling, streaming support
+- **Configuration**: Service account JSON, project ID
+- **STT Capabilities**: Multiple languages, confidence scores, streaming
+- **TTS Capabilities**: Multiple voices, SSML support, streaming audio
+- **Best For**: Architecture reference, learning best practices
+- **Files**:
+  - `google.go` - Configuration with service account handling
+  - `stt.go` - STT implementation with streaming
+  - `tts.go` - TTS implementation with audio chunks
+  - `internal/type.go` - gRPC request/response types
+- **Learning Path**: Start here if new to transformers
+
+#### Azure Cognitive Services
+
+- **Location**: [azure/](azure/)
+- **Type**: REST API with WebSocket events
+- **Key Features**: Event-driven architecture, natural voice synthesis
+- **Configuration**: Subscription key, region, endpoint
+- **STT Capabilities**: Multiple languages, confidence scores
+- **TTS Capabilities**: Neural voices, SSML support
+- **Best For**: Event-driven pattern implementations
+- **Files**:
+  - `azure.go` - Configuration with Azure SDK
+  - `stt.go` - STT implementation
+  - `tts.go` - TTS implementation
+  - `internal/type.go` - Azure-specific types
+
+#### Deepgram
+
+- **Location**: [deepgram/](deepgram/)
+- **Type**: WebSocket-based streaming
+- **Key Features**: Real-time transcription, pre-recorded audio support, multiple models
+- **Configuration**: API key, model selection
+- **STT Capabilities**: Multiple languages, live transcription, diarization
+- **TTS Capabilities**: Multiple voices, streaming synthesis
+- **Best For**: WebSocket implementation patterns
+- **Files**:
+  - `deepgram.go` - Configuration and WebSocket setup
+  - `stt.go` - STT WebSocket implementation
+  - `tts.go` - TTS implementation
+  - `internal/stt_callback.go` - Callback pattern examples
+  - `internal/type.go` - Provider-specific types
+
+#### Cartesia
+
+- **Location**: [cartesia/](cartesia/)
+- **Type**: WebSocket-based real-time
+- **Key Features**: Real-time bidirectional communication, custom voice models
+- **Configuration**: API key, voice configuration
+- **STT Capabilities**: Real-time transcription
+- **TTS Capabilities**: Real-time synthesis with voice customization
+- **Best For**: Real-time bidirectional streaming
+- **Files**:
+  - `cartesia.go` - Configuration and WebSocket setup
+  - `stt.go` - STT implementation
+  - `tts.go` - TTS implementation
+  - `internal/type.go` - Provider-specific types
+
+#### OpenAI
+
+- **Location**: [openai/](openai/)
+- **Type**: REST API
+- **Key Features**: GPT model integration, multi-format support
+- **Configuration**: API key, model selection
+- **STT Capabilities**: Multiple audio formats, language detection
+- **TTS Capabilities**: Multiple voices, audio format options
+- **Best For**: OpenAI/GPT integration
+- **Files**:
+  - `stt.go` - STT implementation
+  - `tts.go` - TTS implementation
+
+#### AWS (Amazon Polly & Transcribe)
+
+- **Location**: [aws/](aws/)
+- **Type**: AWS SDK REST APIs
+- **Key Features**: AWS ecosystem integration, scalability
+- **Configuration**: AWS credentials, region, service endpoints
+- **STT Capabilities**: Transcribe service integration
+- **TTS Capabilities**: Polly service integration with voice options
+- **Best For**: AWS infrastructure integration
+- **Files**:
+  - `stt.go` - Transcribe implementation
+  - `tts.go` - Polly implementation
+
+#### Sarvam (Indian Language Support)
+
+- **Location**: [sarvam/](sarvam/)
+- **Type**: REST API with regional support
+- **Key Features**: Indian language support (Hindi, Tamil, Telugu, etc.)
+- **Configuration**: API key, language selection
+- **STT Capabilities**: Multiple Indian languages
+- **TTS Capabilities**: Multiple Indian language voices
+- **Best For**: Regional language support
+- **Files**:
+  - `sarvam.go` - Configuration with language handling
+  - `stt.go` - STT implementation
+  - `tts.go` - TTS implementation
+  - `internal/type.go` - Provider-specific types
+
+### Provider Selection Guide
+
+| Requirement         | Recommended Provider | Alternative  |
+| ------------------- | -------------------- | ------------ |
+| Learning/Reference  | Google Cloud         | Azure        |
+| Real-time Streaming | Cartesia             | Deepgram     |
+| High-Quality TTS    | ElevenLabs           | Azure        |
+| Cost-Effective STT  | AssemblyAI           | Deepgram     |
+| Voice Cloning       | Resemble             | ElevenLabs   |
+| Regional Languages  | Sarvam               | Google Cloud |
+| AWS Ecosystem       | AWS                  | -            |
+| Multilingual        | Speechmatics         | Google Cloud |
+| WebSocket Pattern   | Deepgram             | Cartesia     |
+| Event-Driven        | Azure                | -            |
+
+---
+
 ## References
 
 - [Transformer Interface](transformer.go)
-- [Google Provider Implementation](google/)
-- [Deepgram Provider Implementation](deepgram/)
-- [Azure Provider Implementation](azure/)
+- [Provider Checklist](PROVIDER_CHECKLIST.md)
+- [Quick Reference](QUICKSTART.md)
+- [Architecture Details](ARCHITECTURE.md)
 
 For questions or clarifications, refer to existing implementations as examples.

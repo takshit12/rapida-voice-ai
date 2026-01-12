@@ -17,7 +17,8 @@ import (
 	internal_assistant_telemetry_exporters "github.com/rapidaai/api/assistant-api/internal/telemetry/assistant/exporters"
 
 	internal_agent_embeddings "github.com/rapidaai/api/assistant-api/internal/agent/embedding"
-	internal_assistant_executors "github.com/rapidaai/api/assistant-api/internal/agent/executor"
+	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
+	internal_agent_executor_llm "github.com/rapidaai/api/assistant-api/internal/agent/executor/llm"
 	internal_agent_rerankers "github.com/rapidaai/api/assistant-api/internal/agent/reranker"
 	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
 	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
@@ -89,14 +90,14 @@ type GenericRequestor struct {
 	// speak
 	textToSpeechTransformer internal_transformer.TextToSpeechTransformer
 	//
-	tokenizer    internal_tokenizer.Tokenizer
-	synthesizers []internal_synthesizers.SentenceSynthesizer
+	tokenizer    internal_tokenizer.SentenceTokenizer
+	synthesizers []internal_synthesizers.Synthesizer
 
 	recorder       internal_recorder.Recorder
 	templateParser parsers.StringTemplateParser
 
 	// executor
-	assistantExecutor internal_assistant_executors.AssistantExecutor
+	assistantExecutor internal_agent_executor.AssistantExecutor
 	// states
 	assistant             *internal_assistant_entity.Assistant
 	assistantConversation *internal_conversation_gorm.AssistantConversation
@@ -106,6 +107,9 @@ type GenericRequestor struct {
 	metadata              map[string]interface{}
 	options               map[string]interface{}
 	StartedAt             time.Time
+	// timeout tracking
+	lastAssistantMessageTime time.Time
+	idealTimeoutTimer        *time.Timer
 }
 
 func NewGenericRequestor(
@@ -154,7 +158,7 @@ func NewGenericRequestor(
 
 		recorder:          internal_recorder.NewRecorder(logger),
 		messaging:         internal_adapter_request_customizers.NewMessaging(logger),
-		assistantExecutor: internal_assistant_executors.NewAssistantExecutor(logger),
+		assistantExecutor: internal_agent_executor_llm.NewAssistantExecutor(logger),
 
 		// will change
 
@@ -422,6 +426,6 @@ func (gr *GenericRequestor) Recorder() internal_recorder.Recorder {
 	return gr.recorder
 }
 
-func (gr *GenericRequestor) AssistantExecutor() internal_assistant_executors.AssistantExecutor {
+func (gr *GenericRequestor) AssistantExecutor() internal_agent_executor.AssistantExecutor {
 	return gr.assistantExecutor
 }

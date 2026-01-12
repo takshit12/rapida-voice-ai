@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_agent_local_tool
+package internal_tool_local
 
 import (
 	"context"
@@ -13,47 +13,22 @@ import (
 	"time"
 
 	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
+	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
-	endpoint_client_builders "github.com/rapidaai/pkg/clients/endpoint/builders"
+	"github.com/rapidaai/pkg/clients/rest"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
-	protos "github.com/rapidaai/protos"
 )
 
-type endpointToolCaller struct {
+type apiRequestToolCaller struct {
 	toolCaller
-	endpointId         uint64
-	endpointParameters map[string]string
-	inputBuilder       endpoint_client_builders.InputInvokeBuilder
+	apiRequestHeader    map[string]string
+	apiRequestParameter map[string]string
+	apiMethod           string
+	apiEndpoint         string
 }
 
-func NewEndpointToolCaller(
-	logger commons.Logger,
-	toolOptions *internal_assistant_entity.AssistantTool,
-	communcation internal_adapter_requests.Communication,
-) (ToolCaller, error) {
-	opts := toolOptions.GetOptions()
-	endpointID, err := opts.GetUint64("tool.endpoint_id")
-	if err != nil {
-		return nil, fmt.Errorf("tool.endpoint_id is not a valid number: %v", err)
-	}
-	parameters, err := opts.GetStringMap("tool.parameters")
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse tool.parameters: %v", err)
-	}
-
-	return &endpointToolCaller{
-		toolCaller: toolCaller{
-			logger:      logger,
-			toolOptions: toolOptions,
-		},
-		endpointId:         endpointID,
-		endpointParameters: parameters,
-		inputBuilder:       endpoint_client_builders.NewInputInvokeBuilder(logger),
-	}, nil
-}
-
-func (afkTool *endpointToolCaller) Call(
+func (afkTool *apiRequestToolCaller) Call(
 	ctx context.Context,
 	messageId string,
 	args string,
@@ -61,45 +36,74 @@ func (afkTool *endpointToolCaller) Call(
 ) (map[string]interface{}, []*types.Metric) {
 	start := time.Now()
 	metrics := make([]*types.Metric, 0)
+	client := rest.NewRestClientWithConfig(afkTool.apiEndpoint, afkTool.apiRequestHeader, 15)
+	var output *rest.APIResponse
+	var err error
+
 	body := afkTool.Parse(
-		afkTool.endpointParameters,
+		afkTool.apiRequestParameter,
 		args,
 		communication,
 	)
-	ivk, err := communication.DeploymentCaller().Invoke(
-		ctx,
-		communication.Auth(),
-		afkTool.inputBuilder.Invoke(
-			&protos.EndpointDefinition{
-				EndpointId: afkTool.endpointId,
-				Version:    "latest",
-			},
-			afkTool.inputBuilder.Arguments(body, nil),
-			nil,
-			nil,
-		),
-	)
+	switch afkTool.apiMethod {
+	case "POST":
+		output, err = client.Post(ctx, "", body, afkTool.apiRequestHeader)
+	case "PUT":
+		output, err = client.Put(ctx, "", body, afkTool.apiRequestHeader)
+	case "PATCH":
+		output, err = client.Patch(ctx, "", body, afkTool.apiRequestHeader)
+	default:
+		output, err = client.Get(ctx, "", body, afkTool.apiRequestHeader)
+	}
+	metrics = append(metrics, types.NewTimeTakenMetric(time.Since(start)))
 	if err != nil {
-		afkTool.logger.Errorf("error while calling endpoint %+v", err)
-		metrics = append(metrics, types.NewTimeTakenMetric(time.Since(start)))
-		return afkTool.Result("Unable to complete the request", true), metrics
+		return afkTool.Result("Unable to complete request", true), metrics
 	}
-	if ivk.GetSuccess() {
-		if data := ivk.GetData(); len(data) > 0 {
-			var contentData map[string]interface{}
-			if err := json.Unmarshal(data[0].Content, &contentData); err != nil {
-				return map[string]interface{}{
-					"result": string(data[0].Content),
-				}, nil
-			}
-			return contentData, nil
-		}
-
+	v, err := output.ToMap()
+	if err != nil {
+		return map[string]interface{}{
+			"request":  body,
+			"response": output.ToString(),
+		}, metrics
 	}
-	return afkTool.Result("Unable to complete the request", true), metrics
+	return v, metrics
 }
 
-func (md *endpointToolCaller) Parse(
+func NewApiRequestToolCaller(
+	logger commons.Logger,
+	toolOptions *internal_assistant_entity.AssistantTool,
+	communcation internal_adapter_requests.Communication,
+) (internal_tool.ToolCaller, error) {
+	opts := toolOptions.GetOptions()
+	endpoint, err := opts.GetString("tool.endpoint")
+	if err != nil {
+		return nil, fmt.Errorf("tool.endpoint is not a valid number: %v", err)
+	}
+	method, err := opts.GetString("tool.method")
+	if err != nil {
+		return nil, fmt.Errorf("tool.method is not a valid number: %v", err)
+	}
+	parameters, err := opts.GetStringMap("tool.parameters")
+	if err != nil {
+		return nil, fmt.Errorf("tool.parameters is not a valid number: %v", err)
+	}
+	headers, err := opts.GetStringMap("tool.headers")
+	if err != nil {
+		logger.Infof("ignoring headers for api requests.")
+	}
+	return &apiRequestToolCaller{
+		toolCaller: toolCaller{
+			logger:      logger,
+			toolOptions: toolOptions,
+		},
+		apiRequestHeader:    headers,
+		apiRequestParameter: parameters,
+		apiEndpoint:         endpoint,
+		apiMethod:           method,
+	}, nil
+}
+
+func (md *apiRequestToolCaller) Parse(
 	mapping map[string]string,
 	args string,
 	communication internal_adapter_requests.Communication,
@@ -151,6 +155,10 @@ func (md *endpointToolCaller) Parse(
 			if ot, ok := communication.GetOptions()[k]; ok {
 				arguments[value] = ot
 			}
+		}
+
+		if k, ok := strings.CutPrefix(key, "custom."); ok {
+			arguments[k] = value
 		}
 	}
 	return arguments

@@ -24,7 +24,6 @@ func TestRapidaStage_Get(t *testing.T) {
 		{AssistantToolConnectStage, "talk.assistant.tool.connect"},
 		{AssistantToolExecuteStage, "talk.assistant.tool.execute"},
 		{AssistantAgentTextGenerationStage, "talk.assistant.agent.text-generation"},
-		{AssistantTranscribeStage, "talk.assistant.speak.transcribe"},
 		{AssistantSpeakingStage, "talk.assistant.speak.speaking"},
 		{AssistantNotifyStage, "talk.assistant.notify"},
 		{AssistantDisconnectStage, "talk.assistant.disconnect"},

@@ -29,8 +29,8 @@ func (deploymentApi *assistantDeploymentGrpcApi) GetAssistantWebpluginDeployment
 	if err != nil {
 		return utils.Error[protos.GetAssistantWebpluginDeploymentResponse](err, "Unable to get deployment, please try again later.")
 	}
-	out := &protos.AssistantWebpluginDeployment{}
-	err = utils.Cast(webpluginDeployment, out)
+	var out *protos.AssistantWebpluginDeployment
+	err = utils.Cast(webpluginDeployment, &out)
 	if err != nil {
 		deploymentApi.logger.Warnf("unable to cast the web plugin deployment model to the response object")
 	}

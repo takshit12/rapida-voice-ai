@@ -28,8 +28,8 @@ func (deploymentApi *assistantDeploymentGrpcApi) GetAssistantPhoneDeployment(ctx
 	if err != nil {
 		return utils.Error[assistant_api.GetAssistantPhoneDeploymentResponse](err, "Unable to get deployment, please try again later.")
 	}
-	out := &assistant_api.AssistantPhoneDeployment{}
-	err = utils.Cast(phoneDeployment, out)
+	var out *assistant_api.AssistantPhoneDeployment
+	err = utils.Cast(phoneDeployment, &out)
 	if err != nil {
 		deploymentApi.logger.Errorf("unable to cast the api deployment model to the response object")
 	}

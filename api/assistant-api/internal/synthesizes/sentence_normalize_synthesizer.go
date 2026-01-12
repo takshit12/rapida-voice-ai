@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	internal_normalizers "github.com/rapidaai/api/assistant-api/internal/synthesizes/normalizers"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 )
 
@@ -32,7 +33,7 @@ var normalizerMap = map[string]func(commons.Logger) internal_normalizers.Normali
 	"symbol":               internal_normalizers.NewSymbolNormalizer,
 }
 
-func NewSentenceNormalizeSynthesizer(logger commons.Logger, opts SynthesizerOptions) (SentenceSynthesizer, error) {
+func NewSentenceNormalizeSynthesizer(logger commons.Logger, opts SynthesizerOptions) (Synthesizer, error) {
 	dictionariesInterface, err := opts.SpeakerOptions.GetString("speaker.pronunciation.dictionaries")
 	if err != nil {
 		return nil, errors.New("no synthesizer applied")
@@ -50,13 +51,9 @@ func NewSentenceNormalizeSynthesizer(logger commons.Logger, opts SynthesizerOpti
 	}, nil
 }
 
-func (ess *sentenceNormalizeSynthesizer) Synthesize(
-	ctx context.Context,
-	contextId string,
-	text string,
-) string {
+func (ess *sentenceNormalizeSynthesizer) Synthesize(ctx context.Context, in internal_type.TextPacket) internal_type.TextPacket {
 	for _, v := range ess.normalizers {
-		text = v.Normalize(text)
+		in.Text = v.Normalize(in.Text)
 	}
-	return text
+	return in
 }

@@ -12,6 +12,7 @@ import (
 
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
 	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
@@ -23,11 +24,7 @@ import (
 // START ListenCallback Interface
 // =====================================
 
-func (lio *GenericRequestor) OnRecieveTranscript(ctx context.Context,
-	transcript string,
-	confidence float64,
-	language string,
-	isCompleted bool) (*types.Message, error) {
+func (lio *GenericRequestor) OnRecieveTranscript(ctx context.Context, transcript string, confidence float64, language string, isCompleted bool) (*types.Message, error) {
 	lio.OnInterrupt(ctx, "word")
 	if isCompleted {
 		msgi := lio.messaging.Create(
@@ -77,15 +74,13 @@ func (io *GenericRequestor) OnSilenceBreak(
 		return nil
 	}
 	io.messaging.Transition(internal_adapter_request_customizers.LLMGenerating)
-	return io.UserCallback(
-		ctx,
-		msg.GetId(),
-		msg,
-		nil,
-	)
+	return io.UserCallback(ctx, msg.GetId(), msg, nil)
 }
 
 func (io *GenericRequestor) OnInterrupt(ctx context.Context, source string) error {
+	io.ResetIdealTimeoutTimer(io.Context())
+
+	//
 	switch source {
 	case "word":
 		if err := io.messaging.Transition(internal_adapter_request_customizers.Interrupted); err != nil {
@@ -168,9 +163,7 @@ func (io *GenericRequestor) InputText(ctx context.Context, msg string) error {
 // END Input
 // =====================================
 
-func (io *GenericRequestor) OutputAudio(
-	contextId string,
-	v []byte, completed bool) error {
+func (io *GenericRequestor) OutputAudio(contextId string, v []byte, completed bool) error {
 	inputMessage, err := io.messaging.GetMessage(type_enums.UserActor)
 	if err != nil {
 		return err
@@ -186,22 +179,26 @@ func (io *GenericRequestor) OutputAudio(
 		return nil
 	}
 
-	if err := io.
-		Notify(
-			io.Context(),
-			&protos.AssistantConversationAssistantMessage{
-				Time:      timestamppb.Now(),
-				Id:        contextId,
-				Completed: completed,
-				Message: &protos.AssistantConversationAssistantMessage_Audio{
-					Audio: &protos.AssistantConversationMessageAudioContent{
-						Content: v,
-					},
+	if err := io.Notify(
+		io.Context(),
+		&protos.AssistantConversationAssistantMessage{
+			Time:      timestamppb.Now(),
+			Id:        contextId,
+			Completed: completed,
+			Message: &protos.AssistantConversationAssistantMessage_Audio{
+				Audio: &protos.AssistantConversationMessageAudioContent{
+					Content: v,
 				},
 			},
-		); err != nil {
+		},
+	); err != nil {
 		io.logger.Tracef(io.ctx, "error while outputing chunk to the user: %w", err)
 	}
+
+	// monitor ideal timeout
+	io.StartIdealTimeoutTimer(io.Context())
+
+	//
 	utils.Go(context.Background(), func() {
 		io.recorder.System(v)
 	})
@@ -237,7 +234,7 @@ func (io *GenericRequestor) Output(ctx context.Context, contextId string, msg *t
 	// Handle completion logic
 	if completed {
 		if io.messaging.GetInputMode().Audio() {
-			io.FinishSpeaking(contextId)
+			io.Speak(internal_type.FlushPacket{ContextID: contextId})
 		}
 		// Attempt to get the user's message and send a completion notification
 		if in, err := io.messaging.GetMessage(type_enums.UserActor); err == nil {
@@ -269,7 +266,7 @@ func (io *GenericRequestor) Output(ctx context.Context, contextId string, msg *t
 
 	// Handle audio mode logic if not completed
 	if io.messaging.GetInputMode().Audio() {
-		if err := io.Speak(contextId, aMsg); err != nil {
+		if err := io.Speak(internal_type.TextPacket{ContextID: contextId, Text: aMsg}); err != nil {
 			io.logger.Errorf("unable to speak for the user, please check the config error = %+v", err)
 		}
 	}

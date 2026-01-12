@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_agent_executor
+package internal_model
 
 import (
 	"context"
@@ -13,8 +13,9 @@ import (
 	"time"
 
 	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
-	internal_agent_tool "github.com/rapidaai/api/assistant-api/internal/agent/tool"
-	internal_executors "github.com/rapidaai/api/assistant-api/internal/agent/tool"
+	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
+	internal_executors "github.com/rapidaai/api/assistant-api/internal/agent/executor"
+	internal_agent_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	integration_client_builders "github.com/rapidaai/pkg/clients/integration/builders"
 	"github.com/rapidaai/pkg/commons"
@@ -34,7 +35,7 @@ type modelAssistantExecutor struct {
 
 func NewModelAssistantExecutor(
 	logger commons.Logger,
-) AssistantExecutor {
+) internal_agent_executor.AssistantExecutor {
 	return &modelAssistantExecutor{
 		logger:       logger,
 		inputBuilder: integration_client_builders.NewChatInputBuilder(logger),
@@ -51,16 +52,7 @@ func (executor *modelAssistantExecutor) Name() string {
 func (executor *modelAssistantExecutor) Initialize(ctx context.Context, communication internal_adapter_requests.Communication,
 ) error {
 	start := time.Now()
-	ctx, span, _ := communication.
-		Tracer().
-		StartSpan(
-			ctx,
-			utils.AssistantAgentConnectStage,
-			internal_adapter_telemetry.KV{
-				K: "executor",
-				V: internal_adapter_telemetry.StringValue(executor.Name()),
-			},
-		)
+	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantAgentConnectStage, internal_adapter_telemetry.KV{K: "executor", V: internal_adapter_telemetry.StringValue(executor.Name())})
 	defer span.EndSpan(ctx, utils.AssistantAgentConnectStage)
 	g, ctx := errgroup.WithContext(ctx)
 	var providerCredential *protos.VaultCredential
@@ -70,16 +62,8 @@ func (executor *modelAssistantExecutor) Initialize(ctx context.Context, communic
 			executor.logger.Errorf("Error while getting provider model credential ID: %v", err)
 			return fmt.Errorf("failed to get credential ID: %w", err)
 		}
-
-		span.AddAttributes(ctx, internal_adapter_telemetry.KV{
-			K: "vault_id",
-			V: internal_adapter_telemetry.IntValue(credentialId),
-		})
-		providerCredential, err = communication.
-			VaultCaller().
-			GetCredential(
-				ctx, communication.Auth(), credentialId,
-			)
+		span.AddAttributes(ctx, internal_adapter_telemetry.KV{K: "vault_id", V: internal_adapter_telemetry.IntValue(credentialId)})
+		providerCredential, err = communication.VaultCaller().GetCredential(ctx, communication.Auth(), credentialId)
 		if err != nil {
 			executor.logger.Errorf("Error while getting provider model credentials: %v", err)
 			return fmt.Errorf("failed to get provider credential: %w", err)
@@ -89,19 +73,13 @@ func (executor *modelAssistantExecutor) Initialize(ctx context.Context, communic
 
 	g.Go(func() error {
 		executor.history = append(executor.history, communication.GetConversationLogs()...)
-		span.AddAttributes(
-			ctx,
-			internal_adapter_telemetry.KV{
-				K: "history_length", V: internal_adapter_telemetry.IntValue(len(executor.history)),
-			},
-		)
+		span.AddAttributes(ctx, internal_adapter_telemetry.KV{K: "history_length", V: internal_adapter_telemetry.IntValue(len(executor.history))})
 		return nil
 
 	})
 	// Goroutine to initialize tool executor
 	g.Go(func() error {
-		err := executor.toolExecutor.Initialize(ctx, communication)
-		if err != nil {
+		if err := executor.toolExecutor.Initialize(ctx, communication); err != nil {
 			executor.logger.Errorf("Error initializing tool executor: %v", err)
 			return fmt.Errorf("failed to initialize tool executor: %w", err)
 		}

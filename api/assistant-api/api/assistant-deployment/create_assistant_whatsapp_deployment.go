@@ -36,6 +36,7 @@ func (deploymentApi *assistantDeploymentApi) CreateAssistantWhatsappDeployment(c
 		deployment.GetWhatsapp().Greeting,
 		deployment.GetWhatsapp().Mistake,
 		&deployment.GetWhatsapp().IdealTimeout,
+		&deployment.GetWhatsapp().IdealTimeoutBackoff,
 		&deployment.GetWhatsapp().IdealTimeoutMessage,
 		&deployment.GetWhatsapp().MaxSessionDuration,
 		deployment.GetWhatsapp().GetWhatsappProviderName(),

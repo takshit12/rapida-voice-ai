@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_agent_local_tool
+package internal_tool_local
 
 import (
 	"context"
@@ -13,8 +13,10 @@ import (
 	"time"
 
 	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
+	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
@@ -70,7 +72,7 @@ func (afkTool *knowledgeRetrievalToolCaller) Call(
 			messageId,
 			*in,
 			v,
-			&internal_adapter_requests.KnowledgeRetriveOption{
+			&internal_type.KnowledgeRetriveOption{
 				EmbeddingProviderCredential: afkTool.providerCredential,
 				RetrievalMethod:             afkTool.searchType,
 				TopK:                        afkTool.topK,
@@ -100,7 +102,7 @@ func NewKnowledgeRetrievalToolCaller(
 	logger commons.Logger,
 	toolOptions *internal_assistant_entity.AssistantTool,
 	communcation internal_adapter_requests.Communication,
-) (ToolCaller, error) {
+) (internal_tool.ToolCaller, error) {
 	opts := toolOptions.GetOptions()
 	searchType, err := opts.GetString("tool.search_type")
 	if err != nil {

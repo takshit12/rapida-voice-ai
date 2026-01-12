@@ -88,6 +88,7 @@ type AssistantDeploymentBehavior struct {
 	Greeting            *string `json:"greeting" gorm:"type:string;size:50;not null;"`
 	Mistake             *string `json:"mistake" gorm:"type:string;size:50;not null;"`
 	IdealTimeout        *uint64 `json:"idealTimeout"`
+	IdealTimeoutBackoff *uint64 `json:"idealTimeoutBackoff"`
 	IdealTimeoutMessage *string `json:"idealTimeoutMessage" gorm:"type:string;size:50;not null;"`
 	MaxSessionDuration  *uint64 `json:"maxSessionDuration"`
 }

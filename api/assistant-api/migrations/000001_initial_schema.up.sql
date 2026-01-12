@@ -671,8 +671,8 @@ CREATE TABLE public.assistant_whatsapp_deployments (
     greeting character varying(250),
     mistake character varying(250),
     ideal_timeout BIGINT, 
-ideal_timeout_message CHARACTER VARYING(200), 
-max_session_duration BIGINT,
+    ideal_timeout_message CHARACTER VARYING(200), 
+    max_session_duration BIGINT,
     whatsapp_provider character varying(50) NOT NULL
 );
 CREATE INDEX idx_assistant_whatsapp_deployments_on_assistant_id ON public.assistant_whatsapp_deployments USING btree (assistant_id);

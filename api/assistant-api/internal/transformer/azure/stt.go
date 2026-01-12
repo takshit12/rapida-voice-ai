@@ -80,7 +80,7 @@ func (a *azureSpeechToText) Name() string {
 }
 
 // Transform implements internal_transformer.SpeechToTextTransformer.
-func (azure *azureSpeechToText) Transform(ctx context.Context, ad []byte, opts *internal_transformer.SpeechToTextOption) (err error) {
+func (azure *azureSpeechToText) Transform(ctx context.Context, ad []byte) (err error) {
 	azure.mu.Lock()
 	stream := azure.inputstream
 	azure.mu.Unlock()

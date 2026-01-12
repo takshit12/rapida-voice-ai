@@ -28,8 +28,8 @@ func (deploymentApi *assistantDeploymentGrpcApi) GetAssistantWhatsappDeployment(
 	if err != nil {
 		return utils.Error[assistant_api.GetAssistantWhatsappDeploymentResponse](err, "Unable to get deployment, please try again later.")
 	}
-	out := &assistant_api.AssistantWhatsappDeployment{}
-	err = utils.Cast(whatsappDeployment, out)
+	var out *assistant_api.AssistantWhatsappDeployment
+	err = utils.Cast(whatsappDeployment, &out)
 	if err != nil {
 		deploymentApi.logger.Errorf("unable to cast the whatsapp deployment model to the response object")
 	}

@@ -44,7 +44,9 @@ func (eService assistantDeploymentService) CreateWebPluginDeployment(
 	assistantId uint64,
 	name string,
 	greeting, mistake *string,
-	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+	idealTimeout *uint64,
+	idealTimeoutBackoff *uint64,
+	idealTimeoutMessage *string, maxSessionDuration *uint64,
 	suggestion []string,
 	helpCenterEnabled, productCatalogEnabled, articleCatalogEnabled bool,
 	inputAudio, outputAudio *protos.DeploymentAudioProvider,
@@ -62,6 +64,7 @@ func (eService assistantDeploymentService) CreateWebPluginDeployment(
 			Greeting:            greeting,
 			Mistake:             mistake,
 			IdealTimeout:        idealTimeout,
+			IdealTimeoutBackoff: idealTimeoutBackoff,
 			IdealTimeoutMessage: idealTimeoutMessage,
 			MaxSessionDuration:  maxSessionDuration,
 		},
@@ -146,7 +149,9 @@ func (eService assistantDeploymentService) CreateDebuggerDeployment(
 	auth types.SimplePrinciple,
 	assistantId uint64,
 	greeting, mistake *string,
-	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+	idealTimeout *uint64,
+	idealTimeoutBackoff *uint64,
+	idealTimeoutMessage *string, maxSessionDuration *uint64,
 	inputAudio, outputAudio *protos.DeploymentAudioProvider,
 ) (*internal_assistant_entity.AssistantDebuggerDeployment, error) {
 	db := eService.postgres.DB(ctx)
@@ -162,6 +167,7 @@ func (eService assistantDeploymentService) CreateDebuggerDeployment(
 			Greeting:            greeting,
 			Mistake:             mistake,
 			IdealTimeout:        idealTimeout,
+			IdealTimeoutBackoff: idealTimeoutBackoff,
 			IdealTimeoutMessage: idealTimeoutMessage,
 			MaxSessionDuration:  maxSessionDuration,
 		},
@@ -187,7 +193,9 @@ func (eService assistantDeploymentService) CreateApiDeployment(
 	auth types.SimplePrinciple,
 	assistantId uint64,
 	greeting, mistake *string,
-	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+	idealTimeout *uint64,
+	idealTimeoutBackoff *uint64,
+	idealTimeoutMessage *string, maxSessionDuration *uint64,
 	inputAudio, outputAudio *protos.DeploymentAudioProvider,
 ) (*internal_assistant_entity.AssistantApiDeployment, error) {
 	db := eService.postgres.DB(ctx)
@@ -203,6 +211,7 @@ func (eService assistantDeploymentService) CreateApiDeployment(
 			Greeting:            greeting,
 			Mistake:             mistake,
 			IdealTimeout:        idealTimeout,
+			IdealTimeoutBackoff: idealTimeoutBackoff,
 			IdealTimeoutMessage: idealTimeoutMessage,
 			MaxSessionDuration:  maxSessionDuration,
 		},
@@ -228,7 +237,9 @@ func (eService assistantDeploymentService) CreateWhatsappDeployment(
 	auth types.SimplePrinciple,
 	assistantId uint64,
 	greeting, mistake *string,
-	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+	idealTimeout *uint64,
+	idealTimeoutBackoff *uint64,
+	idealTimeoutMessage *string, maxSessionDuration *uint64,
 	whatsappProvider string,
 	whatsappOptions []*protos.Metadata,
 ) (*internal_assistant_entity.AssistantWhatsappDeployment, error) {
@@ -245,6 +256,7 @@ func (eService assistantDeploymentService) CreateWhatsappDeployment(
 			Greeting:            greeting,
 			Mistake:             mistake,
 			IdealTimeout:        idealTimeout,
+			IdealTimeoutBackoff: idealTimeoutBackoff,
 			IdealTimeoutMessage: idealTimeoutMessage,
 			MaxSessionDuration:  maxSessionDuration,
 		},
@@ -297,7 +309,9 @@ func (eService assistantDeploymentService) CreatePhoneDeployment(
 	auth types.SimplePrinciple,
 	assistantId uint64,
 	greeting, mistake *string,
-	idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+	idealTimeout *uint64,
+	idealTimeoutBackoff *uint64,
+	idealTimeoutMessage *string, maxSessionDuration *uint64,
 	phoneProvider string,
 	inputAudio, outputAudio *protos.DeploymentAudioProvider,
 	opts []*protos.Metadata,
@@ -315,6 +329,7 @@ func (eService assistantDeploymentService) CreatePhoneDeployment(
 			Greeting:            greeting,
 			Mistake:             mistake,
 			IdealTimeout:        idealTimeout,
+			IdealTimeoutBackoff: idealTimeoutBackoff,
 			IdealTimeoutMessage: idealTimeoutMessage,
 			MaxSessionDuration:  maxSessionDuration,
 		},
@@ -385,7 +400,10 @@ func (eService assistantDeploymentService) GetAssistantApiDeployment(ctx context
 		Column: clause.Column{Name: "created_date"},
 		Desc:   true,
 	}).First(&apiDeployment)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if tx.Error != nil {
 		eService.logger.Errorf("not able to find api deployment for the assistant %d  with error %v", assistantId, tx.Error)
 		return nil, tx.Error
 	}
@@ -404,7 +422,11 @@ func (eService assistantDeploymentService) GetAssistantDebuggerDeployment(ctx co
 		Column: clause.Column{Name: "created_date"},
 		Desc:   true,
 	}).First(&debuggerDeployment)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if tx.Error != nil {
 		eService.logger.Errorf("not able to find api deployment for the assistant %d  with error %v", assistantId, tx.Error)
 		return nil, tx.Error
 	}
@@ -424,7 +446,10 @@ func (eService assistantDeploymentService) GetAssistantPhoneDeployment(ctx conte
 		Column: clause.Column{Name: "created_date"},
 		Desc:   true,
 	}).First(&phoneDeployment)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if tx.Error != nil {
 		eService.logger.Errorf("not able to find api deployment for the assistant %d  with error %v", assistantId, tx.Error)
 		return nil, tx.Error
 	}
@@ -443,7 +468,10 @@ func (eService assistantDeploymentService) GetAssistantWebpluginDeployment(ctx c
 		Column: clause.Column{Name: "created_date"},
 		Desc:   true,
 	}).First(&webPluginDeployment)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if tx.Error != nil {
 		eService.logger.Errorf("not able to find web plugin deployment for the assistant %d  with error %v", assistantId, tx.Error)
 		return nil, tx.Error
 	}
@@ -459,7 +487,11 @@ func (eService assistantDeploymentService) GetAssistantWhatsappDeployment(ctx co
 		Column: clause.Column{Name: "created_date"},
 		Desc:   true,
 	}).First(&whatsappDeployment)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if tx.Error != nil {
 		eService.logger.Errorf("not able to find whatsapp deployment for the assistant %d  with error %v", assistantId, tx.Error)
 		return nil, tx.Error
 	}

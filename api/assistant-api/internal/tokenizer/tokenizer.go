@@ -7,17 +7,28 @@ package internal_tokenizer
 
 import (
 	"context"
+
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 )
 
-type TokenizerCallback func(
-	ctx context.Context,
-	contextId string,
-	output string,
-) error
+// SentenceTokenizer defines the contract for components that transform
+// streamed or batched text inputs into tokenized sentence outputs.
+//
+// Implementations are expected to:
+//   - Accept inputs via Tokenize
+//   - Emit results asynchronously on the Result channel
+//   - Release resources and stop processing on Close
+type SentenceTokenizer interface {
+	// Tokenize consumes a tokenizer input (such as an LLMStreamChunk
+	// or Finalize signal). Implementations should respect context
+	// cancellation and deadlines.
+	Tokenize(ctx context.Context, in ...internal_type.Packet) error
 
-// tokenizerr is a generic interface that defines the contract for any type of synthesizer.
-// It uses a generic type parameter IN to allow for different input types.
-// The interface defines two methods: tokenizer and Flush.
-type Tokenizer interface {
-	Tokenize(ctx context.Context, contextId string, text string, completed bool) error
+	// Result returns a read-only channel on which tokenized outputs
+	// are delivered.
+	Result() <-chan internal_type.Packet
+
+	// Close terminates the tokenizer, releases resources,
+	// and closes the Result channel.
+	Close() error
 }

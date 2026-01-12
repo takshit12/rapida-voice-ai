@@ -3,13 +3,14 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_agent_local_tool
+package internal_tool_local
 
 import (
 	"context"
 	"time"
 
 	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
+	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
@@ -49,7 +50,7 @@ func NewEndOfConversationCaller(
 	logger commons.Logger,
 	toolOptions *internal_assistant_entity.AssistantTool,
 	communcation internal_adapter_requests.Communication,
-) (ToolCaller, error) {
+) (internal_tool.ToolCaller, error) {
 	return &endOfConversationCaller{
 		toolCaller: toolCaller{
 			logger:      logger,

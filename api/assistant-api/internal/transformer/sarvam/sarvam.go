@@ -14,7 +14,6 @@ import (
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
 	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
@@ -91,7 +90,7 @@ func (ro *sarvamOption) configureTextToSpeech() map[string]interface{} {
 	return configMsg
 }
 
-func (ro *sarvamOption) speechToTextMessage(in []byte, opts *internal_transformer.SpeechToTextOption) ([]byte, error) {
+func (ro *sarvamOption) speechToTextMessage(in []byte) ([]byte, error) {
 	sarvamInputAudio := internal_audio.NewLinear16khzMonoAudioConfig()
 	btm, err := ro.resampler.Resample(in, ro.audioConfig, sarvamInputAudio)
 	if err != nil {

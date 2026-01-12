@@ -209,29 +209,48 @@ if speed, err := m.mdlOpts.GetString("speak.speed"); err == nil {
 
 ## Existing Providers Reference
 
-### Google Cloud
+### Speech-to-Text (STT) Providers
 
-- **Files:** `google/google.go`, `google/stt.go`, `google/tts.go`
-- **Strength:** Well-structured, proper error handling, streaming support
-- **Use for:** Architecture reference
+| Provider     | Files                 | Strengths                          | Best For                  |
+| ------------ | --------------------- | ---------------------------------- | ------------------------- |
+| Google Cloud | `google/stt.go`       | Well-structured, streaming support | Architecture reference    |
+| Azure        | `azure/stt.go`        | Event-driven callbacks             | Event-based patterns      |
+| Deepgram     | `deepgram/stt.go`     | WebSocket streaming                | WebSocket implementation  |
+| AssemblyAI   | `assembly-ai/stt.go`  | WebSocket configuration            | WebSocket with headers    |
+| AWS          | `aws/stt.go`          | AWS SDK integration                | AWS ecosystem integration |
+| OpenAI       | `openai/stt.go`       | Multi-format support               | OpenAI integration        |
+| RevAI        | `revai/stt.go`        | High-accuracy transcription        | Transcription accuracy    |
+| Speechmatics | `speechmatics/stt.go` | Advanced language support          | Multiple language support |
 
-### Deepgram
+### Text-to-Speech (TTS) Providers
 
-- **Files:** `deepgram/deepgram.go`, `deepgram/stt.go`
-- **Strength:** WebSocket streaming, callback pattern
-- **Use for:** WebSocket implementation patterns
+| Provider     | Files               | Strengths                          | Best For                  |
+| ------------ | ------------------- | ---------------------------------- | ------------------------- |
+| Google Cloud | `google/tts.go`     | Well-structured, streaming support | Architecture reference    |
+| Azure        | `azure/tts.go`      | Natural voice synthesis            | Voice quality             |
+| ElevenLabs   | `elevenlabs/tts.go` | High-quality voices                | Premium voice synthesis   |
+| OpenAI       | `openai/tts.go`     | Multi-voice support                | OpenAI integration        |
+| AWS          | `aws/tts.go`        | AWS SDK integration                | AWS ecosystem integration |
+| Resemble     | `resemble/tts.go`   | Custom voice cloning               | Voice cloning             |
+| Cartesia     | `cartesia/tts.go`   | Real-time synthesis                | Real-time applications    |
+| Sarvam       | `sarvam/tts.go`     | Indian language support            | Regional language support |
 
-### Azure
+### Multi-Purpose Providers
 
-- **Files:** `azure/azure.go`, `azure/stt.go`, `azure/tts.go`
-- **Strength:** Event-based callbacks, error handling
-- **Use for:** Event-driven patterns
-
-### AssemblyAI
-
-- **Files:** `assembly-ai/assemblyai.go`, `assembly-ai/stt.go`
-- **Strength:** WebSocket configuration
-- **Use for:** WebSocket query parameter patterns
+| Provider     | Supports  | Files                                             | Features                  |
+| ------------ | --------- | ------------------------------------------------- | ------------------------- |
+| Google Cloud | STT + TTS | `google/google.go`, `google/*.go`                 | Streaming, multiple langs |
+| Azure        | STT + TTS | `azure/azure.go`, `azure/*.go`                    | Event callbacks, quality  |
+| Deepgram     | STT + TTS | `deepgram/deepgram.go`, `deepgram/*.go`           | WebSocket streaming       |
+| Cartesia     | STT + TTS | `cartesia/cartesia.go`, `cartesia/*.go`           | Real-time, custom voices  |
+| Sarvam       | STT + TTS | `sarvam/sarvam.go`, `sarvam/*.go`                 | Indian languages          |
+| OpenAI       | STT + TTS | `openai/stt.go`, `openai/tts.go`                  | GPT integration           |
+| AWS          | STT + TTS | `aws/stt.go`, `aws/tts.go`                        | AWS ecosystem             |
+| AssemblyAI   | STT only  | `assembly-ai/assemblyai.go`, `assembly-ai/stt.go` | WebSocket streaming       |
+| RevAI        | STT only  | `revai/stt.go`                                    | Accuracy focused          |
+| Speechmatics | STT only  | `speechmatics/stt.go`                             | Multilingual              |
+| ElevenLabs   | TTS only  | `elevenlabs/tts.go`                               | Voice quality             |
+| Resemble     | TTS only  | `resemble/tts.go`                                 | Voice cloning             |
 
 ---
 

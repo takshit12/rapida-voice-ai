@@ -9,9 +9,11 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
@@ -96,8 +98,8 @@ func (communication *GenericRequestor) OnGreet(ctx context.Context) error {
 	communication.AssistantCallback(ctx, greetings.GetId(), greetings, nil)
 	// audio processing
 	if communication.messaging.GetInputMode().Audio() {
-		if err := communication.Speak(greetings.GetId(), greetingCnt); err == nil {
-			communication.FinishSpeaking(greetings.GetId())
+		if err := communication.Speak(internal_type.TextPacket{ContextID: greetings.GetId(), Text: greetingCnt}, internal_type.FlushPacket{ContextID: greetings.GetId()}); err == nil {
+			communication.logger.Debugf("finished speaking greeting message")
 		}
 	}
 	// Notify the response if there is no user message
@@ -139,4 +141,116 @@ func (communication *GenericRequestor) OnError(ctx context.Context, messageId st
 		communication.logger.Errorf("error while completing on error message: %v", err)
 	}
 	return nil
+}
+
+// OnIdealTimeout handles the behavior when the bot has spoken but the user has not responded for the ideal timeout duration.
+// If configured, it will ask the user if they are still there.
+func (communication *GenericRequestor) OnIdealTimeout(ctx context.Context) error {
+
+	communication.logger.Errorf("will speak something on ideal timeout")
+	behavior, err := communication.GetBehavior()
+	if err != nil {
+		communication.logger.Debugf("no ideal timeout behavior setup for assistant.")
+		return nil
+	}
+
+	// Check if ideal timeout is configured
+	if behavior.IdealTimeout == nil || *behavior.IdealTimeout == 0 {
+		return nil
+	}
+
+	// Use default or configured timeout message
+	timeoutContent := "Are you still there?"
+	if behavior.IdealTimeoutMessage != nil && strings.TrimSpace(*behavior.IdealTimeoutMessage) != "" {
+		timeoutContent = communication.templateParser.Parse(*behavior.IdealTimeoutMessage, communication.GetArgs())
+	}
+
+	if strings.TrimSpace(timeoutContent) == "" {
+		communication.logger.Warnf("empty ideal timeout message")
+		return nil
+	}
+
+	message := communication.messaging.Create(type_enums.UserActor, "")
+
+	timeoutMsg := &types.Message{
+		Id:   message.GetId(),
+		Role: "assistant",
+		Contents: []*types.Content{{
+			ContentType:   commons.TEXT_CONTENT.String(),
+			ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+			Content:       []byte(timeoutContent),
+		}}}
+
+	if err := communication.Notify(ctx, &protos.AssistantConversationAssistantMessage{
+		Time:      timestamppb.Now(),
+		Id:        timeoutMsg.GetId(),
+		Completed: true,
+		Message: &protos.AssistantConversationAssistantMessage_Text{
+			Text: &protos.AssistantConversationMessageTextContent{
+				Content: timeoutContent,
+			},
+		},
+	}); err != nil {
+		communication.logger.Tracef(ctx, "error while outputting ideal timeout message to the user: %w", err)
+	}
+
+	communication.AssistantCallback(ctx, timeoutMsg.GetId(), timeoutMsg, nil)
+
+	// audio processing
+	if communication.messaging.GetInputMode().Audio() {
+		communication.Speak(
+			internal_type.TextPacket{ContextID: timeoutMsg.GetId(), Text: timeoutContent},
+			internal_type.FlushPacket{ContextID: timeoutMsg.GetId()},
+		)
+
+	}
+
+	// Notify the response
+	if err := communication.Notify(ctx, &protos.AssistantConversationMessage{
+		MessageId:               timeoutMsg.GetId(),
+		AssistantId:             communication.assistant.Id,
+		AssistantConversationId: communication.assistantConversation.Id,
+		Response:                timeoutMsg.ToProto(),
+	}); err != nil {
+		communication.logger.Tracef(ctx, "error while outputting ideal timeout message: %w", err)
+	}
+
+	return nil
+}
+
+// StartIdealTimeoutTimer starts a timer that triggers OnIdealTimeout when the bot has spoken but user hasn't responded for the configured duration.
+func (communication *GenericRequestor) StartIdealTimeoutTimer(ctx context.Context) {
+	if communication.idealTimeoutTimer != nil {
+		communication.idealTimeoutTimer.Stop()
+	}
+	behavior, err := communication.GetBehavior()
+	if err != nil {
+		return
+	}
+	if behavior.IdealTimeout == nil || *behavior.IdealTimeout == 0 {
+		return
+	}
+	communication.lastAssistantMessageTime = time.Now()
+	timeoutDuration := time.Duration(*behavior.IdealTimeout) * time.Minute
+	communication.idealTimeoutTimer = time.AfterFunc(timeoutDuration, func() {
+		if err := communication.OnIdealTimeout(ctx); err != nil {
+			communication.logger.Errorf("error while handling ideal timeout: %v", err)
+		}
+		communication.StartIdealTimeoutTimer(ctx)
+	})
+}
+
+// ResetIdealTimeoutTimer resets the ideal timeout timer when the user speaks (indicating they are still there).
+func (communication *GenericRequestor) ResetIdealTimeoutTimer(ctx context.Context) {
+	if communication.idealTimeoutTimer != nil {
+		communication.idealTimeoutTimer.Stop()
+	}
+	behavior, err := communication.GetBehavior()
+	if err != nil {
+		return
+	}
+	if behavior.IdealTimeout == nil || *behavior.IdealTimeout == 0 {
+		return
+	}
+	communication.StartIdealTimeoutTimer(ctx)
 }

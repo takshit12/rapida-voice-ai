@@ -146,7 +146,7 @@ type AssistantDeploymentService interface {
 		auth types.SimplePrinciple,
 		assistantId uint64,
 		greeting, mistake *string,
-		idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+		idealTimeout *uint64, idealTimeoutBackoff *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 		whatsappProvider string,
 		opts []*workflow_api.Metadata,
 	) (*internal_assistant_entity.AssistantWhatsappDeployment, error)
@@ -156,7 +156,7 @@ type AssistantDeploymentService interface {
 		auth types.SimplePrinciple,
 		assistantId uint64,
 		greeting, mistake *string,
-		idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+		idealTimeout *uint64, idealTimeoutBackoff *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 		phoneProvider string,
 		inputAudio, outputAudio *workflow_api.DeploymentAudioProvider,
 		opts []*workflow_api.Metadata,
@@ -167,7 +167,7 @@ type AssistantDeploymentService interface {
 		auth types.SimplePrinciple,
 		assistantId uint64,
 		greeting, mistake *string,
-		idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+		idealTimeout *uint64, idealTimeoutBackoff *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 		inputAudio, outputAudio *workflow_api.DeploymentAudioProvider,
 	) (*internal_assistant_entity.AssistantApiDeployment, error)
 
@@ -176,7 +176,7 @@ type AssistantDeploymentService interface {
 		auth types.SimplePrinciple,
 		assistantId uint64,
 		greeting, mistake *string,
-		idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+		idealTimeout *uint64, idealTimeoutBackoff *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 		inputAudio, outputAudio *workflow_api.DeploymentAudioProvider,
 	) (*internal_assistant_entity.AssistantDebuggerDeployment, error)
 
@@ -186,7 +186,7 @@ type AssistantDeploymentService interface {
 		assistantId uint64,
 		name string,
 		greeting, mistake *string,
-		idealTimeout *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
+		idealTimeout *uint64, idealTimeoutBackoff *uint64, idealTimeoutMessage *string, maxSessionDuration *uint64,
 		suggestion []string,
 		helpCenterEnabled, productCatalogEnabled, articleCatalogEnabled bool,
 		inputAudio, outputAudio *workflow_api.DeploymentAudioProvider,

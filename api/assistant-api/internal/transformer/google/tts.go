@@ -15,6 +15,7 @@ import (
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
 	"cloud.google.com/go/texttospeech/apiv1/texttospeechpb"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -107,11 +108,10 @@ func (google *googleTextToSpeech) Initialize() error {
 }
 
 // Transform handles streaming synthesis requests for input text.
-func (google *googleTextToSpeech) Transform(ctx context.Context, in string, opts *internal_transformer.TextToSpeechOption) error {
-
+func (google *googleTextToSpeech) Transform(ctx context.Context, in internal_type.Packet) error {
 	google.mu.Lock()
-	if opts.ContextId != google.contextId {
-		google.contextId = opts.ContextId
+	if in.ContextId() != google.contextId {
+		google.contextId = in.ContextId()
 	}
 	sCli := google.streamClient
 	google.mu.Unlock()
@@ -120,25 +120,24 @@ func (google *googleTextToSpeech) Transform(ctx context.Context, in string, opts
 		return fmt.Errorf("you are calling transform without initilize")
 	}
 
-	// no need to do anything if the input is marked complete
-	// this is usually for flushing the stream
-	if opts.IsComplete {
-		return nil
-	}
-	// Construct synthesis request with input text.
-	req := texttospeechpb.StreamingSynthesizeRequest{
-		StreamingRequest: &texttospeechpb.StreamingSynthesizeRequest_Input{
-			Input: &texttospeechpb.StreamingSynthesisInput{
-				InputSource: &texttospeechpb.StreamingSynthesisInput_Text{Text: in},
+	switch input := in.(type) {
+	case internal_type.TextPacket:
+		if err := sCli.Send(&texttospeechpb.StreamingSynthesizeRequest{
+			StreamingRequest: &texttospeechpb.StreamingSynthesizeRequest_Input{
+				Input: &texttospeechpb.StreamingSynthesisInput{
+					InputSource: &texttospeechpb.StreamingSynthesisInput_Text{Text: input.Text},
+				},
 			},
-		},
+		}); err != nil {
+			google.logger.Errorf("unable to Synthesize text %v", err)
+		}
+		return nil
+	case internal_type.FlushPacket:
+		return nil
+	default:
+		return fmt.Errorf("google-tts: unsupported input type %T", in)
 	}
-	// Send synthesis request to the streaming client.
-	if err := sCli.Send(&req); err != nil {
-		// Log any errors during synthesis.
-		google.logger.Errorf("unable to Synthesize text %v", err)
-	}
-	return nil
+
 }
 
 // textToSpeechCallback processes streaming responses asynchronously.

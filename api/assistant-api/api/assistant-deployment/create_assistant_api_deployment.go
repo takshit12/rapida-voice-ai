@@ -35,6 +35,7 @@ func (deploymentApi *assistantDeploymentApi) CreateAssistantApiDeployment(ctx co
 		deployment.GetApi().Greeting,
 		deployment.GetApi().Mistake,
 		&deployment.GetApi().IdealTimeout,
+		&deployment.GetApi().IdealTimeoutBackoff,
 		&deployment.GetApi().IdealTimeoutMessage,
 		&deployment.GetApi().MaxSessionDuration,
 		deployment.GetApi().GetInputAudio(),

@@ -36,6 +36,7 @@ func (deploymentApi *assistantDeploymentApi) CreateAssistantDebuggerDeployment(c
 		deployment.GetDebugger().Greeting,
 		deployment.GetDebugger().Mistake,
 		&deployment.GetDebugger().IdealTimeout,
+		&deployment.GetDebugger().IdealTimeoutBackoff,
 		&deployment.GetDebugger().IdealTimeoutMessage,
 		&deployment.GetDebugger().MaxSessionDuration,
 		deployment.GetDebugger().GetInputAudio(),

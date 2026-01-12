@@ -37,6 +37,7 @@ func (deploymentApi *assistantDeploymentApi) CreateAssistantPhoneDeployment(ctx 
 		deployment.GetPhone().Greeting,
 		deployment.GetPhone().Mistake,
 		&deployment.GetPhone().IdealTimeout,
+		&deployment.GetPhone().IdealTimeoutBackoff,
 		&deployment.GetPhone().IdealTimeoutMessage,
 		&deployment.GetPhone().MaxSessionDuration,
 		deployment.GetPhone().GetPhoneProviderName(),
