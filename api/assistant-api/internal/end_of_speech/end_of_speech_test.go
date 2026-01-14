@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_end_of_speech_factory
+package internal_end_of_speech
 
 import (
 	"context"
@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 )
 
 // MockEndOfSpeechCallback is a simple callback function for testing
-var mockCallback internal_end_of_speech.EndOfSpeechCallback = func(ctx context.Context, result *internal_end_of_speech.EndOfSpeechResult) error {
+var mockCallback internal_type.EndOfSpeechCallback = func(ctx context.Context, result internal_type.EndOfSpeechPacket) error {
 	return nil
 }
 

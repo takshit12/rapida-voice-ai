@@ -10,7 +10,6 @@ import (
 	"time"
 
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
-	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	type_enums "github.com/rapidaai/pkg/types/enums"
@@ -23,6 +22,24 @@ import (
 func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_type.Packet) error {
 	for _, p := range pkt {
 		switch vl := p.(type) {
+		case internal_type.UserTextPacket:
+			if talking.endOfSpeech != nil {
+				var err error
+				utils.Go(ctx, func() {
+					err = talking.endOfSpeech.Analyze(ctx, vl)
+					if err != nil {
+						if err == context.Canceled {
+							talking.logger.Info("Analysis canceled due to new content")
+						} else {
+							talking.logger.Tracef(ctx, "list of analyze text and got an error %+v", err)
+						}
+					}
+				})
+				return err
+			}
+			// end of speech not configured so directly send end of speech packet
+			talking.OnPacket(ctx, internal_type.EndOfSpeechPacket{})
+			continue
 		case internal_type.StaticPacket:
 			utils.Go(ctx, func() {
 				// create a message for the static packet
@@ -63,6 +80,20 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 				}
 				talking.Notify(ctx, &protos.AssistantConversationInterruption{Type: protos.AssistantConversationInterruption_INTERRUPTION_TYPE_WORD, Time: timestamppb.Now()})
 			default:
+				ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)
+				span.EndSpan(ctx,
+					utils.AssistantUtteranceStage,
+					internal_telemetry.KV{
+						K: "activity_type",
+						V: internal_telemetry.StringValue("vad"),
+					},
+				)
+				// might be noise at first
+				if vl.StartAt < 3 {
+					talking.logger.Warn("interrupt: very early interruption")
+					continue
+				}
+
 				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupt); err != nil {
 					continue
 				}
@@ -73,6 +104,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 			}
 			continue
 		case internal_type.SpeechToTextPacket:
+			talking.logger.Debugf("testing -> test to speech %v", vl)
 			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantListeningStage,
 				internal_telemetry.KV{
 					K: "transcript",
@@ -86,35 +118,41 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 				})
 			defer span.EndSpan(ctx, utils.AssistantListeningStage)
 			//
+
 			msi := talking.messaging.Create(type_enums.UserActor, "")
 			if !vl.Interim {
 				msi = talking.messaging.Create(type_enums.UserActor, vl.Script)
 				talking.Notify(ctx, &protos.AssistantConversationUserMessage{Id: msi.GetId(), Message: &protos.AssistantConversationUserMessage_Text{Text: &protos.AssistantConversationMessageTextContent{Content: msi.String()}}, Completed: false, Time: timestamppb.New(time.Now())})
 			}
 
-			if err := talking.ListenText(ctx, &internal_end_of_speech.STTEndOfSpeechInput{Message: vl.Script, IsComplete: !vl.Interim, Time: time.Now()}); err != nil {
+			if err := talking.OnPacket(ctx, internal_type.UserTextPacket{Text: msi.String()}); err != nil {
 				talking.logger.Info("ListenText error %s", err)
 			}
 			continue
 		case internal_type.EndOfSpeechPacket:
+			//
+			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)
+			span.EndSpan(ctx,
+				utils.AssistantUtteranceStage,
+				internal_telemetry.KV{
+					K: "activity_type",
+					V: internal_telemetry.StringValue("SpeechEndActivity"),
+				},
+				internal_telemetry.KV{
+					K: "speech",
+					V: internal_telemetry.StringValue(vl.Speech),
+				},
+			)
+			talking.logger.Debugf("testing -> end of speech %v", vl)
+			//
 			msg, err := talking.messaging.GetMessage(type_enums.UserActor)
 			if err != nil {
 				talking.logger.Tracef(ctx, "illegal message state with error %v", err)
 				continue
 			}
-
 			//
 			if err := talking.Notify(ctx,
-				&protos.AssistantConversationUserMessage{
-					Id: msg.GetId(),
-					Message: &protos.AssistantConversationUserMessage_Text{
-						Text: &protos.AssistantConversationMessageTextContent{
-							Content: msg.String(),
-						},
-					},
-					Completed: true,
-					Time:      timestamppb.New(time.Now()),
-				}); err != nil {
+				&protos.AssistantConversationUserMessage{Id: msg.GetId(), Message: &protos.AssistantConversationUserMessage_Text{Text: &protos.AssistantConversationMessageTextContent{Content: msg.String()}}, Completed: true, Time: timestamppb.New(time.Now())}); err != nil {
 				talking.logger.Tracef(ctx, "might be returing processing the duplicate message so cut it out.")
 				continue
 			}
@@ -127,6 +165,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 				}
 			})
 
+			talking.logger.Debugf("testing -> llm executon %v", vl)
 			//
 			talking.messaging.Transition(internal_adapter_request_customizers.LLMGenerating)
 			if err := talking.assistantExecutor.Execute(ctx, talking, internal_type.UserTextPacket{ContextID: msg.GetId(), Text: msg.String()}); err != nil {
@@ -183,7 +222,6 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 					},
 				)
 			continue
-
 		case internal_type.MetricPacket:
 			// metrics update for the message
 			// later this can be used at each stage to calculate various metrics

@@ -4,14 +4,14 @@
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
 
-package internal_vad_factory
+package internal_vad
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	internal_vad "github.com/rapidaai/api/assistant-api/internal/vad"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ import (
 )
 
 // MockVADCallback implements the VADCallback interface for testing
-func MockVADCallback(result *internal_vad.VadResult) error {
+func MockVADCallback(result internal_type.InterruptionPacket) error {
 	return nil
 }
 

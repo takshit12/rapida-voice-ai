@@ -8,16 +8,13 @@ package internal_adapter_request_generic
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
 	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_denoiser_factory "github.com/rapidaai/api/assistant-api/internal/factory/denoiser"
-	internal_end_of_speech_factory "github.com/rapidaai/api/assistant-api/internal/factory/end_of_speech"
 	internal_adapter_transformer_factory "github.com/rapidaai/api/assistant-api/internal/factory/transformer"
-	internal_vad_factory "github.com/rapidaai/api/assistant-api/internal/factory/vad"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -147,11 +144,11 @@ func (listening *GenericRequestor) initializeEndOfSpeech(
 		listening.logger.Errorf("denoising.provider is not set, please check the configuration")
 		return err
 	}
-	endOfSpeech, err := internal_end_of_speech_factory.GetEndOfSpeech(
-		internal_end_of_speech_factory.EndOfSpeechIdentifier(provider),
+	endOfSpeech, err := internal_end_of_speech.GetEndOfSpeech(
+		internal_end_of_speech.EndOfSpeechIdentifier(provider),
 		listening.logger,
-		func(_ctx context.Context, act *internal_end_of_speech.EndOfSpeechResult) error {
-			return listening.afterAnalyze(_ctx, act)
+		func(_ctx context.Context, act internal_type.EndOfSpeechPacket) error {
+			return listening.OnPacket(_ctx, act)
 		},
 		options)
 	if err != nil {
@@ -186,12 +183,12 @@ func (listening *GenericRequestor) initializeVAD(ctx context.Context, audioConfi
 		return err
 	}
 
-	vad, err := internal_vad_factory.GetVAD(
-		internal_vad_factory.VADIdentifier(provider),
+	vad, err := internal_vad.GetVAD(
+		internal_vad.VADIdentifier(provider),
 		listening.logger,
 		audioConfig,
-		func(vr *internal_vad.VadResult) error {
-			return listening.afterAnalyze(listening.Context(), vr)
+		func(vr internal_type.InterruptionPacket) error {
+			return listening.OnPacket(listening.Context(), vr)
 		},
 		options,
 	)
@@ -202,76 +199,6 @@ func (listening *GenericRequestor) initializeVAD(ctx context.Context, audioConfi
 	listening.vad = vad
 	listening.logger.Benchmark("listen.initializeVAD", time.Since(start))
 	return nil
-}
-
-func (listening *GenericRequestor) afterAnalyze(ctx context.Context, a interface{},
-) error {
-	ctx, span, _ := listening.Tracer().StartSpan(listening.Context(), utils.AssistantUtteranceStage)
-	switch v := a.(type) {
-	case *internal_end_of_speech.EndOfSpeechResult:
-		span.EndSpan(ctx,
-			utils.AssistantUtteranceStage,
-			internal_telemetry.KV{
-				K: "activity_type",
-				V: internal_telemetry.StringValue("SpeechEndActivity"),
-			},
-			internal_telemetry.KV{
-				K: "speech_start_at",
-				V: internal_telemetry.StringValue(
-					time.Unix(int64(v.GetSpeechStartAt()), int64((v.GetSpeechStartAt()-float64(int64(v.GetSpeechStartAt())))*1e9)).
-						Format("2006-01-02 15:04:05.000000"),
-				),
-			},
-			internal_telemetry.KV{
-				K: "speech_end_at",
-				V: internal_telemetry.StringValue(
-					time.Unix(int64(v.GetSpeechEndAt()), int64((v.GetSpeechEndAt()-float64(int64(v.GetSpeechEndAt())))*1e9)).
-						Format("2006-01-02 15:04:05.000000"),
-				),
-			},
-			internal_telemetry.KV{
-				K: "speech",
-				V: internal_telemetry.StringValue(v.GetSpeech()),
-			},
-		)
-		return listening.OnPacket(ctx, internal_type.EndOfSpeechPacket{})
-	case *internal_vad.VadResult:
-		span.EndSpan(ctx,
-			utils.AssistantUtteranceStage,
-			internal_telemetry.KV{
-				K: "activity_type",
-				V: internal_telemetry.StringValue("vad"),
-			},
-		)
-		// might be noise at first
-		if v.GetSpeechStartAt() < 3 {
-			listening.logger.Warn("interrupt: very early interruption")
-			return nil
-		}
-		listening.OnPacket(ctx, internal_type.InterruptionPacket{Source: "vad"})
-		listening.ListenText(ctx, &internal_end_of_speech.SystemEndOfSpeechInput{Time: time.Now()})
-		return nil
-	default:
-		return fmt.Errorf("unsupported activity type")
-	}
-}
-
-func (listening *GenericRequestor) ListenText(ctx context.Context, msg internal_end_of_speech.EndOfSpeechInput) error {
-	if listening.endOfSpeech != nil {
-		var err error
-		utils.Go(ctx, func() {
-			err = listening.endOfSpeech.Analyze(ctx, msg)
-			if err != nil {
-				if err == context.Canceled {
-					listening.logger.Info("Analysis canceled due to new content")
-				} else {
-					listening.logger.Tracef(ctx, "list of analyze text and got an error %+v", err)
-				}
-			}
-		})
-		return err
-	}
-	return listening.OnPacket(ctx, internal_type.EndOfSpeechPacket{})
 }
 
 func (listening *GenericRequestor) ListenAudio(ctx context.Context, in []byte) ([]byte, error) {

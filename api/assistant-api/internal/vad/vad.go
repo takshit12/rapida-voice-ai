@@ -5,20 +5,31 @@
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
 package internal_vad
 
-// Activity represents a detected Audio segment.
+import (
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
+	internal_vad_silero "github.com/rapidaai/api/assistant-api/internal/vad/internal/silero_vad"
+	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
+	"github.com/rapidaai/protos"
+)
 
-type VADCallback func(*VadResult) error
-type VadResult struct {
-	StartSec float64
-	EndSec   float64
-}
+type VADIdentifier string
 
-func (a *VadResult) GetSpeechStartAt() float64 { return a.StartSec }
-func (a *VadResult) GetSpeechEndAt() float64   { return a.EndSec }
-func (a *VadResult) GetDuration() float64      { return a.EndSec - a.StartSec }
+const (
+	SILERO_VAD VADIdentifier = "silero_vad"
+	TEN_VAD    VADIdentifier = "ten_vad"
+)
 
-type Vad interface {
-	Name() string
-	Process(frame []byte) error
-	Close() error
+// logger, audioConfig, opts
+func GetVAD(aa VADIdentifier, logger commons.Logger, intputAudio *protos.AudioConfig,
+	callback internal_type.VADCallback,
+	options utils.Option) (internal_type.Vad, error) {
+	switch aa {
+	case SILERO_VAD:
+		return internal_vad_silero.NewSileroVAD(logger, intputAudio, callback, options)
+	case TEN_VAD:
+		return internal_vad_silero.NewSileroVAD(logger, intputAudio, callback, options)
+	default:
+		return internal_vad_silero.NewSileroVAD(logger, intputAudio, callback, options)
+	}
 }

@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_silence_based_end_of_speech
+package internal_silence_based
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 )
 
@@ -23,7 +23,7 @@ import (
 // User input fires callback immediately, testing the fast path.
 func BenchmarkAnalyze_UserInput(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{}))
 
 	b.ResetTimer()
@@ -39,7 +39,7 @@ func BenchmarkAnalyze_UserInput(b *testing.B) {
 // System input extends timer, testing timer setup path.
 func BenchmarkAnalyze_SystemInput(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -56,7 +56,7 @@ func BenchmarkAnalyze_SystemInput(b *testing.B) {
 // STT input extends timer with optional formatting optimization.
 func BenchmarkAnalyze_STTInput(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -73,7 +73,7 @@ func BenchmarkAnalyze_STTInput(b *testing.B) {
 // This simulates the fast path where the context is cancelled before timer fires.
 func BenchmarkAnalyze_NoWait(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{}))
 
 	b.ResetTimer()
@@ -93,7 +93,7 @@ func BenchmarkAnalyze_NoWait(b *testing.B) {
 // This tests thread-safety and contention on mutex locks.
 func BenchmarkAnalyze_Concurrent(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	b.ResetTimer()
@@ -111,7 +111,7 @@ func BenchmarkAnalyze_Concurrent(b *testing.B) {
 // All goroutines hammer the service simultaneously without context cancellation.
 func BenchmarkAnalyze_ConcurrentHighContention(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -130,7 +130,7 @@ func BenchmarkAnalyze_ConcurrentHighContention(b *testing.B) {
 // Different goroutines send user, system, and STT inputs concurrently.
 func BenchmarkAnalyze_ConcurrentMixedInputs(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -162,7 +162,7 @@ func BenchmarkAnalyze_ConcurrentMixedInputs(b *testing.B) {
 // Incomplete STT always uses normal timeout.
 func BenchmarkAnalyze_STTIncomplete(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 150.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -179,7 +179,7 @@ func BenchmarkAnalyze_STTIncomplete(b *testing.B) {
 // Complete STT may use adjusted timeout if text matches previous.
 func BenchmarkAnalyze_STTComplete(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 150.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -196,7 +196,7 @@ func BenchmarkAnalyze_STTComplete(b *testing.B) {
 // Same semantic content with different formatting (punctuation, case).
 func BenchmarkAnalyze_STTFormatting(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 150.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -217,7 +217,7 @@ func BenchmarkAnalyze_STTFormatting(b *testing.B) {
 // Simulates continuous STT updates from speech-to-text engine.
 func BenchmarkAnalyze_STTHighFrequency(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 150.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -239,7 +239,7 @@ func BenchmarkAnalyze_STTHighFrequency(b *testing.B) {
 // Each new input invalidates the previous, testing generation counter efficiency.
 func BenchmarkAnalyze_RapidFireInputs(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -256,7 +256,7 @@ func BenchmarkAnalyze_RapidFireInputs(b *testing.B) {
 // Tests memory and processing of large text payloads.
 func BenchmarkAnalyze_LargePayloads(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -279,7 +279,7 @@ func BenchmarkAnalyze_LargePayloads(b *testing.B) {
 // Empty speech should be ignored, testing the fast rejection path.
 func BenchmarkAnalyze_EmptyInputs(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -296,7 +296,7 @@ func BenchmarkAnalyze_EmptyInputs(b *testing.B) {
 // Context is cancelled before Analyze is called, testing early exit path.
 func BenchmarkAnalyze_ContextCancellation(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	b.ResetTimer()
@@ -312,7 +312,7 @@ func BenchmarkAnalyze_ContextCancellation(b *testing.B) {
 // Tests cost of incrementing generation and invalidating old timers.
 func BenchmarkAnalyze_GenerationInvalidation(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -334,7 +334,7 @@ func BenchmarkAnalyze_GenerationInvalidation(b *testing.B) {
 // Stress test with 1000+ operations, measuring memory and CPU efficiency.
 func BenchmarkAnalyze_HighThroughput(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -359,7 +359,7 @@ func BenchmarkAnalyze_HighThroughput(b *testing.B) {
 func BenchmarkAnalyze_SustainedLoad(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
 	callCount := int64(0)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		atomic.AddInt64(&callCount, 1)
 		return nil
 	}
@@ -380,10 +380,10 @@ func BenchmarkAnalyze_SustainedLoad(b *testing.B) {
 // Tests whether services can coexist and whether there's shared state contention.
 func BenchmarkAnalyze_MultipleServices(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 
 	// Create 10 service instances
-	services := make([]internal_end_of_speech.EndOfSpeech, 10)
+	services := make([]internal_type.EndOfSpeech, 10)
 	for i := 0; i < 10; i++ {
 		svc, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 		services[i] = svc
@@ -408,7 +408,7 @@ func BenchmarkAnalyze_MultipleServices(b *testing.B) {
 // This benchmark should pass with `go test -bench=. -race`.
 func BenchmarkAnalyze_RaceDetectionConcurrent(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -437,7 +437,7 @@ func BenchmarkAnalyze_RaceDetectionWithCallback(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
 	var callCount int64
 
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		atomic.AddInt64(&callCount, 1)
 		return nil
 	}
@@ -463,7 +463,7 @@ func BenchmarkAnalyze_RaceDetectionWithCallback(b *testing.B) {
 // BenchmarkMemory_UserInputAlloc measures memory allocations for user input.
 func BenchmarkMemory_UserInputAlloc(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -478,7 +478,7 @@ func BenchmarkMemory_UserInputAlloc(b *testing.B) {
 // BenchmarkMemory_STTInputAlloc measures memory allocations for STT input.
 func BenchmarkMemory_STTInputAlloc(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -493,7 +493,7 @@ func BenchmarkMemory_STTInputAlloc(b *testing.B) {
 // BenchmarkMemory_ConcurrentAlloc measures memory allocations under concurrent load.
 func BenchmarkMemory_ConcurrentAlloc(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{"microphone.eos.timeout": 100.0}))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -520,7 +520,7 @@ func BenchmarkAnalyze_STTHandling(b *testing.B) {
 // BenchmarkBufferAppend measures the cost of appending activities to the bounded buffer.
 func BenchmarkBufferAppend(b *testing.B) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error { return nil }
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error { return nil }
 	svcIface, _ := NewSilenceBasedEndOfSpeech(logger, callback, newTestOpts(map[string]any{}))
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -14,7 +14,7 @@ import (
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
 	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
-	internal_vad "github.com/rapidaai/api/assistant-api/internal/vad"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
@@ -26,7 +26,7 @@ type SileroVAD struct {
 	logger         commons.Logger
 	inputConfig    *protos.AudioConfig
 	detector       *speech.Detector
-	onActivity     func(*internal_vad.VadResult) error
+	onActivity     internal_type.VADCallback
 	audioSampler   internal_audio.AudioResampler
 	audioConverter internal_audio.AudioConverter
 	vadConfig      *protos.AudioConfig
@@ -35,7 +35,7 @@ type SileroVAD struct {
 // NewSileroVAD creates a new SileroVAD
 func NewSileroVAD(logger commons.Logger,
 	inputAudio *protos.AudioConfig,
-	callback internal_vad.VADCallback, options utils.Option) (internal_vad.Vad, error) {
+	callback internal_type.VADCallback, options utils.Option) (internal_type.Vad, error) {
 
 	envModelPath := os.Getenv("SILERO_MODEL_PATH")
 	if envModelPath == "" {
@@ -109,7 +109,8 @@ func (svad *SileroVAD) Process(input []byte) error {
 			maxEnd = end
 		}
 	}
-	svad.onActivity(&internal_vad.VadResult{StartSec: minStart, EndSec: maxEnd})
+	// svad.onActivity(&internal_inter.VadResult{StartSec: minStart, EndSec: maxEnd})
+	svad.onActivity(internal_type.InterruptionPacket{Source: "vad"})
 	return nil
 }
 func (s *SileroVAD) Close() error {

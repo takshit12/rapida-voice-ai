@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_silence_based_end_of_speech
+package internal_silence_based
 
 import (
 	"context"
@@ -12,22 +12,22 @@ import (
 	"testing"
 	"time"
 
-	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 )
 
 // helpers to build inputs
-func userInput(msg string) *internal_end_of_speech.UserEndOfSpeechInput {
-	return &internal_end_of_speech.UserEndOfSpeechInput{Message: msg, Time: time.Now()}
+func userInput(msg string) internal_type.UserTextPacket {
+	return internal_type.UserTextPacket{Text: msg}
 }
 
-func systemInput(msg string) *internal_end_of_speech.SystemEndOfSpeechInput {
-	return &internal_end_of_speech.SystemEndOfSpeechInput{Time: time.Now()}
+func systemInput(msg string) internal_type.InterruptionPacket {
+	return internal_type.InterruptionPacket{Source: "vad"}
 }
 
-func sttInput(msg string, complete bool) *internal_end_of_speech.STTEndOfSpeechInput {
-	return &internal_end_of_speech.STTEndOfSpeechInput{Message: msg, Time: time.Now(), IsComplete: complete}
+func sttInput(msg string, complete bool) internal_type.SpeechToTextPacket {
+	return internal_type.SpeechToTextPacket{Script: msg, Interim: !complete}
 }
 
 // newTestOpts creates a utils.Option (which is just map[string]interface{})
@@ -39,10 +39,11 @@ func newTestOpts(m map[string]any) utils.Option {
 
 func TestTimerFiresAndCallbackCalled(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	called := make(chan *internal_end_of_speech.EndOfSpeechResult, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	called := make(chan internal_type.EndOfSpeechPacket, 1)
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case called <- res:
+
 		default:
 		}
 		return nil
@@ -71,8 +72,8 @@ func TestTimerFiresAndCallbackCalled(t *testing.T) {
 
 func TestSystemInputTriggersTimer(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	called := make(chan *internal_end_of_speech.EndOfSpeechResult, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	called := make(chan internal_type.EndOfSpeechPacket, 1)
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case called <- res:
 		default:
@@ -100,8 +101,8 @@ func TestSystemInputTriggersTimer(t *testing.T) {
 
 func TestEmptySpeechIgnored(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	called := make(chan *internal_end_of_speech.EndOfSpeechResult, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	called := make(chan internal_type.EndOfSpeechPacket, 1)
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case called <- res:
 		default:
@@ -146,8 +147,8 @@ func TestActivityBufferCapped(t *testing.T) {
 
 func TestConcurrentAnalyze(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	calls := make(chan *internal_end_of_speech.EndOfSpeechResult, 100)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	calls := make(chan internal_type.EndOfSpeechPacket, 100)
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case calls <- res:
 		default:
@@ -177,8 +178,8 @@ func TestConcurrentAnalyze(t *testing.T) {
 
 func TestContextCancelPreventsCallback(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	called := make(chan *internal_end_of_speech.EndOfSpeechResult, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	called := make(chan internal_type.EndOfSpeechPacket, 1)
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case called <- res:
 		default:
@@ -217,22 +218,15 @@ func TestNormalizeMessageAndBuildSegment(t *testing.T) {
 	}
 
 	// Test that the EndOfSpeechResult is built correctly
-	start := time.Now()
-	end := start.Add(150 * time.Millisecond)
 
 	// Simulate what invokeCallback does
-	seg := &internal_end_of_speech.EndOfSpeechResult{
-		StartAt: float64(start.UnixNano()) / 1e9,
-		EndAt:   float64(end.UnixNano()) / 1e9,
-		Speech:  "test",
+	seg := internal_type.EndOfSpeechPacket{
+		Speech: "test",
 	}
-
 	if seg.Speech != "test" {
 		t.Fatalf("speech mismatch: %v", seg.Speech)
 	}
-	if seg.EndAt <= seg.StartAt {
-		t.Fatalf("invalid segment times: %v", seg)
-	}
+
 }
 
 // handleSTTInput timing tests with precision verification
@@ -241,7 +235,7 @@ func TestNormalizeMessageAndBuildSegment(t *testing.T) {
 func TestHandleSTTInput_IncompleteSTT(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -281,7 +275,7 @@ func TestHandleSTTInput_IncompleteSTT(t *testing.T) {
 func TestHandleSTTInput_CompleteSTTNoActivity(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -321,7 +315,7 @@ func TestHandleSTTInput_CompleteSTTNoActivity(t *testing.T) {
 func TestHandleSTTInput_DifferentTextCompleteSTT(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -366,7 +360,7 @@ func TestHandleSTTInput_DifferentTextCompleteSTT(t *testing.T) {
 func TestHandleSTTInput_SameTextCompleteSTT(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -412,7 +406,7 @@ func TestHandleSTTInput_SameTextCompleteSTT(t *testing.T) {
 func TestHandleSTTInput_AdjustedThresholdLowerBound(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -458,7 +452,7 @@ func TestHandleSTTInput_AdjustedThresholdLowerBound(t *testing.T) {
 func TestHandleSTTInput_ActivityAfterUserInput(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -503,7 +497,7 @@ func TestHandleSTTInput_ActivityAfterUserInput(t *testing.T) {
 func TestHandleSTTInput_NormalizedTextMatching(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		callbackTime <- time.Now()
 		return nil
 	}
@@ -554,7 +548,7 @@ func TestCallbackFiresOnlyOnce(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callCount := 0
 	var mu sync.Mutex
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		mu.Lock()
 		callCount++
 		mu.Unlock()
@@ -613,7 +607,7 @@ func TestNewInputInvalidatesPreviousCallback(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callCount := 0
 	var mu sync.Mutex
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		mu.Lock()
 		callCount++
 		mu.Unlock()
@@ -666,7 +660,7 @@ func TestNewInputInvalidatesPreviousCallback(t *testing.T) {
 func TestUserInputImmediateTrigger(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case callTime <- time.Now():
 		default:
@@ -703,7 +697,7 @@ func TestUserInputImmediateTrigger(t *testing.T) {
 func TestSystemInputExtendsTimer(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case callTime <- time.Now():
 		default:
@@ -750,7 +744,7 @@ func TestSystemInputExtendsTimer(t *testing.T) {
 func TestSTTInputExtendsTimer(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case callTime <- time.Now():
 		default:
@@ -790,7 +784,7 @@ func TestSTTInputExtendsTimer(t *testing.T) {
 func TestSTTFormattingOptimization(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case callTime <- time.Now():
 		default:
@@ -842,7 +836,7 @@ func TestGenerationInvalidation(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	callCount := 0
 	var mu sync.Mutex
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		mu.Lock()
 		callCount++
 		mu.Unlock()
@@ -895,7 +889,7 @@ func TestGenerationInvalidation(t *testing.T) {
 func TestContextCancellation(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	called := make(chan bool, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		called <- true
 		return nil
 	}
@@ -954,8 +948,8 @@ func TestNormalizationFunction(t *testing.T) {
 // TestCallbackReceivesCorrectData verifies callback receives complete EndOfSpeechResult
 func TestCallbackReceivesCorrectData(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	results := make(chan *internal_end_of_speech.EndOfSpeechResult, 1)
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	results := make(chan internal_type.EndOfSpeechPacket, 1)
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		select {
 		case results <- res:
 		default:
@@ -981,15 +975,7 @@ func TestCallbackReceivesCorrectData(t *testing.T) {
 		if res.Speech != speechText {
 			t.Fatalf("incorrect speech: expected %q, got %q", speechText, res.Speech)
 		}
-		if res.StartAt <= 0 {
-			t.Fatalf("StartAt should be set: %v", res.StartAt)
-		}
-		if res.EndAt <= 0 {
-			t.Fatalf("EndAt should be set: %v", res.EndAt)
-		}
-		if res.EndAt < res.StartAt {
-			t.Fatalf("EndAt should be >= StartAt: %v <= %v", res.EndAt, res.StartAt)
-		}
+
 	case <-time.After(300 * time.Millisecond):
 		t.Fatal("timeout waiting for callback result")
 	}
@@ -998,7 +984,7 @@ func TestCallbackReceivesCorrectData(t *testing.T) {
 // TestRaceConditionUnderConcurrentInput uses goroutines to stress-test for races
 func TestRaceConditionUnderConcurrentInput(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		return nil
 	}
 
@@ -1037,7 +1023,7 @@ func TestRaceConditionUnderConcurrentInput(t *testing.T) {
 // TestServiceName verifies the service name
 func TestServiceName(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		return nil
 	}
 
@@ -1056,7 +1042,7 @@ func TestServiceName(t *testing.T) {
 // TestServiceClose verifies graceful shutdown
 func TestServiceClose(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
-	callback := func(ctx context.Context, res *internal_end_of_speech.EndOfSpeechResult) error {
+	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
 		return nil
 	}
 

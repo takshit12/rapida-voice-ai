@@ -22,7 +22,6 @@ import (
 	internal_agent_executor_llm "github.com/rapidaai/api/assistant-api/internal/agent/executor/llm"
 	internal_agent_rerankers "github.com/rapidaai/api/assistant-api/internal/agent/reranker"
 	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
-	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_conversation_gorm "github.com/rapidaai/api/assistant-api/internal/entity/conversations"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
@@ -33,7 +32,6 @@ import (
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_tokenizer "github.com/rapidaai/api/assistant-api/internal/tokenizer"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
-	internal_vad "github.com/rapidaai/api/assistant-api/internal/vad"
 	endpoint_client "github.com/rapidaai/pkg/clients/endpoint"
 	integration_client "github.com/rapidaai/pkg/clients/integration"
 	web_client "github.com/rapidaai/pkg/clients/web"
@@ -82,8 +80,8 @@ type GenericRequestor struct {
 
 	// listening
 	speechToTextTransformer internal_transformer.SpeechToTextTransformer
-	endOfSpeech             internal_end_of_speech.EndOfSpeech
-	vad                     internal_vad.Vad
+	endOfSpeech             internal_type.EndOfSpeech
+	vad                     internal_type.Vad
 	denoiser                internal_denoiser.Denoiser
 
 	//

@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_silence_based_end_of_speech
+package internal_silence_based
 
 import (
 	"context"
@@ -12,14 +12,14 @@ import (
 	"time"
 	"unicode"
 
-	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 )
 
 type silenceBasedEndOfSpeech struct {
 	logger            commons.Logger
-	onCallback        internal_end_of_speech.EndOfSpeechCallback
+	onCallback        internal_type.EndOfSpeechCallback
 	thresholdDuration time.Duration
 
 	// worker coordination
@@ -43,9 +43,9 @@ type workerEvent struct {
 
 func NewSilenceBasedEndOfSpeech(
 	logger commons.Logger,
-	onCallback internal_end_of_speech.EndOfSpeechCallback,
+	onCallback internal_type.EndOfSpeechCallback,
 	opts utils.Option,
-) (internal_end_of_speech.EndOfSpeech, error) {
+) (internal_type.EndOfSpeech, error) {
 
 	duration := 1000 * time.Millisecond
 	if v, err := opts.GetFloat64("microphone.eos.timeout"); err == nil {
@@ -70,25 +70,24 @@ func (a *silenceBasedEndOfSpeech) Name() string {
 
 func (a *silenceBasedEndOfSpeech) Analyze(
 	ctx context.Context,
-	msg internal_end_of_speech.EndOfSpeechInput,
+	msg internal_type.Packet,
 ) error {
 
 	switch input := msg.(type) {
-
-	case *internal_end_of_speech.UserEndOfSpeechInput:
+	case internal_type.UserTextPacket:
 		a.enqueue(workerEvent{
 			ctx:     ctx,
-			speech:  input.GetMessage(),
+			speech:  input.Text,
 			fireNow: true,
 		})
 
-	case *internal_end_of_speech.SystemEndOfSpeechInput:
+	case internal_type.InterruptionPacket:
 		a.enqueue(workerEvent{
 			ctx:     ctx,
 			timeout: a.thresholdDuration,
 		})
 
-	case *internal_end_of_speech.STTEndOfSpeechInput:
+	case internal_type.SpeechToTextPacket:
 		a.handleSTT(ctx, input)
 	}
 
@@ -97,14 +96,14 @@ func (a *silenceBasedEndOfSpeech) Analyze(
 
 func (a *silenceBasedEndOfSpeech) handleSTT(
 	ctx context.Context,
-	input *internal_end_of_speech.STTEndOfSpeechInput,
+	input internal_type.SpeechToTextPacket,
 ) {
 	a.mutex.Lock()
 
 	timeout := a.thresholdDuration
-	text := input.GetMessage()
+	text := input.Script
 
-	if input.IsComplete && a.inputSpeech != "" {
+	if !input.Interim && a.inputSpeech != "" {
 		if normalizeSTTText(a.inputSpeech) == normalizeSTTText(text) {
 			timeout = a.thresholdDuration / 2
 		}
@@ -218,11 +217,11 @@ func (a *silenceBasedEndOfSpeech) invokeCallback(
 		return
 	}
 
-	now := time.Now()
-	seg := &internal_end_of_speech.EndOfSpeechResult{
-		StartAt: float64(now.UnixNano()) / 1e9,
-		EndAt:   float64(now.UnixNano()) / 1e9,
-		Speech:  speech,
+	// now := time.Now()
+	seg := internal_type.EndOfSpeechPacket{
+		// StartAt: float64(now.UnixNano()) / 1e9,
+		// EndAt:   float64(now.UnixNano()) / 1e9,
+		Speech: speech,
 	}
 
 	a.logger.Debugf("End of speech detected: '%s'", speech)

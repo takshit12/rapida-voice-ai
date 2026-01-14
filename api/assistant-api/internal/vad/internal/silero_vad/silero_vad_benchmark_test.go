@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
-	internal_vad "github.com/rapidaai/api/assistant-api/internal/vad"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -24,7 +24,7 @@ import (
 func newBenchmarkVAD(b *testing.B, threshold float64) *SileroVAD {
 	logger, err := commons.NewApplicationLoggerWithOptions()
 	inputConfig := internal_audio.NewLinear16khzMonoAudioConfig()
-	callback := func(*internal_vad.VadResult) error { return nil }
+	callback := func(internal_type.InterruptionPacket) error { return nil }
 	opts := newTestOptions(b, threshold)
 
 	vad, err := NewSileroVAD(logger, inputConfig, callback, opts)
@@ -210,7 +210,7 @@ func BenchmarkSileroVAD_Process_Parallel_2Streams(b *testing.B) {
 	// Create 2 separate VAD instances (realistic scenario)
 	vads := make([]*SileroVAD, 2)
 	for i := 0; i < 2; i++ {
-		callback := func(*internal_vad.VadResult) error { return nil }
+		callback := func(internal_type.InterruptionPacket) error { return nil }
 		vad, _ := NewSileroVAD(logger, inputConfig, callback, opts)
 		vads[i] = vad.(*SileroVAD)
 		b.Cleanup(func() { vad.Close() })
@@ -241,7 +241,7 @@ func BenchmarkSileroVAD_Process_Parallel_4Streams(b *testing.B) {
 	// Create 4 separate VAD instances
 	vads := make([]*SileroVAD, 4)
 	for i := 0; i < 4; i++ {
-		callback := func(*internal_vad.VadResult) error { return nil }
+		callback := func(internal_type.InterruptionPacket) error { return nil }
 		vad, _ := NewSileroVAD(logger, inputConfig, callback, opts)
 		vads[i] = vad.(*SileroVAD)
 		b.Cleanup(func() { vad.Close() })
@@ -272,7 +272,7 @@ func BenchmarkSileroVAD_Process_Parallel_8Streams(b *testing.B) {
 	// Create 8 separate VAD instances
 	vads := make([]*SileroVAD, 8)
 	for i := 0; i < 8; i++ {
-		callback := func(*internal_vad.VadResult) error { return nil }
+		callback := func(internal_type.InterruptionPacket) error { return nil }
 		vad, _ := NewSileroVAD(logger, inputConfig, callback, opts)
 		vads[i] = vad.(*SileroVAD)
 		b.Cleanup(func() { vad.Close() })
@@ -345,7 +345,7 @@ func BenchmarkSileroVAD_Process_Resample_8kHz(b *testing.B) {
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		Channels:    1,
 	}
-	callback := func(*internal_vad.VadResult) error { return nil }
+	callback := func(internal_type.InterruptionPacket) error { return nil }
 	opts := newTestOptions(b, 0.5)
 
 	vad, _ := NewSileroVAD(logger, inputConfig, callback, opts)
@@ -367,7 +367,7 @@ func BenchmarkSileroVAD_Process_Resample_24kHz(b *testing.B) {
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		Channels:    1,
 	}
-	callback := func(*internal_vad.VadResult) error { return nil }
+	callback := func(internal_type.InterruptionPacket) error { return nil }
 	opts := newTestOptions(b, 0.5)
 
 	vad, _ := NewSileroVAD(logger, inputConfig, callback, opts)
@@ -389,7 +389,7 @@ func BenchmarkSileroVAD_Process_Resample_48kHz(b *testing.B) {
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		Channels:    1,
 	}
-	callback := func(*internal_vad.VadResult) error { return nil }
+	callback := func(internal_type.InterruptionPacket) error { return nil }
 	opts := newTestOptions(b, 0.5)
 
 	vad, _ := NewSileroVAD(logger, inputConfig, callback, opts)
@@ -442,7 +442,7 @@ func BenchmarkSileroVAD_Process_MixedContent_Alternating(b *testing.B) {
 func BenchmarkSileroVAD_Initialization(b *testing.B) {
 	logger, _ := commons.NewApplicationLoggerWithOptions()
 	inputConfig := internal_audio.NewLinear16khzMonoAudioConfig()
-	callback := func(*internal_vad.VadResult) error { return nil }
+	callback := func(internal_type.InterruptionPacket) error { return nil }
 	opts := newTestOptions(b, 0.5)
 
 	b.ResetTimer()
@@ -489,7 +489,7 @@ func BenchmarkSileroVAD_Process_WithCallback(b *testing.B) {
 	inputConfig := internal_audio.NewLinear16khzMonoAudioConfig()
 
 	callbackCount := 0
-	callback := func(*internal_vad.VadResult) error {
+	callback := func(internal_type.InterruptionPacket) error {
 		callbackCount++
 		return nil
 	}

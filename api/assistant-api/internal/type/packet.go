@@ -44,6 +44,12 @@ type InterruptionPacket struct {
 
 	//
 	Source string
+
+	// start of interruption
+	StartAt float64
+
+	// end of interruption
+	EndAt float64
 }
 
 // ContextId returns the identifier of the context associated with this interruption request.
@@ -192,6 +198,8 @@ func (f UserTextPacket) Role() string {
 type EndOfSpeechPacket struct {
 	// contextID identifies the context to be flushed.
 	ContextID string
+
+	Speech string
 }
 
 func (f EndOfSpeechPacket) ContextId() string {
@@ -217,6 +225,8 @@ type SpeechToTextPacket struct {
 func (f SpeechToTextPacket) ContextId() string {
 	return f.ContextID
 }
+
+//
 
 // h
 type KnowledgeRetriveOption struct {
