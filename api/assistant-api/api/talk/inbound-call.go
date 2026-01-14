@@ -12,9 +12,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	internal_factory "github.com/rapidaai/api/assistant-api/internal/factory"
-	telephony "github.com/rapidaai/api/assistant-api/internal/factory/telephony"
+
+	internal_adapter "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_services "github.com/rapidaai/api/assistant-api/internal/services"
+	telephony "github.com/rapidaai/api/assistant-api/internal/telephony"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
@@ -119,7 +120,7 @@ func (cApi *ConversationApi) CallReciever(c *gin.Context) {
 		return
 	}
 
-	conversation, err := cApi.assistantConversationService.CreateConversation(c, iAuth, internal_factory.Identifier(utils.PhoneCall, c, iAuth, *clientNumber), assistant.Id, assistant.AssistantProviderId, type_enums.DIRECTION_INBOUND, utils.PhoneCall)
+	conversation, err := cApi.assistantConversationService.CreateConversation(c, iAuth, internal_adapter.Identifier(utils.PhoneCall, c, iAuth, *clientNumber), assistant.Id, assistant.AssistantProviderId, type_enums.DIRECTION_INBOUND, utils.PhoneCall)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unable to initiate talker"})
 		return
@@ -185,12 +186,12 @@ func (cApi *ConversationApi) CallTalker(c *gin.Context) {
 		return
 	}
 
-	talker, err := internal_factory.GetTalker(utils.PhoneCall, c, cApi.cfg, cApi.logger, cApi.postgres, cApi.opensearch, cApi.redis, cApi.storage, _telephony.Streamer(c, websocketConnection, assistantId, "latest", conversationId))
+	talker, err := internal_adapter.GetTalker(utils.PhoneCall, c, cApi.cfg, cApi.logger, cApi.postgres, cApi.opensearch, cApi.redis, cApi.storage, _telephony.Streamer(c, websocketConnection, assistantId, "latest", conversationId))
 	if err != nil {
 		cApi.logger.Errorf("illegal to get talker %v", err)
 		return
 	}
-	if err := talker.Talk(c, auth, internal_factory.Identifier(utils.PhoneCall, c, auth, identifier)); err != nil {
+	if err := talker.Talk(c, auth, internal_adapter.Identifier(utils.PhoneCall, c, auth, identifier)); err != nil {
 		cApi.logger.Errorf("illegal while initiating talker %v", err)
 	}
 }

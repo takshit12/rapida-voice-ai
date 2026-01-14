@@ -12,7 +12,6 @@ import (
 	"io"
 	"time"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_executors "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_agent_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool"
@@ -48,7 +47,7 @@ func (executor *modelAssistantExecutor) Name() string {
 	return "model"
 }
 
-func (executor *modelAssistantExecutor) Initialize(ctx context.Context, communication internal_adapter_requests.Communication) error {
+func (executor *modelAssistantExecutor) Initialize(ctx context.Context, communication internal_type.Communication) error {
 	start := time.Now()
 	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantAgentConnectStage, internal_adapter_telemetry.KV{K: "executor", V: internal_adapter_telemetry.StringValue(executor.Name())})
 	defer span.EndSpan(ctx, utils.AssistantAgentConnectStage)
@@ -99,7 +98,7 @@ func (executor *modelAssistantExecutor) chat(
 	ctx context.Context,
 
 	// for communication
-	communication internal_adapter_requests.Communication,
+	communication internal_type.Communication,
 
 	// llm packet
 	packet internal_type.LLMPacket,
@@ -164,7 +163,7 @@ func (executor *modelAssistantExecutor) chat(
 	}
 }
 
-func (executor *modelAssistantExecutor) llm(communication internal_adapter_requests.Communication, in, out internal_type.LLMPacket, metrics internal_type.MetricPacket) error {
+func (executor *modelAssistantExecutor) llm(communication internal_type.Communication, in, out internal_type.LLMPacket, metrics internal_type.MetricPacket) error {
 	if in.Message != nil {
 		executor.history = append(executor.history, in.Message.ToProto())
 	}
@@ -179,7 +178,7 @@ func (executor *modelAssistantExecutor) llm(communication internal_adapter_reque
 }
 
 // when user tigger a message
-func (executor *modelAssistantExecutor) Execute(ctx context.Context, communication internal_adapter_requests.Communication, pctk internal_type.Packet) error {
+func (executor *modelAssistantExecutor) Execute(ctx context.Context, communication internal_type.Communication, pctk internal_type.Packet) error {
 	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantAgentTextGenerationStage, internal_adapter_telemetry.MessageKV(pctk.ContextId()))
 	defer span.EndSpan(ctx, utils.AssistantAgentTextGenerationStage)
 	switch plt := pctk.(type) {
@@ -207,7 +206,7 @@ func (executor *modelAssistantExecutor) Execute(ctx context.Context, communicati
 
 }
 
-func (executor *modelAssistantExecutor) Close(ctx context.Context, communication internal_adapter_requests.Communication) error {
+func (executor *modelAssistantExecutor) Close(ctx context.Context, communication internal_type.Communication) error {
 	executor.history = make([]*protos.Message, 0)
 	return nil
 }

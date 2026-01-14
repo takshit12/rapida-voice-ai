@@ -10,7 +10,7 @@ import (
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
 	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
-	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
@@ -28,7 +28,7 @@ type rnnoiseDenoiser struct {
 // NewDenoiser creates a new denoiser instance
 func NewRnnoiseDenoiser(
 	logger commons.Logger, inputConfig *protos.AudioConfig, options utils.Option,
-) (internal_denoiser.Denoiser, error) {
+) (internal_type.Denoiser, error) {
 	rn, err := NewRNNoise()
 	if err != nil {
 		return nil, err

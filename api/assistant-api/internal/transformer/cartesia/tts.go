@@ -14,7 +14,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	cartesia_internal "github.com/rapidaai/api/assistant-api/internal/transformer/cartesia/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -32,10 +31,10 @@ type cartesiaTTS struct {
 
 	logger     commons.Logger
 	connection *websocket.Conn
-	options    *internal_transformer.TextToSpeechInitializeOptions
+	options    *internal_type.TextToSpeechInitializeOptions
 }
 
-func NewCartesiaTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+func NewCartesiaTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
 	cartesiaOpts, err := NewCartesiaOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("intializing cartesia failed %+v", err)

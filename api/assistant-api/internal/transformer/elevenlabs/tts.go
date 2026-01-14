@@ -17,7 +17,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+
 	elevenlabs_internal "github.com/rapidaai/api/assistant-api/internal/transformer/elevenlabs/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -35,10 +35,10 @@ type elevenlabsTTS struct {
 
 	logger     commons.Logger
 	connection *websocket.Conn
-	options    *internal_transformer.TextToSpeechInitializeOptions
+	options    *internal_type.TextToSpeechInitializeOptions
 }
 
-func NewElevenlabsTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+func NewElevenlabsTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
 	eleOpts, err := NewElevenLabsOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("elevenlabs-tts: intializing elevenlabs failed %+v", err)

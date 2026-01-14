@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strconv"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -51,14 +50,14 @@ func (tc *putOnHoldToolCaller) argument(args string) uint64 {
 
 }
 
-func (afkTool *putOnHoldToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_adapter_requests.Communication) internal_type.LLMToolPacket {
+func (afkTool *putOnHoldToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_type.Communication) internal_type.LLMToolPacket {
 	return internal_type.LLMToolPacket{ContextID: pkt.ContextID, Action: protos.AssistantConversationAction_PUT_ON_HOLD, Result: afkTool.Result("Putting on hold.", true)}
 }
 
 func NewPutOnHoldToolCaller(
 	logger commons.Logger,
 	toolOptions *internal_assistant_entity.AssistantTool,
-	communication internal_adapter_requests.Communication,
+	communication internal_type.Communication,
 ) (internal_tool.ToolCaller, error) {
 
 	opts := toolOptions.GetOptions()

@@ -15,7 +15,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	protos "github.com/rapidaai/protos"
@@ -34,15 +33,15 @@ type resembleTTS struct {
 	connection *websocket.Conn
 
 	logger  commons.Logger
-	options *internal_transformer.TextToSpeechInitializeOptions
+	options *internal_type.TextToSpeechInitializeOptions
 }
 
 func NewResembleTextToSpeech(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	options *internal_transformer.TextToSpeechInitializeOptions,
-) (internal_transformer.TextToSpeechTransformer, error) {
+	options *internal_type.TextToSpeechInitializeOptions,
+) (internal_type.TextToSpeechTransformer, error) {
 	rsmblOpts, err := NewResembleOption(logger, credential, options.AudioConfig, options.ModelOptions)
 	if err != nil {
 		logger.Errorf("resemble-tts: initializing resembleai failed %+v", err)

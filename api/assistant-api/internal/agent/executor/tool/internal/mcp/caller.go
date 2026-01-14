@@ -8,8 +8,8 @@ package internal_agent_mcp_tool
 import (
 	"context"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/types"
 )
 
@@ -20,5 +20,5 @@ type MCPCaller interface {
 	List() ([]internal_tool.ToolCaller, error)
 
 	// call the tools
-	Call(ctx context.Context, tool internal_tool.ToolCaller, messageId string, args string, communication internal_adapter_requests.Communication) (map[string]interface{}, []*types.Metric)
+	Call(ctx context.Context, tool internal_tool.ToolCaller, messageId string, args string, communication internal_type.Communication) (map[string]interface{}, []*types.Metric)
 }

@@ -15,7 +15,6 @@ import (
 
 	speech "cloud.google.com/go/speech/apiv2"
 	"cloud.google.com/go/speech/apiv2/speechpb"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
@@ -29,7 +28,7 @@ type googleSpeechToText struct {
 
 	client  *speech.Client
 	stream  speechpb.Speech_StreamingRecognizeClient
-	options *internal_transformer.SpeechToTextInitializeOptions
+	options *internal_type.SpeechToTextInitializeOptions
 
 	// context management
 	ctx       context.Context
@@ -41,8 +40,8 @@ func (g *googleSpeechToText) Name() string {
 	return "google-speech-to-text"
 }
 
-func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.SpeechToTextInitializeOptions,
-) (internal_transformer.SpeechToTextTransformer, error) {
+func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.SpeechToTextInitializeOptions,
+) (internal_type.SpeechToTextTransformer, error) {
 	start := time.Now()
 	googleOption, err := NewGoogleOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {

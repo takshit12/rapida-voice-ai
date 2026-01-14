@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
-	internal_telephony "github.com/rapidaai/api/assistant-api/internal/telephony"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	"github.com/rapidaai/pkg/utils"
@@ -28,7 +28,7 @@ type vonageTelephony struct {
 	logger commons.Logger
 }
 
-func NewVonageTelephony(config *config.AssistantConfig, logger commons.Logger) (internal_telephony.Telephony, error) {
+func NewVonageTelephony(config *config.AssistantConfig, logger commons.Logger) (internal_type.Telephony, error) {
 	return &vonageTelephony{
 		logger: logger,
 		appCfg: config,
@@ -107,11 +107,11 @@ func (vt *vonageTelephony) MakeCall(
 	connectAction := ncco.Ncco{}
 	nccoConnect := ncco.ConnectAction{
 		EventType: "synchronous",
-		EventUrl:  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
+		EventUrl:  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.PublicAssistantHost, internal_type.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
 		Endpoint: []ncco.Endpoint{ncco.WebSocketEndpoint{
 			Uri: fmt.Sprintf("wss://%s/%s",
 				vt.appCfg.PublicAssistantHost,
-				internal_telephony.GetAnswerPath("vonage", auth, assistantId, assistantConversationId, toPhone)),
+				internal_type.GetAnswerPath("vonage", auth, assistantId, assistantConversationId, toPhone)),
 			ContentType: "audio/l16;rate=16000",
 		}},
 	}
@@ -143,13 +143,13 @@ func (vt *vonageTelephony) IncomingCall(c *gin.Context, auth types.SimplePrincip
 		{
 			"action":    "connect",
 			"eventType": "synchronous",
-			"eventUrl":  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
+			"eventUrl":  []string{fmt.Sprintf("https://%s/%s", vt.appCfg.PublicAssistantHost, internal_type.GetEventPath("vonage", auth, assistantId, assistantConversationId))},
 			"endpoint": []gin.H{
 				{
 					"type": "websocket",
 					"uri": fmt.Sprintf("wss://%s/%s",
 						vt.appCfg.PublicAssistantHost,
-						internal_telephony.GetAnswerPath("vonage", auth, assistantId, assistantConversationId, clientNumber)),
+						internal_type.GetAnswerPath("vonage", auth, assistantId, assistantConversationId, clientNumber)),
 					"content-type": "audio/l16;rate=16000",
 				},
 			},

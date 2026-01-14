@@ -11,7 +11,7 @@ import (
 
 	openai "github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 )
 
@@ -48,8 +48,8 @@ func (o *openaiSpeechToText) Transform(ctx context.Context, byt []byte) error {
 func NewOpenaiSpeechToText(
 	ctx context.Context,
 	logger commons.Logger,
-	opts internal_transformer.SpeechToTextTransformer,
-) (internal_transformer.SpeechToTextTransformer, error) {
+	opts internal_type.SpeechToTextTransformer,
+) (internal_type.SpeechToTextTransformer, error) {
 	stt := &openaiSpeechToText{
 		logger: logger,
 	}

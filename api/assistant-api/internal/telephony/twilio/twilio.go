@@ -14,7 +14,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
-	internal_telephony "github.com/rapidaai/api/assistant-api/internal/telephony"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
+
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	"github.com/rapidaai/pkg/utils"
@@ -30,7 +31,7 @@ type twilioTelephony struct {
 
 func NewTwilioTelephony(
 	config *config.AssistantConfig,
-	logger commons.Logger) (internal_telephony.Telephony, error) {
+	logger commons.Logger) (internal_type.Telephony, error) {
 	return &twilioTelephony{
 		appCfg: config,
 		logger: logger,
@@ -122,7 +123,7 @@ func (tpc *twilioTelephony) MakeCall(
 	callParams.SetTo(toPhone)
 	callParams.SetFrom(fromPhone)
 	callParams.SetStatusCallback(
-		fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
+		fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_type.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
 	)
 	callParams.SetStatusCallbackEvent([]string{
 		"initiated", "ringing", "answered", "completed",
@@ -132,11 +133,11 @@ func (tpc *twilioTelephony) MakeCall(
 		tpc.CreateTwinML(
 			tpc.appCfg.PublicAssistantHost,
 			fmt.Sprintf("%d__%d", assistantId, assistantConversationId),
-			internal_telephony.GetAnswerPath("twilio", auth, assistantId,
+			internal_type.GetAnswerPath("twilio", auth, assistantId,
 				assistantConversationId,
 				toPhone,
 			),
-			fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
+			fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_type.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
 			assistantId,
 			toPhone),
 	)
@@ -179,7 +180,7 @@ func (tpc *twilioTelephony) IncomingCall(c *gin.Context, auth types.SimplePrinci
 			fmt.Sprintf("v1/talk/twilio/prj/%d/%s/%d/%s",
 				assistantId,
 				clientNumber, assistantConversationId, auth.GetCurrentToken()),
-			fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
+			fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_type.GetEventPath("twilio", auth, assistantId, assistantConversationId)),
 			assistantId, clientNumber),
 	))
 	return nil

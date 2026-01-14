@@ -1,78 +1,40 @@
-// Copyright (c) 2023-2025 RapidaAI
-// Author: Prashant Srivastav <prashant@rapida.ai>
-//
-// Licensed under GPL-2.0 with Rapida Additional Terms.
-// See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_telephony
+package internal_telephony_factory
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
-	"github.com/rapidaai/pkg/types"
-	"github.com/rapidaai/pkg/utils"
-	"github.com/rapidaai/protos"
+	"github.com/rapidaai/api/assistant-api/config"
+	internal_exotel_telephony "github.com/rapidaai/api/assistant-api/internal/telephony/exotel"
+	internal_twilio_telephony "github.com/rapidaai/api/assistant-api/internal/telephony/twilio"
+	internal_vonage_telephony "github.com/rapidaai/api/assistant-api/internal/telephony/vonage"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
+	"github.com/rapidaai/pkg/commons"
 )
 
-// any telephony integration must impliment this interface to provide consistent behaviour
-type Telephony interface {
-	// streamer
-	Streamer(c *gin.Context, connection *websocket.Conn, assistantID uint64, assistantVersion string, assistantConversationID uint64) internal_streamers.Streamer
+type Telephony string
 
-	// for creating call throght telephony
-	MakeCall(auth types.SimplePrinciple, toPhone string, fromPhone string, assistantId, assistantConversationId uint64, vaultCredential *protos.VaultCredential, opts utils.Option) ([]*types.Metadata, []*types.Metric, []*types.Event, error)
+const (
+	Twilio Telephony = "twilio"
+	Exotel Telephony = "exotel"
+	Vonage Telephony = "vonage"
+)
 
-	//  event callback for a conversation
-	StatusCallback(ctx *gin.Context, auth types.SimplePrinciple, assistantId, assistantConversationId uint64) ([]*types.Metric, []*types.Event, error)
-
-	// catch all event callback
-	CatchAllStatusCallback(ctx *gin.Context) (*string, []*types.Metric, []*types.Event, error)
-
-	//
-	IncomingCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error
-
-	//
-	AcceptCall(c *gin.Context) (client *string, assistantId *string, err error)
+func (at Telephony) String() string {
+	return string(at)
 }
 
-func GetAnswerPath(provider string, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64, toPhone string) string {
-	switch auth.Type() {
-	case "project":
-		return fmt.Sprintf("v1/talk/%s/prj/%d/%s/%d/%s",
-			provider,
-			assistantId,
-			toPhone,
-			assistantConversationId,
-			auth.GetCurrentToken())
+func GetTelephony(
+	at Telephony,
+	cfg *config.AssistantConfig,
+	logger commons.Logger) (internal_type.Telephony, error) {
+	switch at {
+	case Twilio:
+		return internal_twilio_telephony.NewTwilioTelephony(cfg, logger)
+	case Exotel:
+		return internal_exotel_telephony.NewExotelTelephony(cfg, logger)
+	case Vonage:
+		return internal_vonage_telephony.NewVonageTelephony(cfg, logger)
 	default:
-		return fmt.Sprintf("v1/talk/%s/usr/%d/%s/%d/%s/%d/%d",
-			provider,
-			assistantId,
-			toPhone,
-			assistantConversationId,
-			auth.GetCurrentToken(),
-			*auth.GetUserId(),
-			*auth.GetCurrentProjectId())
-	}
-}
-
-func GetEventPath(provider string, auth types.SimplePrinciple, assistantId, assistantConversationId uint64) string {
-	switch auth.Type() {
-	case "project":
-		return fmt.Sprintf("v1/talk/%s/prj/event/%d/%d/%s",
-			provider,
-			assistantId,
-			assistantConversationId,
-			auth.GetCurrentToken())
-	default:
-		return fmt.Sprintf("v1/talk/%s/usr/event/%d/%d/%s/%d/%d",
-			provider,
-			assistantId,
-			assistantConversationId,
-			auth.GetCurrentToken(),
-			*auth.GetUserId(),
-			*auth.GetCurrentProjectId())
+		return nil, errors.New("illegal telephony provider")
 	}
 }

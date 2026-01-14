@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
@@ -47,7 +46,7 @@ func (tc *knowledgeRetrievalToolCaller) argument(args string) (*string, map[stri
 	}
 	return utils.Ptr(queryOrContext), input, nil
 }
-func (afkTool *knowledgeRetrievalToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_adapter_requests.Communication) internal_type.LLMToolPacket {
+func (afkTool *knowledgeRetrievalToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_type.Communication) internal_type.LLMToolPacket {
 	in, v, err := afkTool.argument(args)
 	var contextString string
 
@@ -79,7 +78,7 @@ func (afkTool *knowledgeRetrievalToolCaller) Call(ctx context.Context, pkt inter
 func NewKnowledgeRetrievalToolCaller(
 	logger commons.Logger,
 	toolOptions *internal_assistant_entity.AssistantTool,
-	communcation internal_adapter_requests.Communication,
+	communcation internal_type.Communication,
 ) (internal_tool.ToolCaller, error) {
 	opts := toolOptions.GetOptions()
 	searchType, err := opts.GetString("tool.search_type")

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	assemblyai_internal "github.com/rapidaai/api/assistant-api/internal/transformer/assembly-ai/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -34,11 +33,11 @@ type assemblyaiSTT struct {
 	connection *websocket.Conn
 
 	logger  commons.Logger
-	options *internal_transformer.SpeechToTextInitializeOptions
+	options *internal_type.SpeechToTextInitializeOptions
 }
 
-func NewAssemblyaiSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_transformer.SpeechToTextInitializeOptions,
-) (internal_transformer.SpeechToTextTransformer, error) {
+func NewAssemblyaiSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_type.SpeechToTextInitializeOptions,
+) (internal_type.SpeechToTextTransformer, error) {
 	ayOptions, err := NewAssemblyaiOption(
 		logger,
 		credential,

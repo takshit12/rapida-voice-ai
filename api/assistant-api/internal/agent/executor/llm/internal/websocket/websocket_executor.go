@@ -12,9 +12,10 @@ import (
 	"net/url"
 
 	"github.com/gorilla/websocket"
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
+
 	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	"github.com/rapidaai/pkg/utils"
@@ -28,7 +29,7 @@ type websocketExecutor struct {
 
 // Init implements internal_executors.AssistantExecutor.
 func (executor *websocketExecutor) Initialize(ctx context.Context,
-	communication internal_adapter_requests.Communication) error {
+	communication internal_type.Communication) error {
 	ctx, span, _ := communication.Tracer().StartSpan(
 		ctx,
 		utils.AssistantAgentConnectStage,
@@ -89,18 +90,18 @@ func (a *websocketExecutor) Name() string {
 	return "websocket"
 }
 
-func (executor *websocketExecutor) Assistant(ctx context.Context, messageid string, msg *types.Message, communication internal_adapter_requests.Communication) error {
+func (executor *websocketExecutor) Assistant(ctx context.Context, messageid string, msg *types.Message, communication internal_type.Communication) error {
 	return nil
 }
 
 // Talk implements internal_executors.AssistantExecutor.
-func (a *websocketExecutor) User(ctx context.Context, messageid string, msg *types.Message, communication internal_adapter_requests.Communication) error {
+func (a *websocketExecutor) User(ctx context.Context, messageid string, msg *types.Message, communication internal_type.Communication) error {
 	panic("unimplemented")
 }
 
 func (a *websocketExecutor) Close(
 	ctx context.Context,
-	communication internal_adapter_requests.Communication,
+	communication internal_type.Communication,
 ) error {
 	return nil
 }

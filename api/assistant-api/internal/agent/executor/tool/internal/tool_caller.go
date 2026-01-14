@@ -8,7 +8,6 @@ package internal_tool
 import (
 	"context"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 
 	"github.com/rapidaai/protos"
@@ -42,5 +41,5 @@ type ToolCaller interface {
 	// Call executes the tool with the given arguments and communication
 	// context. It returns a slice of Packets representing the tool's
 	// response(s) to be consumed by the agent runtime.
-	Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_adapter_requests.Communication) internal_type.LLMToolPacket
+	Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_type.Communication) internal_type.LLMToolPacket
 }

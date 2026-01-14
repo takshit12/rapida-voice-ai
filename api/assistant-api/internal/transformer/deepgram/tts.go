@@ -16,7 +16,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -40,15 +39,15 @@ type deepgramTTS struct {
 
 	logger     commons.Logger
 	connection *websocket.Conn
-	options    *internal_transformer.TextToSpeechInitializeOptions
+	options    *internal_type.TextToSpeechInitializeOptions
 }
 
 func NewDeepgramTextToSpeech(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	opts *internal_transformer.TextToSpeechInitializeOptions,
-) (internal_transformer.TextToSpeechTransformer, error) {
+	opts *internal_type.TextToSpeechInitializeOptions,
+) (internal_type.TextToSpeechTransformer, error) {
 
 	dGoptions, err := NewDeepgramOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {

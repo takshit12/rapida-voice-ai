@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_request_generic
+package internal_adapter_generic
 
 import (
 	"context"
@@ -11,10 +11,10 @@ import (
 	"io"
 	"time"
 
+	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
 	internal_end_of_speech "github.com/rapidaai/api/assistant-api/internal/end_of_speech"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
-	internal_denoiser_factory "github.com/rapidaai/api/assistant-api/internal/factory/denoiser"
-	internal_adapter_transformer_factory "github.com/rapidaai/api/assistant-api/internal/factory/transformer"
+
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -36,7 +36,7 @@ func (listening *GenericRequestor) initializeSpeechToText(ctx context.Context, t
 		return err
 	}
 
-	atransformer, err := internal_adapter_transformer_factory.GetSpeechToTextTransformer(internal_adapter_transformer_factory.AudioTransformer(transformerConfig.AudioProvider), listening.Context(), listening.logger, credential, &internal_transformer.SpeechToTextInitializeOptions{AudioConfig: audioConfig, OnPacket: func(pkt ...internal_type.Packet) error { return listening.OnPacket(ctx, pkt...) }, ModelOptions: options})
+	atransformer, err := internal_transformer.GetSpeechToTextTransformer(internal_transformer.AudioTransformer(transformerConfig.AudioProvider), listening.Context(), listening.logger, credential, &internal_type.SpeechToTextInitializeOptions{AudioConfig: audioConfig, OnPacket: func(pkt ...internal_type.Packet) error { return listening.OnPacket(ctx, pkt...) }, ModelOptions: options})
 	if err != nil {
 		listening.logger.Errorf("unable to create input audio transformer with error %v", err)
 		return err
@@ -166,7 +166,7 @@ func (listening *GenericRequestor) initializeDenoiser(ctx context.Context, audio
 		listening.logger.Errorf("denoising.provider is not set, please check the configuration")
 		return err
 	}
-	denoise, err := internal_denoiser_factory.GetDenoiser(internal_denoiser_factory.DenoiserIdentifier(provider), listening.logger, audioConfig, options)
+	denoise, err := internal_denoiser.GetDenoiser(internal_denoiser.DenoiserIdentifier(provider), listening.logger, audioConfig, options)
 	if err != nil {
 		listening.logger.Errorf("error wile intializing denoiser %+v", err)
 	}

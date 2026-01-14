@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_request_generic
+package internal_adapter_generic
 
 import (
 	"context"
@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
@@ -129,7 +129,7 @@ func (talking *GenericRequestor) Connect(ctx context.Context, iAuth types.Simple
 
 // OnCreateSession initializes a new assistant session, sets up listeners and speakers,
 // starts voice recording, and sends configuration notifications.
-func (talking *GenericRequestor) OnCreateSession(ctx context.Context, inCfg, strmCfg *protos.StreamConfig, assistant *internal_assistant_entity.Assistant, identifier string, customization internal_adapter_requests.Customization) error {
+func (talking *GenericRequestor) OnCreateSession(ctx context.Context, inCfg, strmCfg *protos.StreamConfig, assistant *internal_assistant_entity.Assistant, identifier string, customization internal_type.Customization) error {
 	ctx, span, err := talking.Tracer().StartSpan(ctx, utils.AssistantCreateConversationStage)
 	defer span.EndSpan(ctx, utils.AssistantCreateConversationStage)
 	wg, _ := errgroup.WithContext(ctx)
@@ -230,7 +230,7 @@ func (talking *GenericRequestor) OnCreateSession(ctx context.Context, inCfg, str
 
 // OnResumeSession resumes an existing assistant session, re-initializes listeners and speakers,
 // and sends configuration notifications while also restoring ongoing conversation details.
-func (talking *GenericRequestor) OnResumeSession(ctx context.Context, inCfg, strmCfg *protos.StreamConfig, assistant *internal_assistant_entity.Assistant, identifier string, assistantConversationId uint64, customization internal_adapter_requests.Customization) error {
+func (talking *GenericRequestor) OnResumeSession(ctx context.Context, inCfg, strmCfg *protos.StreamConfig, assistant *internal_assistant_entity.Assistant, identifier string, assistantConversationId uint64, customization internal_type.Customization) error {
 	ctx, span, err := talking.Tracer().StartSpan(talking.Context(), utils.AssistantResumeConverstaionStage)
 	defer span.EndSpan(ctx, utils.AssistantResumeConverstaionStage)
 	wg, _ := errgroup.WithContext(ctx)

@@ -12,8 +12,6 @@ import (
 	"sync"
 	"time"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
-	internal_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_tool_local "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal/local"
@@ -45,7 +43,7 @@ func NewToolExecutor(
 	}
 }
 
-func (executor *toolExecutor) GetLocalTool(logger commons.Logger, toolOpts *internal_assistant_entity.AssistantTool, communcation internal_adapter_requests.Communication) (internal_tool.ToolCaller, error) {
+func (executor *toolExecutor) GetLocalTool(logger commons.Logger, toolOpts *internal_assistant_entity.AssistantTool, communcation internal_type.Communication) (internal_tool.ToolCaller, error) {
 	switch toolOpts.ExecutionMethod {
 	case "knowledge_retrieval":
 		return internal_tool_local.NewKnowledgeRetrievalToolCaller(logger, toolOpts, communcation)
@@ -62,7 +60,7 @@ func (executor *toolExecutor) GetLocalTool(logger commons.Logger, toolOpts *inte
 	}
 }
 
-func (executor *toolExecutor) Initialize(ctx context.Context, communication internal_requests.Communication) error {
+func (executor *toolExecutor) Initialize(ctx context.Context, communication internal_type.Communication) error {
 	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantToolConnectStage)
 	defer span.EndSpan(ctx, utils.AssistantToolConnectStage)
 
@@ -93,14 +91,14 @@ func (executor *toolExecutor) GetFunctionDefinitions() []*protos.FunctionDefinit
 	return executor.availableToolFunctions
 }
 
-func (executor *toolExecutor) tool(messageId string, in, out map[string]interface{}, metrics []*types.Metric, communication internal_requests.Communication) error {
+func (executor *toolExecutor) tool(messageId string, in, out map[string]interface{}, metrics []*types.Metric, communication internal_type.Communication) error {
 	utils.Go(communication.Context(), func() {
 		communication.CreateConversationToolLog(messageId, in, out, metrics)
 	})
 	return nil
 }
 
-func (executor *toolExecutor) execute(ctx context.Context, message internal_type.LLMPacket, call *protos.ToolCall, communication internal_requests.Communication) internal_type.LLMToolPacket {
+func (executor *toolExecutor) execute(ctx context.Context, message internal_type.LLMPacket, call *protos.ToolCall, communication internal_type.Communication) internal_type.LLMToolPacket {
 	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantToolExecuteStage, internal_adapter_telemetry.MessageKV(message.ContextID))
 	defer span.EndSpan(ctx, utils.AssistantToolExecuteStage)
 
@@ -139,7 +137,7 @@ func (executor *toolExecutor) execute(ctx context.Context, message internal_type
 	return output
 }
 
-func (executor *toolExecutor) ExecuteAll(ctx context.Context, message internal_type.LLMPacket, calls []*protos.ToolCall, communication internal_requests.Communication) ([]internal_type.Packet, []*types.Content) {
+func (executor *toolExecutor) ExecuteAll(ctx context.Context, message internal_type.LLMPacket, calls []*protos.ToolCall, communication internal_type.Communication) ([]internal_type.Packet, []*types.Content) {
 	contents := make([]internal_type.Packet, 0)
 	result := make([]*types.Content, 0)
 	var wg sync.WaitGroup
@@ -175,7 +173,7 @@ func (executor *toolExecutor) ExecuteAll(ctx context.Context, message internal_t
 	return contents, result
 }
 
-func (executor *toolExecutor) Log(ctx context.Context, toolCaller internal_tool.ToolCaller, communication internal_requests.Communication, assistantConversationMessageId string, recordStatus type_enums.RecordState, timeTaken int64, in, out map[string]interface{}) {
+func (executor *toolExecutor) Log(ctx context.Context, toolCaller internal_tool.ToolCaller, communication internal_type.Communication, assistantConversationMessageId string, recordStatus type_enums.RecordState, timeTaken int64, in, out map[string]interface{}) {
 	utils.Go(ctx, func() {
 		i, _ := json.Marshal(in)
 		o, _ := json.Marshal(out)

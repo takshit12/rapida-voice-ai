@@ -17,8 +17,8 @@ import (
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -32,14 +32,14 @@ type deepgramSTT struct {
 
 	logger  commons.Logger
 	client  *client.WSCallback
-	options *internal_transformer.SpeechToTextInitializeOptions
+	options *internal_type.SpeechToTextInitializeOptions
 }
 
 func (*deepgramSTT) Name() string {
 	return "deepgram-speech-to-text"
 }
 
-func NewDeepgramSpeechToText(ctx context.Context, logger commons.Logger, vaultCredential *protos.VaultCredential, opts *internal_transformer.SpeechToTextInitializeOptions) (internal_transformer.SpeechToTextTransformer, error) {
+func NewDeepgramSpeechToText(ctx context.Context, logger commons.Logger, vaultCredential *protos.VaultCredential, opts *internal_type.SpeechToTextInitializeOptions) (internal_type.SpeechToTextTransformer, error) {
 	deepgramOpts, err := NewDeepgramOption(logger, vaultCredential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("deepgram-stt: Key from credential failed %+v", err)

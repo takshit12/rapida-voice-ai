@@ -3,16 +3,14 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_requests
+package internal_type
 
 import (
 	"context"
-
-	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 )
 
 type Callback interface {
-	OnPacket(ctx context.Context, pkts ...internal_type.Packet) error
+	OnPacket(ctx context.Context, pkts ...Packet) error
 	// OnGeneration(ctx context.Context, messageid string, out *types.Message) error
 	// OnGenerationComplete(ctx context.Context, messageid string, out *types.Message, metrics []*types.Metric) error
 }

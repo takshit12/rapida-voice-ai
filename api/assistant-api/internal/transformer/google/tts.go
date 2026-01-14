@@ -14,7 +14,6 @@ import (
 
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
 	"cloud.google.com/go/texttospeech/apiv1/texttospeechpb"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
@@ -32,7 +31,7 @@ type googleTextToSpeech struct {
 	logger             commons.Logger                                        // Logger for debugging and error reporting.
 	client             *texttospeech.Client                                  // Google TTS client.
 	streamClient       texttospeechpb.TextToSpeech_StreamingSynthesizeClient // Streaming client for real-time TTS.
-	transformerOptions *internal_transformer.TextToSpeechInitializeOptions   // Options for TTS initialization.
+	transformerOptions *internal_type.TextToSpeechInitializeOptions          // Options for TTS initialization.
 }
 
 // Name returns the name of this transformer implementation.
@@ -41,7 +40,7 @@ func (*googleTextToSpeech) Name() string {
 }
 
 // NewGoogleTextToSpeech creates a new instance of googleTextToSpeech.
-func NewGoogleTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+func NewGoogleTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
 	// Initialize Google TTS options.
 	googleOption, err := NewGoogleOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {

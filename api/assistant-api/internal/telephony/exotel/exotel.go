@@ -18,7 +18,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
-	internal_telephony "github.com/rapidaai/api/assistant-api/internal/telephony"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
+
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	"github.com/rapidaai/pkg/utils"
@@ -57,7 +58,7 @@ func (tpc *exotelTelephony) StatusCallback(c *gin.Context, auth types.SimplePrin
 
 }
 
-func NewExotelTelephony(config *config.AssistantConfig, logger commons.Logger) (internal_telephony.Telephony, error) {
+func NewExotelTelephony(config *config.AssistantConfig, logger commons.Logger) (internal_type.Telephony, error) {
 	return &exotelTelephony{
 		logger: logger,
 		appCfg: config,
@@ -133,10 +134,10 @@ func (tpc *exotelTelephony) MakeCall(
 	formData.Set("CallerId", fromPhone)
 	formData.Set("To", fromPhone)
 	formData.Set("Url", *appUrl)
-	formData.Set("StatusCallback", fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_telephony.GetEventPath("exotel", auth, assistantId, assistantConversationId)))
+	formData.Set("StatusCallback", fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_type.GetEventPath("exotel", auth, assistantId, assistantConversationId)))
 	// for exotel there is no way to set dynamic path so pass it as custom filed
 	formData.Set("CustomField",
-		internal_telephony.GetAnswerPath("exotel", auth, assistantId,
+		internal_type.GetAnswerPath("exotel", auth, assistantId,
 			assistantConversationId,
 			toPhone,
 		))
@@ -187,7 +188,7 @@ func (tpc *exotelTelephony) IncomingCall(c *gin.Context, auth types.SimplePrinci
 	response := map[string]string{
 		"url": fmt.Sprintf("wss://%s/%s",
 			tpc.appCfg.PublicAssistantHost,
-			internal_telephony.GetAnswerPath("exotel", auth, assistantId, assistantConversationId, clientNumber)),
+			internal_type.GetAnswerPath("exotel", auth, assistantId, assistantConversationId, clientNumber)),
 	}
 
 	c.JSON(http.StatusOK, response)

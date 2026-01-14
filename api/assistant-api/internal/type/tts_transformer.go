@@ -4,10 +4,9 @@
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
 
-package internal_transformer
+package internal_type
 
 import (
-	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
@@ -19,7 +18,7 @@ type TextToSpeechTransformer interface {
 	Name() string
 
 	//
-	Transformers[internal_type.Packet]
+	Transformers[Packet]
 }
 
 // OutputAudioTransformerOptions defines the interface for handling audio output transformation
@@ -29,7 +28,7 @@ type TextToSpeechInitializeOptions struct {
 	AudioConfig *protos.AudioConfig
 
 	//
-	OnSpeech func(pkt ...internal_type.Packet) error
+	OnSpeech func(pkt ...Packet) error
 
 	// options of model
 	ModelOptions utils.Option

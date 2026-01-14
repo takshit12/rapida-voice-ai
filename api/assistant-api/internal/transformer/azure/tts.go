@@ -13,7 +13,6 @@ import (
 
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
@@ -30,10 +29,10 @@ type azureTextToSpeech struct {
 	logger      commons.Logger
 	audioConfig *audio.AudioConfig
 	client      *speech.SpeechSynthesizer
-	options     *internal_transformer.TextToSpeechInitializeOptions
+	options     *internal_type.TextToSpeechInitializeOptions
 }
 
-func NewAzureTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+func NewAzureTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
 	azureOption, err := NewAzureOption(logger, credential, iOption.AudioConfig, iOption.ModelOptions)
 	if err != nil {
 		logger.Errorf("azure-tts: Unable to initilize azure option", err)

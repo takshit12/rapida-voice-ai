@@ -9,9 +9,9 @@ import (
 	"context"
 	"fmt"
 
-	internal_factories "github.com/rapidaai/api/assistant-api/internal/factory"
-	telephony "github.com/rapidaai/api/assistant-api/internal/factory/telephony"
+	internal_adapter "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_services "github.com/rapidaai/api/assistant-api/internal/services"
+	telephony "github.com/rapidaai/api/assistant-api/internal/telephony"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
@@ -68,7 +68,7 @@ func (cApi *ConversationGrpcApi) CreatePhoneCall(ctx context.Context, ir *protos
 		CreateConversation(
 			ctx,
 			auth,
-			internal_factories.Identifier(utils.PhoneCall, ctx, auth, toNumber),
+			internal_adapter.Identifier(utils.PhoneCall, ctx, auth, toNumber),
 			assistant.Id,
 			assistant.AssistantProviderId,
 			type_enums.DIRECTION_OUTBOUND,

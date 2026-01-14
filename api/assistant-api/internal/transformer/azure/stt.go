@@ -13,7 +13,6 @@ import (
 
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
@@ -31,7 +30,7 @@ type azureSpeechToText struct {
 	client            *speech.SpeechRecognizer
 	azureAudioConfig  *audio.AudioConfig
 	inputstream       *audio.PushAudioInputStream
-	transformerOption *internal_transformer.SpeechToTextInitializeOptions
+	transformerOption *internal_type.SpeechToTextInitializeOptions
 }
 
 func (azure *azureSpeechToText) Initialize() (err error) {
@@ -96,7 +95,7 @@ func (azure *azureSpeechToText) Transform(ctx context.Context, ad []byte) (err e
 	return nil
 }
 
-func NewAzureSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOptions *internal_transformer.SpeechToTextInitializeOptions) (internal_transformer.SpeechToTextTransformer, error) {
+func NewAzureSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOptions *internal_type.SpeechToTextInitializeOptions) (internal_type.SpeechToTextTransformer, error) {
 	azure, err := NewAzureOption(logger, credential, iOptions.AudioConfig, iOptions.ModelOptions)
 	if err != nil {
 		logger.Errorf("azure-stt: Unable to initilize azure option", err)

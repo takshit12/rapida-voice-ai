@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_requests
+package internal_type
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	internal_conversation_gorm "github.com/rapidaai/api/assistant-api/internal/entity/conversations"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
 	internal_adapter_tracing "github.com/rapidaai/api/assistant-api/internal/telemetry"
-	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
+
 	endpoint_client "github.com/rapidaai/pkg/clients/endpoint"
 	integration_client "github.com/rapidaai/pkg/clients/integration"
 	web_client "github.com/rapidaai/pkg/clients/web"
@@ -78,7 +78,7 @@ type Communication interface {
 	// later will create an interface to move all the conversation
 	// idea is have custom history maintainer eg: database, inmemory
 	// local managing the histories for given conversation
-	GetHistories() []internal_type.MessagePacket
+	GetHistories() []MessagePacket
 
 	// metadata management
 	GetMetadata() map[string]interface{}
@@ -93,6 +93,6 @@ type Communication interface {
 		conversationMessageId string,
 		query string,
 		filter map[string]interface{},
-		kc *internal_type.KnowledgeRetriveOption,
-	) ([]internal_type.KnowledgeContextResult, error)
+		kc *KnowledgeRetriveOption,
+	) ([]KnowledgeContextResult, error)
 }

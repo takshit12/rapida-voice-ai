@@ -4,13 +4,13 @@
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
 
-package internal_transformer_factory
+package internal_transformer
 
 import (
 	"context"
 	"testing"
 
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 	"github.com/stretchr/testify/assert"
@@ -78,7 +78,7 @@ func TestGetTextToSpeechTransformer(t *testing.T) {
 	mockLogger, _ := commons.NewApplicationLogger()
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.TextToSpeechInitializeOptions{}
+	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	tests := []struct {
 		name            string
@@ -120,7 +120,7 @@ func TestGetSpeechToTextTransformer(t *testing.T) {
 	mockLogger, _ := commons.NewApplicationLogger()
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.SpeechToTextInitializeOptions{}
+	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	tests := []struct {
 		name            string
@@ -162,8 +162,8 @@ func TestInvalidAudioTransformerTypesCombinations(t *testing.T) {
 	ctx := context.Background()
 	mockLogger, _ := commons.NewApplicationLogger()
 	credential := &protos.VaultCredential{}
-	optsTTS := &internal_transformer.TextToSpeechInitializeOptions{}
-	optsSTT := &internal_transformer.SpeechToTextInitializeOptions{}
+	optsTTS := &internal_type.TextToSpeechInitializeOptions{}
+	optsSTT := &internal_type.SpeechToTextInitializeOptions{}
 
 	tests := []struct {
 		name       string
@@ -222,7 +222,7 @@ func TestInvalidAudioTransformerTypesTTS(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.TextToSpeechInitializeOptions{}
+	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	invalidTypes := []string{
 		"",
@@ -248,7 +248,7 @@ func TestInvalidAudioTransformerTypesSTT(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.SpeechToTextInitializeOptions{}
+	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	invalidTypes := []string{
 		"",
@@ -274,7 +274,7 @@ func TestAllTextToSpeechTransformersCallFactory(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.TextToSpeechInitializeOptions{}
+	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	transformerTypes := []AudioTransformer{
 		DEEPGRAM,
@@ -300,7 +300,7 @@ func TestAllSpeechToTextTransformersCallFactory(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.SpeechToTextInitializeOptions{}
+	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	transformerTypes := []AudioTransformer{
 		DEEPGRAM,
@@ -326,7 +326,7 @@ func BenchmarkGetTextToSpeechTransformer(b *testing.B) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.TextToSpeechInitializeOptions{}
+	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -340,7 +340,7 @@ func BenchmarkGetSpeechToTextTransformer(b *testing.B) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_transformer.SpeechToTextInitializeOptions{}
+	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

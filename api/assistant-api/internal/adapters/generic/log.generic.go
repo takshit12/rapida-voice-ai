@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_request_generic
+package internal_adapter_generic
 
 import (
 	"github.com/rapidaai/pkg/types"

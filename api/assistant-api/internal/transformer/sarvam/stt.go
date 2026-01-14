@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	sarvam_internal "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -30,7 +29,7 @@ type sarvamSpeechToText struct {
 	connection *websocket.Conn
 
 	logger             commons.Logger
-	transformerOptions *internal_transformer.SpeechToTextInitializeOptions
+	transformerOptions *internal_type.SpeechToTextInitializeOptions
 }
 
 // Name implements internal_transformer.SpeechToTextTransformer.
@@ -42,8 +41,8 @@ func NewSarvamSpeechToText(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	opts *internal_transformer.SpeechToTextInitializeOptions,
-) (internal_transformer.SpeechToTextTransformer, error) {
+	opts *internal_type.SpeechToTextInitializeOptions,
+) (internal_type.SpeechToTextTransformer, error) {
 
 	sarvamOpts, err := NewSarvamOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {

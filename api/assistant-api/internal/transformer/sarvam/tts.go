@@ -14,7 +14,6 @@ import (
 	"sync"
 
 	"github.com/dvonthenen/websocket"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	sarvam_internal "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -32,10 +31,10 @@ type sarvamTextToSpeech struct {
 	contextId  string
 
 	logger  commons.Logger
-	options *internal_transformer.TextToSpeechInitializeOptions
+	options *internal_type.TextToSpeechInitializeOptions
 }
 
-func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_transformer.TextToSpeechInitializeOptions) (internal_transformer.TextToSpeechTransformer, error) {
+func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
 	sarvamOpts, err := NewSarvamOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
 	if err != nil {
 		logger.Errorf("sarvam-tts: initializing sarvam failed %+v", err)

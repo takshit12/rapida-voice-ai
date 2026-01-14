@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/rapidaai/api/assistant-api/config"
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
-	internal_adapter_request_generic "github.com/rapidaai/api/assistant-api/internal/adapters/generic"
+
+	internal_adapter_generic "github.com/rapidaai/api/assistant-api/internal/adapters/generic"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/storages"
@@ -26,7 +27,7 @@ import (
 )
 
 type sdkTalking struct {
-	internal_adapter_request_generic.GenericRequestor
+	internal_adapter_generic.GenericRequestor
 	logger commons.Logger
 }
 
@@ -40,11 +41,11 @@ func NewSDKTalking(
 	redis connectors.RedisConnector,
 	storage storages.Storage,
 	streamer internal_streamers.Streamer,
-) (internal_adapter_requests.Talking, error) {
+) (internal_type.Talking, error) {
 
 	return &sdkTalking{
 		logger:           logger,
-		GenericRequestor: internal_adapter_request_generic.NewGenericRequestor(ctx, config, logger, utils.SDK, postgres, opensearch, redis, storage, streamer),
+		GenericRequestor: internal_adapter_generic.NewGenericRequestor(ctx, config, logger, utils.SDK, postgres, opensearch, redis, storage, streamer),
 	}, nil
 }
 

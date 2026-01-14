@@ -3,14 +3,13 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_request_generic
+package internal_adapter_generic
 
 import (
 	"context"
 	"sync"
 	"time"
 
-	internal_adapter_transformer_factory "github.com/rapidaai/api/assistant-api/internal/factory/transformer"
 	internal_synthesizers "github.com/rapidaai/api/assistant-api/internal/synthesizes"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_sentence_tokenizer "github.com/rapidaai/api/assistant-api/internal/tokenizer/sentence"
@@ -100,7 +99,7 @@ func (spk *GenericRequestor) ConnectSpeaker(ctx context.Context, audioOutConfig 
 	wg.Add(1)
 	utils.Go(context, func() {
 		defer wg.Done()
-		opts := &internal_transformer.TextToSpeechInitializeOptions{
+		opts := &internal_type.TextToSpeechInitializeOptions{
 			AudioConfig:  audioOutConfig,
 			OnSpeech:     func(pkt ...internal_type.Packet) error { return spk.OnPacket(context, pkt...) },
 			ModelOptions: speakerOpts,
@@ -117,7 +116,7 @@ func (spk *GenericRequestor) ConnectSpeaker(ctx context.Context, audioOutConfig 
 			return
 		}
 
-		atransformer, err := internal_adapter_transformer_factory.GetTextToSpeechTransformer(internal_adapter_transformer_factory.AudioTransformer(outputTransformer.GetName()), context, spk.logger, credential, opts)
+		atransformer, err := internal_transformer.GetTextToSpeechTransformer(internal_transformer.AudioTransformer(outputTransformer.GetName()), context, spk.logger, credential, opts)
 		if err != nil {
 			spk.logger.Errorf("unable to create input audio transformer with error %v", err)
 			return

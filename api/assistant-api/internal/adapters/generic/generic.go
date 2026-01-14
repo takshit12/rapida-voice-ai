@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_adapter_request_generic
+package internal_adapter_generic
 
 import (
 	"context"
@@ -21,7 +21,6 @@ import (
 	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_agent_executor_llm "github.com/rapidaai/api/assistant-api/internal/agent/executor/llm"
 	internal_agent_rerankers "github.com/rapidaai/api/assistant-api/internal/agent/reranker"
-	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_conversation_gorm "github.com/rapidaai/api/assistant-api/internal/entity/conversations"
 	internal_knowledge_gorm "github.com/rapidaai/api/assistant-api/internal/entity/knowledges"
@@ -31,7 +30,6 @@ import (
 	internal_synthesizers "github.com/rapidaai/api/assistant-api/internal/synthesizes"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_tokenizer "github.com/rapidaai/api/assistant-api/internal/tokenizer"
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
 	endpoint_client "github.com/rapidaai/pkg/clients/endpoint"
 	integration_client "github.com/rapidaai/pkg/clients/integration"
 	web_client "github.com/rapidaai/pkg/clients/web"
@@ -79,16 +77,17 @@ type GenericRequestor struct {
 	messaging internal_adapter_request_customizers.Messaging
 
 	// listening
-	speechToTextTransformer internal_transformer.SpeechToTextTransformer
-	endOfSpeech             internal_type.EndOfSpeech
-	vad                     internal_type.Vad
-	denoiser                internal_denoiser.Denoiser
+	speechToTextTransformer internal_type.SpeechToTextTransformer
 
-	//
+	// audio intelligence
+	endOfSpeech internal_type.EndOfSpeech
+	vad         internal_type.Vad
+	denoiser    internal_type.Denoiser
 
 	// speak
-	textToSpeechTransformer internal_transformer.TextToSpeechTransformer
-	//
+	textToSpeechTransformer internal_type.TextToSpeechTransformer
+
+	// speak intelligence
 	tokenizer    internal_tokenizer.SentenceTokenizer
 	synthesizers []internal_synthesizers.Synthesizer
 
@@ -97,6 +96,7 @@ type GenericRequestor struct {
 
 	// executor
 	assistantExecutor internal_agent_executor.AssistantExecutor
+
 	// states
 	assistant             *internal_assistant_entity.Assistant
 	assistantConversation *internal_conversation_gorm.AssistantConversation

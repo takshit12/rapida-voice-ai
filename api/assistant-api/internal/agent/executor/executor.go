@@ -8,7 +8,6 @@ package internal_agent_executor
 import (
 	"context"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/types"
 	"github.com/rapidaai/protos"
@@ -42,16 +41,16 @@ making it easier to maintain and evolve the codebase over time.
 type AssistantExecutor interface {
 
 	// init after creation to intilize all fields
-	Initialize(ctx context.Context, communication internal_adapter_requests.Communication) error
+	Initialize(ctx context.Context, communication internal_type.Communication) error
 
 	// name
 	Name() string
 
 	// when tigger a message
-	Execute(ctx context.Context, communication internal_adapter_requests.Communication, pctk internal_type.Packet) error
+	Execute(ctx context.Context, communication internal_type.Communication, pctk internal_type.Packet) error
 
 	// disconnect
-	Close(ctx context.Context, communication internal_adapter_requests.Communication) error
+	Close(ctx context.Context, communication internal_type.Communication) error
 }
 
 /**
@@ -66,7 +65,7 @@ type ToolExecutor interface {
 	// init tool executor
 	//  get all the tools that is required for the assistant and intialize or do the dirty work that
 	// optimize the execution or etc
-	Initialize(ctx context.Context, communication internal_adapter_requests.Communication) error
+	Initialize(ctx context.Context, communication internal_type.Communication) error
 	/**
 	 * GetFunctionDefinitions retrieves function definitions based on the provided communication.
 	 *
@@ -89,5 +88,5 @@ type ToolExecutor interface {
 	*   - A slice of Content pointers containing the results of the tool calls
 	*   - An error if any occurred during execution
 	 */
-	ExecuteAll(ctx context.Context, message internal_type.LLMPacket, calls []*protos.ToolCall, communication internal_adapter_requests.Communication) ([]internal_type.Packet, []*types.Content)
+	ExecuteAll(ctx context.Context, message internal_type.LLMPacket, calls []*protos.ToolCall, communication internal_type.Communication) ([]internal_type.Packet, []*types.Content)
 }

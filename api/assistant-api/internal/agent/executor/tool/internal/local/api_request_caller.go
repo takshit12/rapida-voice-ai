@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -28,7 +27,7 @@ type apiRequestToolCaller struct {
 	apiEndpoint         string
 }
 
-func (afkTool *apiRequestToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_adapter_requests.Communication) internal_type.LLMToolPacket {
+func (afkTool *apiRequestToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_type.Communication) internal_type.LLMToolPacket {
 	client := rest.NewRestClientWithConfig(afkTool.apiEndpoint, afkTool.apiRequestHeader, 15)
 	var output *rest.APIResponse
 	var err error
@@ -59,7 +58,7 @@ func (afkTool *apiRequestToolCaller) Call(ctx context.Context, pkt internal_type
 	return internal_type.LLMToolPacket{ContextID: pkt.ContextID, Action: protos.AssistantConversationAction_API_REQUEST, Result: v}
 }
 
-func NewApiRequestToolCaller(logger commons.Logger, toolOptions *internal_assistant_entity.AssistantTool, communcation internal_adapter_requests.Communication) (internal_tool.ToolCaller, error) {
+func NewApiRequestToolCaller(logger commons.Logger, toolOptions *internal_assistant_entity.AssistantTool, communcation internal_type.Communication) (internal_tool.ToolCaller, error) {
 	opts := toolOptions.GetOptions()
 	endpoint, err := opts.GetString("tool.endpoint")
 	if err != nil {
@@ -89,7 +88,7 @@ func NewApiRequestToolCaller(logger commons.Logger, toolOptions *internal_assist
 	}, nil
 }
 
-func (md *apiRequestToolCaller) Parse(mapping map[string]string, args string, communication internal_adapter_requests.Communication) map[string]interface{} {
+func (md *apiRequestToolCaller) Parse(mapping map[string]string, args string, communication internal_type.Communication) map[string]interface{} {
 	arguments := make(map[string]interface{})
 	for key, value := range mapping {
 		if k, ok := strings.CutPrefix(key, "tool."); ok {

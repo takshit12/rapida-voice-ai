@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_model "github.com/rapidaai/api/assistant-api/internal/agent/executor/llm/internal/model"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -29,7 +28,7 @@ func NewAssistantExecutor(logger commons.Logger) internal_agent_executor.Assista
 }
 
 // Init implements internal_executors.AssistantExecutor.
-func (a *assistantExecutor) Initialize(ctx context.Context, communication internal_adapter_requests.Communication) error {
+func (a *assistantExecutor) Initialize(ctx context.Context, communication internal_type.Communication) error {
 	switch communication.Assistant().AssistantProvider {
 	// case type_enums.AGENTKIT:
 	// 	a.executor = internal_agentkit.NewAgentKitAssistantExecutor(a.logger)
@@ -49,14 +48,14 @@ func (a *assistantExecutor) Name() string {
 }
 
 // Talk implements internal_executors.AssistantExecutor.
-func (a *assistantExecutor) Execute(ctx context.Context, communication internal_adapter_requests.Communication, pctk internal_type.Packet) error {
+func (a *assistantExecutor) Execute(ctx context.Context, communication internal_type.Communication, pctk internal_type.Packet) error {
 	if a.executor == nil {
 		return errors.New("assistant executor not initialized")
 	}
 	return a.executor.Execute(ctx, communication, pctk)
 }
 
-func (a *assistantExecutor) Close(ctx context.Context, communication internal_adapter_requests.Communication) error {
+func (a *assistantExecutor) Close(ctx context.Context, communication internal_type.Communication) error {
 	if a.executor == nil {
 		return errors.New("assistant executor not initialized")
 	}

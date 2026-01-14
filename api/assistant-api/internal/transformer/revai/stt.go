@@ -9,7 +9,7 @@ package internal_transformer_revai
 import (
 	"context"
 
-	internal_transformer "github.com/rapidaai/api/assistant-api/internal/transformer"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 )
@@ -18,6 +18,6 @@ func NewRevaiSpeechToText(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	opts *internal_transformer.SpeechToTextInitializeOptions) (internal_transformer.SpeechToTextTransformer, error) {
+	opts *internal_type.SpeechToTextInitializeOptions) (internal_type.SpeechToTextTransformer, error) {
 	return nil, nil
 }

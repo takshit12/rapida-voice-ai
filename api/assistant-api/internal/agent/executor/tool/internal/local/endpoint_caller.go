@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -30,7 +29,7 @@ type endpointToolCaller struct {
 func NewEndpointToolCaller(
 	logger commons.Logger,
 	toolOptions *internal_assistant_entity.AssistantTool,
-	communcation internal_adapter_requests.Communication,
+	communcation internal_type.Communication,
 ) (internal_tool.ToolCaller, error) {
 	opts := toolOptions.GetOptions()
 	endpointID, err := opts.GetUint64("tool.endpoint_id")
@@ -53,7 +52,7 @@ func NewEndpointToolCaller(
 	}, nil
 }
 
-func (afkTool *endpointToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_adapter_requests.Communication) internal_type.LLMToolPacket {
+func (afkTool *endpointToolCaller) Call(ctx context.Context, pkt internal_type.LLMPacket, toolId string, args string, communication internal_type.Communication) internal_type.LLMToolPacket {
 	body := afkTool.Parse(afkTool.endpointParameters, args, communication)
 	ivk, err := communication.DeploymentCaller().Invoke(
 		ctx,
@@ -88,7 +87,7 @@ func (afkTool *endpointToolCaller) Call(ctx context.Context, pkt internal_type.L
 func (md *endpointToolCaller) Parse(
 	mapping map[string]string,
 	args string,
-	communication internal_adapter_requests.Communication,
+	communication internal_type.Communication,
 ) map[string]interface{} {
 	arguments := make(map[string]interface{})
 	for key, value := range mapping {

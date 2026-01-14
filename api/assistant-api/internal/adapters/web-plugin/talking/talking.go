@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/rapidaai/api/assistant-api/config"
-	internal_adapter_requests "github.com/rapidaai/api/assistant-api/internal/adapters"
-	internal_adapter_request_generic "github.com/rapidaai/api/assistant-api/internal/adapters/generic"
+
+	internal_adapter_generic "github.com/rapidaai/api/assistant-api/internal/adapters/generic"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/connectors"
 	"github.com/rapidaai/pkg/storages"
@@ -26,7 +27,7 @@ import (
 )
 
 type webpluginTalking struct {
-	internal_adapter_request_generic.GenericRequestor
+	internal_adapter_generic.GenericRequestor
 	logger commons.Logger
 }
 
@@ -40,10 +41,10 @@ func NewTalking(
 	redis connectors.RedisConnector,
 	storage storages.Storage,
 	stream internal_streamers.Streamer,
-) (internal_adapter_requests.Talking, error) {
+) (internal_type.Talking, error) {
 	return &webpluginTalking{
 		logger: logger,
-		GenericRequestor: internal_adapter_request_generic.NewGenericRequestor(
+		GenericRequestor: internal_adapter_generic.NewGenericRequestor(
 			ctx,
 			config,
 			logger,
