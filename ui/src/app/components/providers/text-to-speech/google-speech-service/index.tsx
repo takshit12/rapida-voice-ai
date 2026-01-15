@@ -92,7 +92,7 @@ export const ConfigureGoogleTextToSpeech: React.FC<{
         />
         <ILinkBorderButton
           target="_blank"
-          href={`/integration/models/google-cloud?query=${getParamValue('speak.voice.id')}`}
+          href={`/integration/models/google-speech-service?query=${getParamValue('speak.voice.id')}`}
           className="h-10 text-sm p-2 px-3 bg-light-background max-w-full dark:bg-gray-950 border-b"
         >
           <ExternalLink className="w-4 h-4" strokeWidth={1.5} />

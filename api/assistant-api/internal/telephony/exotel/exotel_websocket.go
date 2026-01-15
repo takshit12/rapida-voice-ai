@@ -229,8 +229,10 @@ func (exotel *exotelWebsocketStreamer) Send(response *protos.AssistantMessagingR
 		// interrupt on word given by stt
 		if data.Interruption.Type == protos.AssistantConversationInterruption_INTERRUPTION_TYPE_WORD {
 			exotel.audioBufferLock.Lock()
-			defer exotel.audioBufferLock.Unlock()
 			exotel.outputAudioBuffer.Reset()
+			exotel.audioBufferLock.Unlock()
+
+			//
 			if err := exotel.sendingExotelMessage("clear", nil); err != nil {
 				exotel.logger.Errorf("Error sending clear command:", err)
 			}

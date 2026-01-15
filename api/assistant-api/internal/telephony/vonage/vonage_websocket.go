@@ -209,8 +209,9 @@ func (vng *vonageWebsocketStreamer) Send(response *protos.AssistantMessagingResp
 	case *protos.AssistantMessagingResponse_Interruption:
 		if data.Interruption.Type == protos.AssistantConversationInterruption_INTERRUPTION_TYPE_WORD {
 			vng.audioBufferLock.Lock()
-			defer vng.audioBufferLock.Unlock()
 			vng.outputAudioBuffer.Reset()
+			vng.audioBufferLock.Unlock()
+
 			// Clear the buffer after flushing
 			if err := vng.conn.WriteMessage(websocket.TextMessage, []byte(`{"action":"clear"}`)); err != nil {
 				vng.logger.Errorf("Error sending clear command:", err)

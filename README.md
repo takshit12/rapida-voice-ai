@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/rapidaai/voice-ai/blob/807a2b596c45326e9db5eb7051b133722e646de8/.github/banner-01.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/rapidaai/voice-ai/blob/807a2b596c45326e9db5eb7051b133722e646de8/.github/banner-01.png">
-  <img style="width:100%;" src="https://github.com/rapidaai/voice-ai/blob/807a2b596c45326e9db5eb7051b133722e646de8/.github/banner-01.png" alt="Banner">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/rapidaai/voice-ai/main/.github/banner-02.jpg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/rapidaai/voice-ai/main/.github/banner-02.jpg">
+  <img style="width:100%;" src="https://raw.githubusercontent.com/rapidaai/voice-ai/main/.github/banner-02.jpg" alt="Banner">
 </picture>
 
 # Rapida: End-to-End Voice Orchestration Platform
@@ -42,189 +42,191 @@ Rapida is written in **Go**, using the highly optimized [gRPC](https://github.co
 - **Enterprise-ready**  
   Scalable design, efficient protocol, and predictable performance.
 
-## Architecture Overview
-
-    ┌──────────────────────────────────────────────────────────────┐
-    │                           CHANNELS                           │
-    │         Phone • Web • WhatsApp • SIP • WebRTC • Others       │
-    └──────────────────────────────────┬───────────────────────────┘
-                                    │
-                                    ▼
-    ┌─────────────────────────────────────────────────────────────┐
-    │                       RAPIDA ORCHESTRATOR                   │
-    │   Routing • State • Parallelism • Tools • Observability     │
-    └───────────────┬──────────────────────────────┬──────────────┘
-                    │                              │
-                    ▼                              ▼
-        ┌──────────────────────┐        ┌────────────────────────┐
-        │   Audio Preprocess   │        │          STT           │
-        │  • VAD               │ <----> │   Speech-to-Text       │
-        │  • Noise Reduction   │        │   (ASR Engine)         │
-        │  • End-of-Speech     │        └───────────┬────────────┘
-        └───────────┬──────────┘                    │
-                    │                               ▼
-                    │                    ┌────────────────────────┐
-                    │                    │           LLM          │
-                    │                    │ Reasoning • Tools •    │
-                    │                    │  Memory • Policies     │
-                    │                    └───────────┬────────────┘
-                    │                                │
-                    │                                ▼
-                    │                    ┌────────────────────────┐
-                    └──────────────────▶ │           TTS          │
-                                         │    Text-to-Speech      │
-                                         └───────────┬────────────┘
-                                                     │
-                                                     ▼
-                                    ┌────────────────────────────────────┐
-                                    │              USER OUTPUT           │
-                                    │         Audio Stream Response      │
-                                    └────────────────────────────────────┘
-
 ## Documentation & Guides
 
 https://doc.rapida.ai
 
----
-
-## Services
-
-| Service         | Description                         | Port           |
-| --------------- | ----------------------------------- | -------------- |
-| PostgreSQL      | Database for persistent storage     | `5432`         |
-| Redis           | In-memory caching                   | `6379`         |
-| OpenSearch      | Search engine for document indexing | `9200`, `9600` |
-| Web API         | Backend service                     | `9001`         |
-| Assistant API   | Intelligence and assistance API     | `9007`         |
-| Integration API | Third-party integrations API        | `9004`         |
-| Endpoint API    | Endpoint management API             | `9005`         |
-| Document API    | Document handling API               | `9010`         |
-| UI              | React front-end                     | `3000`         |
-| NGINX           | Reverse proxy and static server     | `8080`         |
-
----
-
 ## Prerequisites
 
-- **Docker**: [Install Docker](https://www.docker.com/).
-- **Docker Compose**: Ensure Docker Compose is included with your Docker installation.
+- **Docker** & **Docker Compose** ([Install](https://www.docker.com/))
+- **16GB+ RAM** (for all services)
 
 ---
 
-## Setup
+## Quick Start
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/rapidaai/voice-ai.git
-cd voice-ai
-```
-
-### 2. Create Necessary Directories
-
-Ensure the following directories (along with proper permissions) exist for containerized services to mount their data:
+Get all services running in 4 commands:
 
 ```bash
-make setup-local
-```
+# Clone repo
+git clone https://github.com/rapidaai/voice-ai.git && cd voice-ai
 
-For more about how the data is structured for services https://doc.rapida.ai
+# Setup & build
+make setup-local && make build-all
 
-### 3. Build the Services
-
-```bash
-make build-all
-```
-
-### 4. Start the Services
-
-Start all services:
-
-```bash
+# Start all services
 make up-all
+
+# View running services
+docker compose ps
 ```
 
-Alternatively, start specific services (e.g., just PostgreSQL):
+**Services Ready:**
 
-```bash
-make up-db
-```
+- UI: http://localhost:3000
+- Web API: http://localhost:9001
+- Assistant API: http://localhost:9007
+- Endpoint API: http://localhost:9005
+- Integration API: http://localhost:9004
+- Document API: http://localhost:9010
 
-### 5. Stop the Services
-
-Stop all running services:
+**Stop services:**
 
 ```bash
 make down-all
 ```
 
-Stop specific services:
+---
+
+## Development
+
+### Work on Specific Services
 
 ```bash
-make down-web
+# Start only database
+make up-db
+
+# Start only UI
+make up-ui
+
+# Start only Assistant API
+make up-assistant
+
+# List all start commands
+make help
+```
+
+### View Logs
+
+```bash
+# All services
+make logs-all
+
+# Specific service
+make logs-web
+make logs-assistant
+```
+
+### Rebuild After Code Changes
+
+```bash
+# Rebuild and restart one service
+make rebuild-assistant
+
+# Rebuild all
+make rebuild-all
+```
+
+### Configure Services
+
+Edit environment files before starting:
+
+- `docker/web-api/.web.env` - Web API (port 9001)
+- `docker/assistant-api/.assistant.env` - Assistant API (port 9007)
+- `docker/endpoint-api/.endpoint.env` - Endpoint API (port 9005)
+- `docker/integration-api/.integration.env` - Integration API (port 9004)
+- `docker/document-api/config.yaml` - Document API (port 9010)
+
+Add your API keys (OpenAI, Anthropic, Deepgram, Twilio, etc.) in these files.
+
+---
+
+## Local Development (Without Docker)
+
+### Go Services
+
+```bash
+# Install dependencies
+go mod download
+
+# Build service
+go build -o bin/web ./cmd/web
+
+# Run service
+./bin/web
+```
+
+Requires PostgreSQL, Redis, OpenSearch running separately.
+
+### React UI
+
+```bash
+cd ui
+
+# Install & run
+yarn install
+yarn start:dev
+
+# Build for production
+yarn build
 ```
 
 ---
 
-## Accessing Services
+## Troubleshooting
 
-| Service         | URL                                            |
-| --------------- | ---------------------------------------------- |
-| UI              | [http://localhost:3000](http://localhost:3000) |
-| Web-API         | [http://localhost:9001](http://localhost:9001) |
-| Assistant-API   | [http://localhost:9007](http://localhost:9007) |
-| Integration-API | [http://localhost:9004](http://localhost:9004) |
-| Endpoint-API    | [http://localhost:9005](http://localhost:9005) |
-| Document-API    | [http://localhost:9010](http://localhost:9010) |
-| OpenSearch      | [http://localhost:9200](http://localhost:9200) |
+**Port already in use:**
 
----
+```bash
+lsof -i :3000    # Find process
+kill -9 <PID>    # Kill it
+```
 
-## Makefile Usage
+**Services won't start:**
 
-The `Makefile` simplifies operations using Docker Compose:
+```bash
+make logs-all    # Check logs
+docker compose ps  # Verify status
+```
 
-### Common Commands
+**Database issues:**
 
-- **Build all images:**
+```bash
+# Test connection
+docker compose exec postgres psql -U rapida -d web_db -c "SELECT 1"
 
-  ```bash
-  make build-all
-  ```
-
-- **Start all services:**
-
-  ```bash
-  make up-all
-  ```
-
-- **Stop all services:**
-
-  ```bash
-  make down-all
-  ```
-
-- **Check service logs (e.g., Web API):**
-
-  ```bash
-  make logs-web
-  ```
-
-- **Restart specific services (e.g., Redis):**
-  ```bash
-  make restart-redis
-  ```
-
-### View All Commands
-
-Run `make help` to see a full list of available `Makefile` commands.
+# Reset everything
+make clean
+make setup-local
+make build-all
+make up-all
+```
 
 ---
 
-## Notes
+## All Commands
 
-- Ensure to create the necessary directories (`rapida-data/assets/...`) and apply permissions before starting the services.
-- Custom configurations for NGINX and other services are mounted and should be adjusted as per your requirements.
+```bash
+make help          # Show all available commands
+make setup-local   # Create data directories
+make build-all     # Build all Docker images
+make up-all        # Start all services
+make down-all      # Stop all services
+make logs-all      # View all logs
+make clean         # Remove containers & volumes
+make restart-all   # Restart all services
+```
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+Want to add:
+
+- New STT/TTS provider? Check `api/assistant-api/internal/transformer/`
+- New telephony channel? Check `api/assistant-api/internal/telephony/`
 
 ---
 

@@ -49,10 +49,11 @@ CREATE TABLE public.assistant_conversation_messages (
     updated_date timestamp without time zone,
     assistant_id bigint,
     assistant_provider_model_id bigint,
-    message_id character varying
+    message_id character varying,
+    body text,
+    role character varying(50)
 );
-ALTER TABLE ONLY public.assistant_conversation_messages
-    ADD CONSTRAINT unique_message_id_assistant_conversation_id UNIQUE (message_id, assistant_conversation_id);
+
 CREATE INDEX idx_assistant_conversation_messages_assistant_conversation_id ON public.assistant_conversation_messages (assistant_conversation_id);
 CREATE INDEX idx_assistant_conversation_messages_status ON public.assistant_conversation_messages (status);
 CREATE INDEX idx_assistant_conversation_messages_created_date ON public.assistant_conversation_messages (created_date);

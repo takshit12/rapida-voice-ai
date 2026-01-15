@@ -223,8 +223,9 @@ func (tws *twilioWebsocketStreamer) Send(response *protos.AssistantMessagingResp
 	case *protos.AssistantMessagingResponse_Interruption:
 		if data.Interruption.Type == protos.AssistantConversationInterruption_INTERRUPTION_TYPE_WORD {
 			tws.audioBufferLock.Lock()
-			defer tws.audioBufferLock.Unlock()
 			tws.outputAudioBuffer.Reset() // Clear the buffer after flushing
+			tws.audioBufferLock.Unlock()
+
 			if err := tws.sendTwilioMessage("clear", nil); err != nil {
 				tws.logger.Errorf("Error sending clear command:", err)
 			}

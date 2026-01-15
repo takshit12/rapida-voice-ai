@@ -12,7 +12,6 @@ import {
   useAgentMessages,
 } from '@rapidaai/react';
 import { FC, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { useCurrentCredential } from '@/hooks/use-credential';
 import { MessageFeedbackDialog } from '@/app/components/base/modal/message-feedback-modal';
