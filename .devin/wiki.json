@@ -1,0 +1,301 @@
+{
+  "repo_notes": [
+    {
+      "content": "Rapida: The open source platform for building voice agents."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "Introduce the Rapida voice AI platform, its purpose, core principles (reliable, observable, customizable), and high-level capabilities",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Architecture Overview",
+      "purpose": "Explain the overall system architecture, microservices design, voice orchestration pipeline, and how components interact",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started",
+      "purpose": "Guide users through initial setup, running the platform with Docker Compose, and making their first voice call",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Configuration System",
+      "purpose": "Deep dive into the AppConfig structure, environment variables, service configuration, and how settings propagate across microservices",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Application Configuration",
+      "purpose": "Document the AppConfig struct, required fields, validation, and configuration loading mechanisms",
+      "parent": "Configuration System",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Environment Variables",
+      "purpose": "List and explain all environment variables used across services, including database, Redis, and inter-service communication settings",
+      "parent": "Configuration System",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Data Layer",
+      "purpose": "Explain the data persistence architecture, including PostgreSQL databases, Redis caching, and OpenSearch indexing",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Database Connectors",
+      "purpose": "Document the Connector abstraction, PostgresConnector, RedisConnector, and OpenSearchConnector implementations",
+      "parent": "Data Layer",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Database Schemas",
+      "purpose": "Detail the database schemas for each service, including assistant conversations, endpoints, integrations, and relationships",
+      "parent": "Data Layer",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Caching Strategy",
+      "purpose": "Explain Redis usage patterns, query caching, session management, and cache invalidation strategies",
+      "parent": "Data Layer",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Microservices",
+      "purpose": "Overview of the microservices architecture, inter-service communication, and service responsibilities",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Web API",
+      "purpose": "Document the web-api service, its role as the primary backend, authentication, and routing responsibilities",
+      "parent": "Microservices",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Assistant API",
+      "purpose": "Deep dive into the assistant-api service, voice orchestration, conversation management, and the GenericRequestor component",
+      "parent": "Microservices",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Endpoint API",
+      "purpose": "Explain the endpoint-api service, LLM endpoint management, caching, retry policies, and logging",
+      "parent": "Microservices",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Integration API",
+      "purpose": "Document the integration-api service, external integrations, webhook handling, and audit logging",
+      "parent": "Microservices",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Document API",
+      "purpose": "Explain the document-api service, document processing, knowledge base management, and vector search",
+      "parent": "Microservices",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Voice Orchestration",
+      "purpose": "Explain the RAPIDA ORCHESTRATOR, conversation lifecycle, state management, and real-time audio processing",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Conversation Management",
+      "purpose": "Document conversation creation, message handling, state transitions, interruptions, and recording",
+      "parent": "Voice Orchestration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Audio Input Processing",
+      "purpose": "Explain audio preprocessing, denoising (RNNoise), VAD (Silero), end-of-speech detection, and buffering",
+      "parent": "Voice Orchestration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Audio Output Processing",
+      "purpose": "Document TTS synthesis, audio buffering (20ms chunks), interruption handling, and streaming delivery",
+      "parent": "Voice Orchestration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Telephony Integration",
+      "purpose": "Overview of telephony provider support, call control, and audio streaming over WebSocket",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Telephony Interface",
+      "purpose": "Document the Telephony abstraction, common methods (MakeCall, IncomingCall, StatusCallback, Streamer)",
+      "parent": "Telephony Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Twilio Integration",
+      "purpose": "Explain Twilio-specific implementation, TwiML generation, WebSocket streaming, and μ-law audio handling",
+      "parent": "Telephony Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Vonage Integration",
+      "purpose": "Document Vonage-specific implementation, NCCO generation, WebSocket streaming, and PCM audio handling",
+      "parent": "Telephony Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Exotel Integration",
+      "purpose": "Explain Exotel-specific implementation, custom field routing, WebSocket streaming, and audio format handling",
+      "parent": "Telephony Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "AI Provider Integration",
+      "purpose": "Overview of the transformer architecture for speech-to-text and text-to-speech, supporting multiple AI providers",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Speech-to-Text Transformers",
+      "purpose": "Document the SpeechToTextTransformer interface and implementations for Google, Deepgram, Sarvam, AssemblyAI, Cartesia",
+      "parent": "AI Provider Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Text-to-Speech Transformers",
+      "purpose": "Document the TextToSpeechTransformer interface and implementations for Google, Deepgram, Sarvam, Cartesia, Elevenlabs, Resemble",
+      "parent": "AI Provider Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Provider Configuration",
+      "purpose": "Explain audio format mapping, credential management, model options, and provider-specific settings",
+      "parent": "AI Provider Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Frontend",
+      "purpose": "Overview of the React UI, voice agent interface, activity monitoring, and provider configuration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}
