@@ -1,139 +1,178 @@
 // Copyright (c) 2023-2025 RapidaAI
-// Author: Prashant Srivastav <prashant@rapida.ai>
+// Author: Prashant Srivastav <prashant@rapidsilenceEOS.ai>
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
-// See LICENSE.md or contact sales@rapida.ai for commercial usage.
+// See LICENSE.md or contact sales@rapidsilenceEOS.ai for commercial usage.
 package internal_silence_based
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"time"
-	"unicode"
 
-	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
+	internaltype "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 )
 
-type silenceBasedEndOfSpeech struct {
-	logger            commons.Logger
-	onCallback        internal_type.EndOfSpeechCallback
-	thresholdDuration time.Duration
-
-	// worker coordination
-	inputCh chan workerEvent
-	stopCh  chan struct{}
-
-	// protected state
-	mutex         sync.Mutex
-	callbackFired bool
-	generation    uint64
-	inputSpeech   string
+// SpeechSegment represents accumulated speech with metadata
+type SpeechSegment struct {
+	ContextID string
+	Text      string
+	Timestamp time.Time
 }
 
-type workerEvent struct {
+// command defines operations for the worker goroutine
+type command struct {
 	ctx     context.Context
 	timeout time.Duration
-	speech  string
+	segment SpeechSegment
 	fireNow bool
 	reset   bool
 }
 
-func NewSilenceBasedEndOfSpeech(logger commons.Logger, onCallback internal_type.EndOfSpeechCallback, opts utils.Option) (internal_type.EndOfSpeech, error) {
-	duration := 1000 * time.Millisecond
-	if v, err := opts.GetFloat64("microphone.eos.timeout"); err == nil {
-		duration = time.Duration(v) * time.Millisecond
-	}
-	a := &silenceBasedEndOfSpeech{
-		logger:            logger,
-		onCallback:        onCallback,
-		thresholdDuration: duration,
-		inputCh:           make(chan workerEvent, 16),
-		stopCh:            make(chan struct{}),
-	}
+// SilenceBasedEOS detects end-of-speech based on silence duration
+type SilenceBasedEOS struct {
+	logger         commons.Logger
+	callback       internaltype.EndOfSpeechCallback
+	silenceTimeout time.Duration
 
-	go a.worker()
-	return a, nil
+	// worker orchestration
+	cmdCh  chan command
+	stopCh chan struct{}
+
+	// state
+	mu    sync.RWMutex
+	state *eosState
 }
 
-func (a *silenceBasedEndOfSpeech) Name() string {
+// eosState holds protected state for end-of-speech detection
+type eosState struct {
+	segment       SpeechSegment
+	callbackFired bool
+	generation    uint64
+}
+
+// NewSilenceBasedEOS creates a new silence-based end-of-speech detector
+func NewSilenceBasedEndOfSpeech(
+	logger commons.Logger,
+	callback internaltype.EndOfSpeechCallback,
+	opts utils.Option,
+) (internaltype.EndOfSpeech, error) {
+	threshold := 1000 * time.Millisecond
+	if v, err := opts.GetFloat64("microphone.eos.timeout"); err == nil {
+		threshold = time.Duration(v) * time.Millisecond
+	}
+
+	eos := &SilenceBasedEOS{
+		logger:         logger,
+		callback:       callback,
+		silenceTimeout: threshold,
+		cmdCh:          make(chan command, 32),
+		stopCh:         make(chan struct{}),
+		state: &eosState{
+			segment: SpeechSegment{},
+		},
+	}
+
+	go eos.worker()
+	return eos, nil
+}
+
+// Name returns the component name
+func (eos *SilenceBasedEOS) Name() string {
 	return "silenceBasedEndOfSpeech"
 }
 
-func (a *silenceBasedEndOfSpeech) Analyze(ctx context.Context, msg internal_type.Packet,
-) error {
-	switch input := msg.(type) {
-	case internal_type.UserTextPacket:
-		if input.Text == "" {
+// Analyze processes incoming speech packets
+func (eos *SilenceBasedEOS) Analyze(ctx context.Context, pkt internaltype.Packet) error {
+	switch p := pkt.(type) {
+
+	case internaltype.UserTextPacket:
+		if p.Text == "" {
 			return nil
 		}
-		a.enqueue(workerEvent{
+		eos.mu.RLock()
+		seg := SpeechSegment{ContextID: p.ContextId(), Text: p.Text, Timestamp: time.Now()}
+		eos.state.segment = seg
+		eos.mu.RUnlock()
+		eos.send(command{
 			ctx:     ctx,
-			speech:  input.Text,
+			segment: seg,
 			fireNow: true,
 		})
 
-	case internal_type.InterruptionPacket:
-		a.mutex.Lock()
-		currentSpeech := a.inputSpeech
-		a.mutex.Unlock()
+	case internaltype.InterruptionPacket:
+		eos.mu.RLock()
+		seg := eos.state.segment
+		eos.mu.RUnlock()
 
-		a.enqueue(workerEvent{
+		if seg.Text == "" {
+			return nil
+		}
+
+		eos.send(command{
 			ctx:     ctx,
-			speech:  currentSpeech,
-			timeout: a.thresholdDuration,
+			segment: seg,
+			timeout: eos.silenceTimeout,
 		})
 
-	case internal_type.SpeechToTextPacket:
-		a.handleSTT(ctx, input)
+	case internaltype.SpeechToTextPacket:
+		eos.mu.Lock()
+
+		// skip interim-only updates with no prior content
+		if p.Interim && eos.state.segment.Text == "" {
+			eos.mu.Unlock()
+			return nil
+		}
+
+		// build new segment
+		newSeg := SpeechSegment{
+			ContextID: p.ContextId(),
+			Timestamp: time.Now(),
+		}
+
+		// text accumulation: interim extends, final replaces
+		if p.Interim {
+			newSeg.Text = eos.state.segment.Text + p.Script
+		} else {
+			newSeg.Text = p.Script
+		}
+
+		eos.state.segment = newSeg
+		segCopy := newSeg
+		eos.mu.Unlock()
+
+		eos.send(command{
+			ctx:     ctx,
+			segment: segCopy,
+			timeout: eos.silenceTimeout,
+		})
 	}
 
 	return nil
 }
 
-func (a *silenceBasedEndOfSpeech) handleSTT(ctx context.Context, input internal_type.SpeechToTextPacket) {
-	a.mutex.Lock()
-
-	timeout := a.thresholdDuration
-	text := input.Script
-
-	if !input.Interim && a.inputSpeech != "" {
-		if normalizeSTTText(a.inputSpeech) == normalizeSTTText(text) {
-			timeout = a.thresholdDuration / 2
-		}
-	}
-
-	a.inputSpeech = text
-	a.mutex.Unlock()
-
-	a.enqueue(workerEvent{
-		ctx:     ctx,
-		speech:  text,
-		timeout: timeout,
-	})
-}
-
-func (a *silenceBasedEndOfSpeech) enqueue(evt workerEvent) {
+// send dispatches a command to the worker
+func (eos *SilenceBasedEOS) send(cmd command) {
 	select {
-	case a.inputCh <- evt:
+	case eos.cmdCh <- cmd:
 	default:
-		// avoid deadlock under load
-		go func() { a.inputCh <- evt }()
+		go func() { eos.cmdCh <- cmd }()
 	}
 }
 
-func (a *silenceBasedEndOfSpeech) worker() {
+// worker manages silence detection and callback invocation
+func (eos *SilenceBasedEOS) worker() {
 	var (
-		timer      *time.Timer
-		timerC     <-chan time.Time
-		generation uint64
-		ctx        context.Context
-		speech     string
+		timer   *time.Timer
+		timerC  <-chan time.Time
+		gen     uint64
+		ctx     context.Context
+		segment SpeechSegment
 	)
 
-	stopTimer := func() {
+	cleanup := func() {
 		if timer != nil {
 			timer.Stop()
 			timer = nil
@@ -143,96 +182,91 @@ func (a *silenceBasedEndOfSpeech) worker() {
 
 	for {
 		select {
-		case <-a.stopCh:
-			stopTimer()
+
+		case <-eos.stopCh:
+			cleanup()
 			return
 
-		case evt := <-a.inputCh:
+		case cmd := <-eos.cmdCh:
+			eos.mu.Lock()
 
-			// --- RESET EVENT (after callback) ---
-			if evt.reset {
-				a.mutex.Lock()
-				a.callbackFired = false
-				a.generation++
-				a.inputSpeech = ""
-				a.mutex.Unlock()
+			// handle reset
+			if cmd.reset {
+				eos.state.callbackFired = false
+				eos.state.generation++
+				eos.state.segment = SpeechSegment{}
+				eos.mu.Unlock()
 				continue
 			}
 
-			a.mutex.Lock()
-			// After a callback fires and reset is processed, new inputs are accepted
-			// because callbackFired will be false and generation will be incremented
-			if a.callbackFired {
-				a.mutex.Unlock()
+			// drop if callback pending
+			if eos.state.callbackFired {
+				eos.mu.Unlock()
 				continue
 			}
 
-			// Increment generation for this new input
-			a.generation++
-			generation = a.generation
-
-			if evt.fireNow {
-				// User input triggers callback immediately
-				a.callbackFired = true
-				stopTimer()
-				text := evt.speech
-				cbCtx := evt.ctx
-				a.mutex.Unlock()
-				a.invokeCallback(cbCtx, text)
-				// Reset is enqueued by invokeCallback
+			// immediate fire
+			if cmd.fireNow {
+				eos.state.callbackFired = true
+				seg := eos.state.segment
+				cbCtx := cmd.ctx
+				cleanup()
+				eos.mu.Unlock()
+				eos.fire(cbCtx, seg)
 				continue
 			}
 
-			// System or STT input extends the silence timer
-			ctx = evt.ctx
-			speech = evt.speech
-
-			stopTimer()
-			timer = time.NewTimer(evt.timeout)
+			// schedule timer
+			gen = eos.state.generation + 1
+			eos.state.generation = gen
+			ctx = cmd.ctx
+			segment = cmd.segment
+			cleanup()
+			timer = time.NewTimer(cmd.timeout)
 			timerC = timer.C
-
-			a.mutex.Unlock()
+			eos.mu.Unlock()
 
 		case <-timerC:
-			a.mutex.Lock()
-			if a.callbackFired || generation != a.generation {
-				a.mutex.Unlock()
+			eos.mu.Lock()
+
+			// stale timer check
+			if eos.state.callbackFired || gen != eos.state.generation {
+				eos.mu.Unlock()
 				continue
 			}
 
-			a.callbackFired = true
-			text := speech
+			eos.state.callbackFired = true
+			seg := segment
 			cbCtx := ctx
-			stopTimer()
-			a.mutex.Unlock()
+			cleanup()
+			eos.mu.Unlock()
 
-			a.invokeCallback(cbCtx, text)
-			// Reset is enqueued by invokeCallback
+			eos.fire(cbCtx, seg)
 		}
 	}
 }
 
-func (a *silenceBasedEndOfSpeech) invokeCallback(
-	ctx context.Context,
-	speech string,
-) {
+// fire triggers the callback and enqueues reset
+func (eos *SilenceBasedEOS) fire(ctx context.Context, seg SpeechSegment) {
 	if ctx.Err() != nil {
 		return
 	}
-	_ = a.onCallback(ctx, internal_type.EndOfSpeechPacket{Speech: speech})
-	a.enqueue(workerEvent{reset: true})
+
+	eos.logger.Debugf(
+		"EOS: contextID=%s, text=%q, duration=%dms",
+		seg.ContextID, seg.Text, time.Since(seg.Timestamp).Milliseconds(),
+	)
+
+	_ = eos.callback(ctx, internaltype.EndOfSpeechPacket{
+		Speech:    seg.Text,
+		ContextID: seg.ContextID,
+	})
+
+	eos.send(command{reset: true})
 }
 
-func normalizeSTTText(s string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsPunct(r) || unicode.IsSymbol(r) {
-			return -1
-		}
-		return unicode.ToLower(r)
-	}, s)
-}
-
-func (a *silenceBasedEndOfSpeech) Close() error {
-	close(a.stopCh)
+// Close shuts down the detector
+func (eos *SilenceBasedEOS) Close() error {
+	close(eos.stopCh)
 	return nil
 }

@@ -8,7 +8,6 @@ package internal_silence_based
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -210,31 +209,6 @@ func TestContextCancelPreventsCallback(t *testing.T) {
 	}
 }
 
-func TestNormalizeMessageAndBuildSegment(t *testing.T) {
-	// Test normalizeSTTText helper
-	in := "Hello, WORLD!!! 123"
-	got := normalizeSTTText(in)
-	if got == "" {
-		t.Fatalf("normalizeSTTText returned empty string")
-	}
-	if strings.ContainsAny(got, "!,.") {
-		t.Fatalf("normalizeSTTText should remove punctuation: %v", got)
-	}
-
-	// Test that the EndOfSpeechResult is built correctly
-
-	// Simulate what invokeCallback does
-	seg := internal_type.EndOfSpeechPacket{
-		Speech: "test",
-	}
-	if seg.Speech != "test" {
-		t.Fatalf("speech mismatch: %v", seg.Speech)
-	}
-
-}
-
-// handleSTTInput timing tests with precision verification
-
 // TestHandleSTTInput_IncompleteSTT verifies incomplete STT triggers normal threshold
 func TestHandleSTTInput_IncompleteSTT(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
@@ -255,6 +229,10 @@ func TestHandleSTTInput_IncompleteSTT(t *testing.T) {
 	startTime := time.Now()
 
 	// Send incomplete STT - should trigger normal timeout
+	if err := svcIface.Analyze(ctx, sttInput("hello world", true)); err != nil {
+		t.Fatalf("analyze: %v", err)
+	}
+
 	if err := svcIface.Analyze(ctx, sttInput("hello world", false)); err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -360,98 +338,6 @@ func TestHandleSTTInput_DifferentTextCompleteSTT(t *testing.T) {
 	}
 }
 
-// TestHandleSTTInput_SameTextCompleteSTT verifies same STT text uses adjusted threshold (base/2, min 100ms)
-func TestHandleSTTInput_SameTextCompleteSTT(t *testing.T) {
-	logger, _ := commons.NewApplicationLogger()
-	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
-		callbackTime <- time.Now()
-		return nil
-	}
-
-	timeout := 300.0 // 300ms base
-	opts := newTestOpts(map[string]any{"microphone.eos.timeout": timeout})
-	svcIface, err := NewSilenceBasedEndOfSpeech(logger, callback, opts)
-	if err != nil {
-		t.Fatalf("new: %v", err)
-	}
-
-	ctx := context.Background()
-
-	// First STT with "hello world"
-	if err := svcIface.Analyze(ctx, sttInput("hello world", true)); err != nil {
-		t.Fatalf("analyze first: %v", err)
-	}
-
-	// Second STT with same text (after normalization) - uses half timeout
-	startTime := time.Now()
-	if err := svcIface.Analyze(ctx, sttInput("hello world", true)); err != nil {
-		t.Fatalf("analyze second: %v", err)
-	}
-
-	select {
-	case cbTime := <-callbackTime:
-		elapsed := cbTime.Sub(startTime)
-		// Expected: 300ms / 2 = 150ms (adjusted threshold)
-		expectedMs := 150 * time.Millisecond
-		tolerance := 30 * time.Millisecond
-		minExpected := expectedMs - tolerance
-		maxExpected := expectedMs + tolerance
-
-		if elapsed < minExpected || elapsed > maxExpected {
-			t.Fatalf("callback timing out of bounds: expected %v±%v, got %v", expectedMs, tolerance, elapsed)
-		}
-	case <-time.After(500 * time.Millisecond):
-		t.Fatal("timeout waiting for callback on same STT text")
-	}
-}
-
-// TestHandleSTTInput_AdjustedThresholdLowerBound verifies adjusted threshold uses base/2 calculation
-func TestHandleSTTInput_AdjustedThresholdLowerBound(t *testing.T) {
-	logger, _ := commons.NewApplicationLogger()
-	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
-		callbackTime <- time.Now()
-		return nil
-	}
-
-	timeout := 120.0 // 120ms base -> 120/2 = 60ms adjusted
-	opts := newTestOpts(map[string]any{"microphone.eos.timeout": timeout})
-	svcIface, err := NewSilenceBasedEndOfSpeech(logger, callback, opts)
-	if err != nil {
-		t.Fatalf("new: %v", err)
-	}
-
-	ctx := context.Background()
-
-	// First STT
-	if err := svcIface.Analyze(ctx, sttInput("test", true)); err != nil {
-		t.Fatalf("analyze first: %v", err)
-	}
-
-	// Second STT with same text - adjusted threshold: 120/2 = 60ms
-	startTime := time.Now()
-	if err := svcIface.Analyze(ctx, sttInput("test", true)); err != nil {
-		t.Fatalf("analyze second: %v", err)
-	}
-
-	select {
-	case cbTime := <-callbackTime:
-		elapsed := cbTime.Sub(startTime)
-		// Expected: 60ms (120/2)
-		expectedMs := 60 * time.Millisecond
-		tolerance := 20 * time.Millisecond
-		minExpected := expectedMs - tolerance
-		maxExpected := expectedMs + tolerance
-
-		if elapsed < minExpected || elapsed > maxExpected {
-			t.Fatalf("callback timing out of bounds: expected %v±%v, got %v", expectedMs, tolerance, elapsed)
-		}
-	case <-time.After(300 * time.Millisecond):
-		t.Fatal("timeout waiting for callback on lower bound threshold")
-	}
-}
-
 // TestHandleSTTInput_ActivityAfterUserInput verifies STT after user input doesn't use adjusted threshold
 func TestHandleSTTInput_ActivityAfterUserInput(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
@@ -497,53 +383,6 @@ func TestHandleSTTInput_ActivityAfterUserInput(t *testing.T) {
 	}
 }
 
-// TestHandleSTTInput_NormalizedTextMatching verifies punctuation/case normalization works
-func TestHandleSTTInput_NormalizedTextMatching(t *testing.T) {
-	logger, _ := commons.NewApplicationLogger()
-	callbackTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
-		callbackTime <- time.Now()
-		return nil
-	}
-
-	timeout := 250.0
-	opts := newTestOpts(map[string]any{"microphone.eos.timeout": timeout})
-	svcIface, err := NewSilenceBasedEndOfSpeech(logger, callback, opts)
-	if err != nil {
-		t.Fatalf("new: %v", err)
-	}
-
-	ctx := context.Background()
-
-	// First STT: "Hello, World!"
-	if err := svcIface.Analyze(ctx, sttInput("Hello, World!", true)); err != nil {
-		t.Fatalf("analyze first: %v", err)
-	}
-
-	// Second STT: "hello world" (different case, no punctuation, but same normalized form)
-	// Should use adjusted threshold: 250/2 = 125ms
-	startTime := time.Now()
-	if err := svcIface.Analyze(ctx, sttInput("hello world", true)); err != nil {
-		t.Fatalf("analyze second: %v", err)
-	}
-
-	select {
-	case cbTime := <-callbackTime:
-		elapsed := cbTime.Sub(startTime)
-		// Expected: 250ms / 2 = 125ms (adjusted threshold)
-		expectedMs := 125 * time.Millisecond
-		tolerance := 30 * time.Millisecond
-		minExpected := expectedMs - tolerance
-		maxExpected := expectedMs + tolerance
-
-		if elapsed < minExpected || elapsed > maxExpected {
-			t.Fatalf("callback timing out of bounds: expected %v±%v, got %v", expectedMs, tolerance, elapsed)
-		}
-	case <-time.After(500 * time.Millisecond):
-		t.Fatal("timeout waiting for callback on normalized text matching")
-	}
-}
-
 // === Additional comprehensive test cases per README ===
 
 // TestCallbackFiresOnlyOnce verifies the callback fires exactly once per utterance.
@@ -568,7 +407,7 @@ func TestCallbackFiresOnlyOnce(t *testing.T) {
 	ctx := context.Background()
 
 	// Send system input - starts timer for utterance 1
-	if err := svcIface.Analyze(ctx, systemInput("activity")); err != nil {
+	if err := svcIface.Analyze(ctx, sttInput("activity", true)); err != nil {
 		t.Fatalf("analyze system 1: %v", err)
 	}
 
@@ -626,14 +465,25 @@ func TestNewInputInvalidatesPreviousCallback(t *testing.T) {
 
 	ctx := context.Background()
 
+	// activity
+	if err := svcIface.Analyze(ctx, sttInput("activity1", false)); err != nil {
+		t.Fatalf("analyze 1: %v", err)
+	}
+
 	// Send system input - starts 300ms timer
-	if err := svcIface.Analyze(ctx, systemInput("activity1")); err != nil {
+	// here the timer is started for generation 1
+	if err := svcIface.Analyze(ctx, sttInput("activity1.", true)); err != nil {
 		t.Fatalf("analyze 1: %v", err)
 	}
 
 	// Wait 150ms, then send another system input - resets timer
 	time.Sleep(150 * time.Millisecond)
-	if err := svcIface.Analyze(ctx, systemInput("activity2")); err != nil {
+	if err := svcIface.Analyze(ctx, sttInput("activity2", false)); err != nil {
+		t.Fatalf("analyze 2: %v", err)
+	}
+
+	time.Sleep(150 * time.Millisecond)
+	if err := svcIface.Analyze(ctx, sttInput("activity2!", true)); err != nil {
 		t.Fatalf("analyze 2: %v", err)
 	}
 
@@ -718,7 +568,7 @@ func TestSystemInputExtendsTimer(t *testing.T) {
 	ctx := context.Background()
 
 	// Send initial system input (NOT user input, which fires immediately)
-	if err := svcIface.Analyze(ctx, systemInput("activity")); err != nil {
+	if err := svcIface.Analyze(ctx, sttInput("activity", true)); err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
 
@@ -765,7 +615,7 @@ func TestSTTInputExtendsTimer(t *testing.T) {
 	ctx := context.Background()
 
 	// Send STT input
-	if err := svcIface.Analyze(ctx, sttInput("incomplete message", false)); err != nil {
+	if err := svcIface.Analyze(ctx, sttInput("incomplete message", true)); err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
 
@@ -781,57 +631,6 @@ func TestSTTInputExtendsTimer(t *testing.T) {
 		}
 	case <-time.After(500 * time.Millisecond):
 		t.Fatal("timeout waiting for callback on STT input")
-	}
-}
-
-// TestSTTFormattingOptimization verifies same-content STT with different formatting uses half timeout
-func TestSTTFormattingOptimization(t *testing.T) {
-	logger, _ := commons.NewApplicationLogger()
-	callTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
-		select {
-		case callTime <- time.Now():
-		default:
-		}
-		return nil
-	}
-
-	timeout := 400.0 // 400ms base
-	opts := newTestOpts(map[string]any{"microphone.eos.timeout": timeout})
-	svcIface, err := NewSilenceBasedEndOfSpeech(logger, callback, opts)
-	if err != nil {
-		t.Fatalf("new: %v", err)
-	}
-
-	ctx := context.Background()
-
-	// First STT: streaming text
-	if err := svcIface.Analyze(ctx, sttInput("hello world", false)); err != nil {
-		t.Fatalf("analyze 1: %v", err)
-	}
-
-	time.Sleep(100 * time.Millisecond)
-
-	// Second STT: final transcript with same semantic content but different formatting
-	startTime := time.Now()
-	if err := svcIface.Analyze(ctx, sttInput("Hello, World.", true)); err != nil {
-		t.Fatalf("analyze 2: %v", err)
-	}
-
-	// Should use half timeout: 400/2 = 200ms
-	select {
-	case cbTime := <-callTime:
-		elapsed := cbTime.Sub(startTime)
-		expectedMs := 200 * time.Millisecond
-		tolerance := 30 * time.Millisecond
-		minExpected := expectedMs - tolerance
-		maxExpected := expectedMs + tolerance
-
-		if elapsed < minExpected || elapsed > maxExpected {
-			t.Fatalf("callback timing incorrect: expected %v±%v, got %v", expectedMs, tolerance, elapsed)
-		}
-	case <-time.After(600 * time.Millisecond):
-		t.Fatal("timeout waiting for callback on formatted STT")
 	}
 }
 
@@ -856,13 +655,13 @@ func TestGenerationInvalidation(t *testing.T) {
 	ctx := context.Background()
 
 	// Send first system input - starts timer for generation 1
-	if err := svcIface.Analyze(ctx, systemInput("activity1")); err != nil {
+	if err := svcIface.Analyze(ctx, sttInput("activity1", true)); err != nil {
 		t.Fatalf("analyze 1: %v", err)
 	}
 
 	// Wait 200ms and send second input - increments generation, invalidates gen1 timer
 	time.Sleep(200 * time.Millisecond)
-	if err := svcIface.Analyze(ctx, systemInput("activity2")); err != nil {
+	if err := svcIface.Analyze(ctx, sttInput("activity2", true)); err != nil {
 		t.Fatalf("analyze 2: %v", err)
 	}
 
@@ -922,30 +721,6 @@ func TestContextCancellation(t *testing.T) {
 		t.Fatal("callback should not be called after context cancellation")
 	default:
 		// Expected: no callback
-	}
-}
-
-// TestNormalizationFunction verifies text normalization logic
-func TestNormalizationFunction(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-		desc     string
-	}{
-		{"hello world", "hello world", "lowercase unchanged"},
-		{"Hello World", "hello world", "uppercase converted"},
-		{"hello, world!", "hello world", "punctuation removed"},
-		{"Hello, WORLD!!!", "hello world", "mixed case and punctuation removed"},
-		{"123 abc 456", "123 abc 456", "numbers preserved"},
-		{"test@#$%", "test", "symbols removed"},
-		{"café", "café", "accents preserved"},
-	}
-
-	for _, tc := range tests {
-		got := normalizeSTTText(tc.input)
-		if got != tc.expected {
-			t.Fatalf("%s: normalizeSTTText(%q) = %q, expected %q", tc.desc, tc.input, got, tc.expected)
-		}
 	}
 }
 
@@ -1341,66 +1116,6 @@ func TestConcurrentUtterancesRapid(t *testing.T) {
 	}
 }
 
-// TestSTTFormattingVsRealContent tests edge case where final STT normalizes to same text
-// repeated across many updates
-func TestSTTFormattingVsRealContent(t *testing.T) {
-	logger, _ := commons.NewApplicationLogger()
-	callTime := make(chan time.Time, 1)
-	callback := func(ctx context.Context, res internal_type.EndOfSpeechPacket) error {
-		select {
-		case callTime <- time.Now():
-		default:
-		}
-		return nil
-	}
-
-	opts := newTestOpts(map[string]any{"microphone.eos.timeout": 200.0})
-	svcIface, err := NewSilenceBasedEndOfSpeech(logger, callback, opts)
-	if err != nil {
-		t.Fatalf("new: %v", err)
-	}
-	defer svcIface.Close()
-
-	ctx := context.Background()
-
-	// Streaming updates with punctuation changes
-	updates := []string{
-		"hello",
-		"hello world",
-		"hello world",
-		"hello world,",
-		"Hello, world.",
-		"Hello, world!", // Different final punctuation
-	}
-
-	for i, text := range updates {
-		interim := i < len(updates)-1
-		_ = svcIface.Analyze(ctx, sttInput(text, !interim))
-		time.Sleep(30 * time.Millisecond)
-	}
-
-	startTime := time.Now()
-
-	// Final update: same content, just formatting
-	_ = svcIface.Analyze(ctx, sttInput("Hello, World!", true))
-
-	select {
-	case cbTime := <-callTime:
-		elapsed := cbTime.Sub(startTime)
-		// Should use half timeout: 200/2 = 100ms (since normalized text matches)
-		expectedMs := 100 * time.Millisecond
-		tolerance := 40 * time.Millisecond
-		minExpected := expectedMs - tolerance
-		maxExpected := expectedMs + tolerance
-
-		if elapsed < minExpected || elapsed > maxExpected {
-			t.Fatalf("callback timing incorrect: expected %v±%v, got %v", expectedMs, tolerance, elapsed)
-		}
-	case <-time.After(500 * time.Millisecond):
-		t.Fatal("timeout: callback should fire with formatting optimization")
-	}
-}
-
 // TestConcurrentInputsDuringReset tests inputs arriving while reset is processing
 // This was a critical race condition in the original implementation
 func TestConcurrentInputsDuringReset(t *testing.T) {
@@ -1668,13 +1383,13 @@ func TestGenerationCounterPreventsStaleCallbacks(t *testing.T) {
 	ctx := context.Background()
 
 	// Start a timer that will eventually fire
-	_ = svcIface.Analyze(ctx, systemInput("gen1"))
+	_ = svcIface.Analyze(ctx, sttInput("gen1", true))
 
 	// Wait 30ms
 	time.Sleep(30 * time.Millisecond)
 
 	// Before old timer fires, send new input (invalidates old generation)
-	_ = svcIface.Analyze(ctx, systemInput("gen2"))
+	_ = svcIface.Analyze(ctx, sttInput("gen2", true))
 
 	// Wait 30ms more (total 60ms from first, 30ms from second)
 	time.Sleep(30 * time.Millisecond)

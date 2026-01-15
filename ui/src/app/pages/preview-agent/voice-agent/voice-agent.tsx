@@ -276,7 +276,11 @@ export const VoiceAgentDebugger: FC<{
                       </>
                     )}
                   </div>
-                  <InputGroup title="Arguments" childClass="!p-0">
+                  <InputGroup
+                    title="Arguments"
+                    childClass="p-0"
+                    className="m-0 border-x-0"
+                  >
                     {variables.length > 0 ? (
                       <div className="text-sm leading-normal">
                         {variables.map((x, idx) => {
@@ -371,7 +375,11 @@ export const VoiceAgentDebugger: FC<{
                       </YellowNoticeBlock>
                     )}
                   </InputGroup>
-                  <InputGroup title="Deployment" childClass="p-3 text-muted">
+                  <InputGroup
+                    title="Deployment"
+                    childClass="p-3 text-muted"
+                    className="m-0 border-x-0"
+                  >
                     <div className="space-y-4">
                       <div className="flex justify-between">
                         <div className="text-sm uppercase tracking-wider">

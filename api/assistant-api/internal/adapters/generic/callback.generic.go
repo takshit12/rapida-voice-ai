@@ -7,6 +7,7 @@ package internal_adapter_generic
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
@@ -18,18 +19,26 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func (talking *GenericRequestor) callEndOfSpeech(ctx context.Context, vl internal_type.Packet) error {
+	if talking.endOfSpeech != nil {
+		utils.Go(ctx, func() {
+			if err := talking.endOfSpeech.Analyze(ctx, vl); err != nil {
+				talking.logger.Errorf("end of speech analyze error: %v", err)
+			}
+
+		})
+		return nil
+	}
+	return errors.New("end of speech analyzer not configured")
+}
+
 /**/
 func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_type.Packet) error {
 	for _, p := range pkt {
 		switch vl := p.(type) {
 		case internal_type.UserTextPacket:
 			if talking.endOfSpeech != nil {
-				utils.Go(ctx, func() {
-					if err := talking.endOfSpeech.Analyze(ctx, vl); err != nil {
-						talking.logger.Errorf("end of speech analyze error: %v", err)
-					}
-
-				})
+				talking.callEndOfSpeech(ctx, vl)
 				continue
 			}
 			// end of speech not configured so directly send end of speech packet
@@ -56,35 +65,40 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 			talking.messaging.Transition(internal_adapter_request_customizers.AgentCompleted)
 			continue
 		case internal_type.InterruptionPacket:
+
+			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)
+			defer span.EndSpan(ctx, utils.AssistantUtteranceStage)
+
+			// notify end of speech first
+			talking.callEndOfSpeech(ctx, vl)
 			switch vl.Source {
 			case "word":
 				// user had spoken reset the timer
+				span.AddAttributes(ctx, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("word_interrupt")})
+
+				//
 				talking.ResetIdealTimeoutTimer(talking.Context())
 				//
 				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupted); err != nil {
 					continue
 				}
-				if talking.messaging.GetInputMode().Audio() {
-					talking.recorder.Interrupt()
-				}
+
 				talking.Notify(ctx, &protos.AssistantConversationInterruption{Type: protos.AssistantConversationInterruption_INTERRUPTION_TYPE_WORD, Time: timestamppb.Now()})
 			default:
-				ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)
-				span.EndSpan(ctx, utils.AssistantUtteranceStage, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("vad")})
-
 				// might be noise at first
 				if vl.StartAt < 3 {
 					talking.logger.Warn("interrupt: very early interruption")
 					continue
 				}
-
+				span.AddAttributes(ctx, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("vad_interrupt")})
 				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupt); err != nil {
 					continue
 				}
-				if talking.messaging.GetInputMode().Audio() {
-					talking.recorder.Interrupt()
-				}
 				talking.Notify(ctx, &protos.AssistantConversationInterruption{Type: protos.AssistantConversationInterruption_INTERRUPTION_TYPE_VAD, Time: timestamppb.Now()})
+			}
+			// recorder interrupted
+			if talking.messaging.GetInputMode().Audio() {
+				talking.recorder.Interrupt()
 			}
 			continue
 		case internal_type.SpeechToTextPacket:
@@ -108,21 +122,14 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkt ...internal_t
 				talking.Notify(ctx, &protos.AssistantConversationUserMessage{Id: msi.GetId(), Message: &protos.AssistantConversationUserMessage_Text{Text: &protos.AssistantConversationMessageTextContent{Content: msi.String()}}, Completed: false, Time: timestamppb.New(time.Now())})
 			}
 
-			if talking.endOfSpeech != nil {
-				utils.Go(ctx, func() {
-					if err := talking.endOfSpeech.Analyze(ctx, vl); err != nil {
-						talking.logger.Errorf("end of speech analyze error: %v", err)
-					}
-
-				})
-				continue
-			}
-
-			// trigger end of speech directly when stt is completed
-			if !vl.Interim {
-				talking.OnPacket(ctx, internal_type.EndOfSpeechPacket{ContextID: vl.ContextID, Speech: msi.String()})
+			// send to end of speech analyzer
+			if err := talking.callEndOfSpeech(ctx, vl); err != nil {
+				if !vl.Interim {
+					talking.OnPacket(ctx, internal_type.EndOfSpeechPacket{ContextID: vl.ContextID, Speech: msi.String()})
+				}
 			}
 			continue
+
 		case internal_type.EndOfSpeechPacket:
 			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)
 			span.EndSpan(ctx,
