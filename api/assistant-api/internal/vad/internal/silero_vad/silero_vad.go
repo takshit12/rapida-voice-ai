@@ -6,6 +6,7 @@
 package internal_silero_vad
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"runtime"
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
-	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
+	internal_audio_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
@@ -27,8 +28,8 @@ type SileroVAD struct {
 	inputConfig    *protos.AudioConfig
 	detector       *speech.Detector
 	onActivity     internal_type.VADCallback
-	audioSampler   internal_audio.AudioResampler
-	audioConverter internal_audio.AudioConverter
+	audioSampler   internal_type.AudioResampler
+	audioConverter internal_type.AudioConverter
 	vadConfig      *protos.AudioConfig
 }
 
@@ -55,14 +56,25 @@ func NewSileroVAD(logger commons.Logger, inputAudio *protos.AudioConfig, callbac
 	if err != nil {
 		return nil, err
 	}
+
+	resampler, err := internal_audio_resampler.GetResampler(logger)
+	if err != nil {
+		return nil, err
+	}
+
+	converter, err := internal_audio_resampler.GetConverter(logger)
+	if err != nil {
+		return nil, err
+	}
+
 	return &SileroVAD{
 		detector:       detector,
 		inputConfig:    inputAudio,
 		vadConfig:      vadAudioConfig,
 		onActivity:     callback,
 		logger:         logger,
-		audioSampler:   default_resampler.NewDefaultAudioResampler(logger),
-		audioConverter: default_resampler.NewDefaultAudioConverter(logger),
+		audioSampler:   resampler,
+		audioConverter: converter,
 	}, nil
 }
 
@@ -71,8 +83,8 @@ func (s *SileroVAD) Name() string {
 }
 
 // ProcessFrame buffers incoming audio and periodically calls Detect
-func (svad *SileroVAD) Process(input []byte) error {
-	idi, err := svad.audioSampler.Resample(input, svad.inputConfig, svad.vadConfig)
+func (svad *SileroVAD) Process(ctx context.Context, pkt internal_type.UserAudioPacket) error {
+	idi, err := svad.audioSampler.Resample(pkt.Audio, svad.inputConfig, svad.vadConfig)
 	if err != nil {
 		svad.logger.Debugf("Resampling failed: %+v", err) // Improved logging
 		return err
@@ -105,7 +117,7 @@ func (svad *SileroVAD) Process(input []byte) error {
 			maxEnd = end
 		}
 	}
-	svad.onActivity(internal_type.InterruptionPacket{Source: "vad", StartAt: minStart, EndAt: maxEnd})
+	svad.onActivity(internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceVad, StartAt: minStart, EndAt: maxEnd})
 	return nil
 }
 func (s *SileroVAD) Close() error {

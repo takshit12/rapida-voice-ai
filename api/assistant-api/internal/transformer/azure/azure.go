@@ -11,6 +11,7 @@ import (
 
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/audio"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/common"
+	cmmn "github.com/Microsoft/cognitive-services-speech-sdk-go/common"
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
@@ -53,6 +54,8 @@ func (az *azureOption) SpeechToTextOption() (*speech.SpeechConfig, error) {
 	if language, ok := az.mdlOpts.GetString("listen.language"); ok == nil {
 		cfg.SetSpeechRecognitionLanguage(language)
 	}
+	cfg.SetOutputFormat(cmmn.Detailed)
+	// Optional: For word-level confidence
 	return cfg, err
 }
 

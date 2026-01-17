@@ -24,14 +24,31 @@ type MessagePacket interface {
 	Content() string
 }
 
+type AudioPacket interface {
+	Packet
+	Content() []byte
+}
+
 // InterruptionPacket represents a request to interrupt ongoing processing
 // within a specific context.
+
+// =============================================================================
+// LLM Packets
+// =============================================================================
+
+type InterruptionSource string
+
+const (
+	InterruptionSourceWord InterruptionSource = "word"
+	InterruptionSourceVad  InterruptionSource = "vad"
+)
+
 type InterruptionPacket struct {
 	// ContextID identifies the context to be interrupted.
 	ContextID string
 
-	//
-	Source string
+	// Source indicates the origin of the interruption.
+	Source InterruptionSource
 
 	// start of interruption
 	StartAt float64
@@ -44,6 +61,10 @@ type InterruptionPacket struct {
 func (f InterruptionPacket) ContextId() string {
 	return f.ContextID
 }
+
+// =============================================================================
+// LLM Packets
+// =============================================================================
 
 // MetricPacket represents a request to send metrics within a specific context.
 type MetricPacket struct {
@@ -188,6 +209,31 @@ func (f UserTextPacket) Content() string {
 func (f UserTextPacket) Role() string {
 	return "user"
 }
+
+type UserAudioPacket struct {
+	// contextID identifies the context to be flushed.
+	ContextID string
+
+	Audio []byte
+
+	NoiseReduced bool
+}
+
+func (f UserAudioPacket) ContextId() string {
+	return f.ContextID
+}
+
+func (f UserAudioPacket) Content() []byte {
+	return f.Audio
+}
+
+func (f UserAudioPacket) Role() string {
+	return "user"
+}
+
+// =============================================================================
+// End of speech Packet
+// =============================================================================
 
 type EndOfSpeechPacket struct {
 	// contextID identifies the context to be flushed.

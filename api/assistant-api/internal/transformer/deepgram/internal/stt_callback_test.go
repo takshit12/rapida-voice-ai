@@ -155,7 +155,7 @@ func TestMessage(t *testing.T) {
 		// First packet should be InterruptionPacket
 		interruption, ok := packets[0].(internal_type.InterruptionPacket)
 		assert.True(t, ok, "first packet should be InterruptionPacket")
-		assert.Equal(t, "word", interruption.Source)
+		assert.Equal(t, internal_type.InterruptionSourceWord, interruption.Source)
 
 		// Second packet should be SpeechToTextPacket
 		stt, ok := packets[1].(internal_type.SpeechToTextPacket)

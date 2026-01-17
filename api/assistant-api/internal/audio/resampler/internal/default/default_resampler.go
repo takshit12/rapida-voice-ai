@@ -3,13 +3,13 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_audio_default_resampler
+package internal_resampler_default
 
 import (
 	"encoding/binary"
 	"fmt"
 
-	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 	"github.com/zaf/g711"
@@ -21,11 +21,11 @@ type audioResampler struct {
 }
 
 // NewAudioResampler creates a new audio resampler instance
-func NewDefaultAudioResampler(logger commons.Logger) internal_audio.AudioResampler {
+func NewDefaultAudioResampler(logger commons.Logger) internal_type.AudioResampler {
 	return &audioResampler{logger: logger}
 }
 
-func NewDefaultAudioConverter(logger commons.Logger) internal_audio.AudioConverter {
+func NewDefaultAudioConverter(logger commons.Logger) internal_type.AudioConverter {
 	return &audioResampler{logger: logger}
 }
 
@@ -90,7 +90,7 @@ func (r *audioResampler) ConvertToByteSamples(samples []float32, config *protos.
 }
 
 // GetAudioInfo returns information about the byte audio data
-func (r *audioResampler) GetAudioInfo(data []byte, config *protos.AudioConfig) internal_audio.AudioInfo {
+func (r *audioResampler) GetAudioInfo(data []byte, config *protos.AudioConfig) internal_type.AudioInfo {
 	var samplesPerChannel int
 	var bytesPerSample int
 
@@ -105,7 +105,7 @@ func (r *audioResampler) GetAudioInfo(data []byte, config *protos.AudioConfig) i
 
 	duration := float64(samplesPerChannel) / float64(config.SampleRate)
 
-	return internal_audio.AudioInfo{
+	return internal_type.AudioInfo{
 		SampleRate:        config.SampleRate,
 		Format:            config.GetAudioFormat(),
 		Channels:          config.GetChannels(),

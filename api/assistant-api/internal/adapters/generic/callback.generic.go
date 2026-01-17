@@ -8,9 +8,9 @@ package internal_adapter_generic
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 
-	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	type_enums "github.com/rapidaai/pkg/types/enums"
@@ -31,16 +31,71 @@ func (talking *GenericRequestor) callEndOfSpeech(ctx context.Context, vl interna
 	return errors.New("end of speech analyzer not configured")
 }
 
+func (talking *GenericRequestor) recording(ctx context.Context, vl internal_type.Packet) error {
+	if talking.recorder != nil {
+		utils.Go(ctx, func() {
+			if err := talking.recorder.Record(ctx, vl); err != nil {
+				talking.logger.Errorf("recorder error: %v", err)
+			}
+		})
+		return nil
+	}
+	return errors.New("end of speech analyzer not configured")
+}
+
 /**/
 func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_type.Packet) error {
 	for _, p := range pkts {
 		switch vl := p.(type) {
 		case internal_type.UserTextPacket:
 			// calling end of speech analyzer
+
+			// io.messaging.Transition(internal_adapter_request_customizers.Interrupted)
+			interim := talking.messaging.Create(type_enums.UserActor, vl.Text)
+			if err := talking.Notify(talking.Context(), &protos.AssistantConversationUserMessage{Id: interim.GetId(), Completed: false, Message: &protos.AssistantConversationUserMessage_Text{Text: &protos.AssistantConversationMessageTextContent{Content: interim.String()}}, Time: timestamppb.Now()}); err != nil {
+				talking.logger.Tracef(talking.Context(), "error while notifying the text input from user: %w", err)
+			}
+			// send to end of speech analyzer
 			if err := talking.callEndOfSpeech(ctx, vl); err != nil {
 				talking.OnPacket(ctx, internal_type.EndOfSpeechPacket{ContextID: vl.ContextID, Speech: vl.Text})
 			}
 			// end of speech not configured so directly send end of speech packet
+			continue
+
+		case internal_type.UserAudioPacket:
+			if talking.denoiser != nil && !vl.NoiseReduced {
+				vl.NoiseReduced = true
+				dnOut, _, err := talking.denoiser.Denoise(ctx, vl.Audio)
+				if err != nil {
+					talking.logger.Warnf("error while denoising process | will process actual audio byte")
+					talking.OnPacket(ctx, vl)
+				} else {
+					vl.Audio = dnOut
+					talking.OnPacket(ctx, vl)
+				}
+				continue
+			}
+
+			if err := talking.recording(ctx, vl); err != nil {
+				talking.logger.Errorf("recorder error: %v", err)
+			}
+
+			if talking.vad != nil {
+				utils.Go(ctx, func() {
+					if err := talking.vad.Process(ctx, vl); err != nil {
+						talking.logger.Warnf("error while processing with vad %s", err.Error())
+					}
+				})
+			}
+			if talking.speechToTextTransformer != nil {
+				utils.Go(ctx, func() {
+					if err := talking.speechToTextTransformer.Transform(ctx, vl); err != nil {
+						if !errors.Is(err, io.EOF) {
+							talking.logger.Tracef(ctx, "error while transforming input %s and error %s", talking.speechToTextTransformer.Name(), err.Error())
+						}
+					}
+				})
+			}
 			continue
 		case internal_type.StaticPacket:
 			// when static packet is received it means that rapida system has something to speak
@@ -57,7 +112,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			// sending static packat to executor for any post processing
 			talking.assistantExecutor.Execute(ctx, talking, vl)
 			//transition to completed
-			talking.messaging.Transition(internal_adapter_request_customizers.AgentCompleted)
+			// talking.messaging.Transition(internal_adapter_request_customizers.AgentCompleted)
 			continue
 		case internal_type.InterruptionPacket:
 			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)
@@ -65,18 +120,23 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 
 			// calling end of speech analyzer
 			if err := talking.callEndOfSpeech(ctx, vl); err != nil {
-				talking.OnPacket(ctx, vl)
+				talking.logger.Errorf("end of speech error: %v", err)
 			}
 			//
+			// recorder interrupted
+			if err := talking.recording(ctx, vl); err != nil {
+				talking.logger.Errorf("recorder error: %v", err)
+			}
+
 			switch vl.Source {
-			case "word":
+			case internal_type.InterruptionSourceWord:
 				// user had spoken reset the timer
 				span.AddAttributes(ctx, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("word_interrupt")})
 				//
 				talking.resetIdleTimeoutTimer(talking.Context())
-				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupted); err != nil {
-					continue
-				}
+				// if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupted); err != nil {
+				// 	continue
+				// }
 				//
 				if err := talking.sentenceAssembler.Assemble(ctx, vl); err != nil {
 					talking.logger.Debugf("unable to send interruption packet to assembler %v", err)
@@ -89,15 +149,12 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 					continue
 				}
 				span.AddAttributes(ctx, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("vad_interrupt")})
-				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupt); err != nil {
-					continue
-				}
+				// if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupt); err != nil {
+				// 	continue
+				// }
 				talking.Notify(ctx, &protos.AssistantConversationInterruption{Type: protos.AssistantConversationInterruption_INTERRUPTION_TYPE_VAD, Time: timestamppb.Now()})
 			}
-			// recorder interrupted
-			if talking.messaging.GetInputMode().Audio() {
-				talking.recorder.Interrupt()
-			}
+
 			continue
 		case internal_type.SpeechToTextPacket:
 			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantListeningStage,
@@ -148,7 +205,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			}
 
 			//
-			talking.messaging.Transition(internal_adapter_request_customizers.UserCompleted)
+			// talking.messaging.Transition(internal_adapter_request_customizers.UserCompleted)
 			utils.Go(ctx, func() {
 				if err := talking.onCreateMessage(ctx, internal_type.UserTextPacket{ContextID: msg.GetId(), Text: msg.String()}); err != nil {
 					talking.logger.Errorf("Error in onCreateMessage: %v", err)
@@ -156,7 +213,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			})
 
 			//
-			talking.messaging.Transition(internal_adapter_request_customizers.LLMGenerating)
+			// talking.messaging.Transition(internal_adapter_request_customizers.LLMGenerating)
 			if err := talking.assistantExecutor.Execute(ctx, talking, internal_type.UserTextPacket{ContextID: msg.GetId(), Text: msg.String()}); err != nil {
 				talking.logger.Errorf("assistant executor error: %v", err)
 				talking.OnError(ctx, msg.GetId())
@@ -184,7 +241,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 				talking.logger.Warnf("unable to send finish speaking sentence to tokenizer %v", err)
 			}
 
-			talking.messaging.Transition(internal_adapter_request_customizers.AgentCompleted)
+			// talking.messaging.Transition(internal_adapter_request_customizers.AgentCompleted)
 			continue
 		case internal_type.LLMToolPacket:
 			talking.
@@ -213,26 +270,26 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			}
 			continue
 		case internal_type.TextToSpeechAudioPacket:
+			// get current input message
 			inputMessage, err := talking.messaging.GetMessage(type_enums.UserActor)
 			if err != nil {
 				continue
 			}
-			// //
+			// might be stale packet
 			if vl.ContextID != inputMessage.GetId() {
 				continue
 			}
 
-			if err := talking.messaging.Transition(internal_adapter_request_customizers.AgentSpeaking); err != nil {
-				continue
-			}
-
+			// notify the user about audio chunk
 			if err := talking.Notify(talking.Context(), &protos.AssistantConversationAssistantMessage{Time: timestamppb.Now(), Id: vl.ContextID, Message: &protos.AssistantConversationAssistantMessage_Audio{Audio: &protos.AssistantConversationMessageAudioContent{Content: vl.AudioChunk}}}); err != nil {
 				talking.logger.Tracef(talking.ctx, "error while outputing chunk to the user: %w", err)
 			}
+
+			// for recording puposes
+			if err := talking.recording(ctx, vl); err != nil {
+				talking.logger.Errorf("recorder error: %v", err)
+			}
 			//
-			utils.Go(context.Background(), func() {
-				talking.recorder.System(vl.AudioChunk)
-			})
 			continue
 		default:
 			talking.logger.Warnf("unknown packet type received in OnGeneration %T", vl)

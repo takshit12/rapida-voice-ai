@@ -27,8 +27,6 @@ func GetVAD(aa VADIdentifier, logger commons.Logger, intputAudio *protos.AudioCo
 	switch aa {
 	case SILERO_VAD:
 		return internal_vad_silero.NewSileroVAD(logger, intputAudio, callback, options)
-	case TEN_VAD:
-		return internal_vad_silero.NewSileroVAD(logger, intputAudio, callback, options)
 	default:
 		return internal_vad_silero.NewSileroVAD(logger, intputAudio, callback, options)
 	}

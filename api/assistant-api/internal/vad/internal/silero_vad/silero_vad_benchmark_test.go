@@ -6,6 +6,7 @@
 package internal_silero_vad
 
 import (
+	"context"
 	"encoding/binary"
 	"math"
 	"os"
@@ -38,17 +39,17 @@ func newBenchmarkVAD(b *testing.B, threshold float64) *SileroVAD {
 	return vad.(*SileroVAD)
 }
 
-func generateBenchmarkSilence(samples int) []byte {
-	return make([]byte, samples*2)
+func generateBenchmarkSilence(samples int) internal_type.UserAudioPacket {
+	return internal_type.UserAudioPacket{Audio: make([]byte, samples*2)}
 }
 
-func generateBenchmarkSineWave(samples int, frequency, amplitude float64) []byte {
+func generateBenchmarkSineWave(samples int, frequency, amplitude float64) internal_type.UserAudioPacket {
 	data := make([]byte, samples*2)
 	for i := 0; i < samples; i++ {
 		sample := int16(amplitude * 32767 * math.Sin(2*math.Pi*float64(i)*frequency/16000))
 		binary.LittleEndian.PutUint16(data[i*2:i*2+2], uint16(sample))
 	}
-	return data
+	return internal_type.UserAudioPacket{Audio: data}
 }
 
 // Single operation benchmarks
@@ -60,7 +61,7 @@ func BenchmarkSileroVAD_Process_Silence_100ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -71,7 +72,7 @@ func BenchmarkSileroVAD_Process_Silence_500ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -82,7 +83,7 @@ func BenchmarkSileroVAD_Process_Silence_1s(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -93,7 +94,7 @@ func BenchmarkSileroVAD_Process_Speech_100ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -104,7 +105,7 @@ func BenchmarkSileroVAD_Process_Speech_500ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -115,7 +116,7 @@ func BenchmarkSileroVAD_Process_Speech_1s(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -128,7 +129,7 @@ func BenchmarkSileroVAD_Process_ChunkSize_20ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -139,7 +140,7 @@ func BenchmarkSileroVAD_Process_ChunkSize_50ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -150,7 +151,7 @@ func BenchmarkSileroVAD_Process_ChunkSize_200ms(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -161,7 +162,7 @@ func BenchmarkSileroVAD_Process_ChunkSize_2s(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -174,7 +175,7 @@ func BenchmarkSileroVAD_Process_Threshold_0_1(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -185,7 +186,7 @@ func BenchmarkSileroVAD_Process_Threshold_0_5(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -196,7 +197,7 @@ func BenchmarkSileroVAD_Process_Threshold_0_9(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -226,7 +227,7 @@ func BenchmarkSileroVAD_Process_Parallel_2Streams(b *testing.B) {
 			wg.Add(1)
 			go func(v *SileroVAD) {
 				defer wg.Done()
-				_ = v.Process(data)
+				_ = v.Process(context.Background(), data)
 			}(vad)
 		}
 		wg.Wait()
@@ -257,7 +258,7 @@ func BenchmarkSileroVAD_Process_Parallel_4Streams(b *testing.B) {
 			wg.Add(1)
 			go func(v *SileroVAD) {
 				defer wg.Done()
-				_ = v.Process(data)
+				_ = v.Process(context.Background(), data)
 			}(vad)
 		}
 		wg.Wait()
@@ -288,7 +289,7 @@ func BenchmarkSileroVAD_Process_Parallel_8Streams(b *testing.B) {
 			wg.Add(1)
 			go func(v *SileroVAD) {
 				defer wg.Done()
-				_ = v.Process(data)
+				_ = v.Process(context.Background(), data)
 			}(vad)
 		}
 		wg.Wait()
@@ -305,7 +306,7 @@ func BenchmarkSileroVAD_Process_SequentialStream_10Chunks(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 10; j++ {
-			_ = vad.Process(data)
+			_ = vad.Process(context.Background(), data)
 		}
 	}
 }
@@ -318,7 +319,7 @@ func BenchmarkSileroVAD_Process_SequentialStream_50Chunks(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 50; j++ {
-			_ = vad.Process(data)
+			_ = vad.Process(context.Background(), data)
 		}
 	}
 }
@@ -331,7 +332,7 @@ func BenchmarkSileroVAD_Process_SequentialStream_100Chunks(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 100; j++ {
-			_ = vad.Process(data)
+			_ = vad.Process(context.Background(), data)
 		}
 	}
 }
@@ -356,7 +357,7 @@ func BenchmarkSileroVAD_Process_Resample_8kHz(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -378,7 +379,7 @@ func BenchmarkSileroVAD_Process_Resample_24kHz(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -400,7 +401,7 @@ func BenchmarkSileroVAD_Process_Resample_48kHz(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -414,14 +415,14 @@ func BenchmarkSileroVAD_Process_MixedContent_SpeechSilence(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(speech)
-		_ = vad.Process(silence)
+		_ = vad.Process(context.Background(), speech)
+		_ = vad.Process(context.Background(), silence)
 	}
 }
 
 func BenchmarkSileroVAD_Process_MixedContent_Alternating(b *testing.B) {
 	vad := newBenchmarkVAD(b, 0.5)
-	chunks := [][]byte{
+	chunks := []internal_type.UserAudioPacket{
 		generateBenchmarkSineWave(1600, 440, 0.8),
 		generateBenchmarkSilence(1600),
 		generateBenchmarkSineWave(1600, 880, 0.7),
@@ -432,7 +433,7 @@ func BenchmarkSileroVAD_Process_MixedContent_Alternating(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for _, chunk := range chunks {
-			_ = vad.Process(chunk)
+			_ = vad.Process(context.Background(), chunk)
 		}
 	}
 }
@@ -466,7 +467,7 @@ func BenchmarkSileroVAD_Process_MemoryPressure_SmallChunks(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 50; j++ { // 1 second total
-			_ = vad.Process(data)
+			_ = vad.Process(context.Background(), data)
 		}
 	}
 }
@@ -478,7 +479,7 @@ func BenchmarkSileroVAD_Process_MemoryPressure_LargeChunks(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 	}
 }
 
@@ -503,7 +504,7 @@ func BenchmarkSileroVAD_Process_WithCallback(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(speech)
+		_ = vad.Process(context.Background(), speech)
 	}
 	b.ReportMetric(float64(callbackCount)/float64(b.N), "callbacks/op")
 }
@@ -519,7 +520,7 @@ func BenchmarkSileroVAD_Throughput_RealTime(b *testing.B) {
 
 	var totalSamples int64
 	for i := 0; i < b.N; i++ {
-		_ = vad.Process(data)
+		_ = vad.Process(context.Background(), data)
 		totalSamples += 16000
 	}
 

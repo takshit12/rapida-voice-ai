@@ -86,7 +86,7 @@ func (cst *cartesiaSpeechToText) speechToTextCallback(conn *websocket.Conn, ctx 
 			if err := json.Unmarshal(msg, &resp); err == nil && resp.Text != "" {
 				if cst.transformerOptions.OnPacket != nil {
 					cst.transformerOptions.OnPacket(
-						internal_type.InterruptionPacket{Source: "word"},
+						internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 						internal_type.SpeechToTextPacket{
 							Script:   resp.Text,
 							Language: resp.Language,
@@ -98,7 +98,7 @@ func (cst *cartesiaSpeechToText) speechToTextCallback(conn *websocket.Conn, ctx 
 	}
 }
 
-func (cst *cartesiaSpeechToText) Transform(ctx context.Context, in []byte) error {
+func (cst *cartesiaSpeechToText) Transform(ctx context.Context, in internal_type.UserAudioPacket) error {
 	cst.mu.Lock()
 	conn := cst.connection
 	defer cst.mu.Unlock()
@@ -106,7 +106,7 @@ func (cst *cartesiaSpeechToText) Transform(ctx context.Context, in []byte) error
 	if conn == nil {
 		return fmt.Errorf("cartesia-stt: websocket connection is not initialized")
 	}
-	if err := conn.WriteMessage(websocket.BinaryMessage, in); err != nil {
+	if err := conn.WriteMessage(websocket.BinaryMessage, in.Audio); err != nil {
 		return fmt.Errorf("failed to send audio data: %w", err)
 	}
 	return nil

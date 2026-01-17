@@ -8,8 +8,7 @@ package internal_denoiser_rnnoise
 import (
 	"context"
 
-	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
-	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
+	internal_audio_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
@@ -21,8 +20,8 @@ type rnnoiseDenoiser struct {
 	logger         commons.Logger
 	denoiserConfig *protos.AudioConfig
 	inputConfig    *protos.AudioConfig
-	audioSampler   internal_audio.AudioResampler
-	audioConverter internal_audio.AudioConverter
+	audioSampler   internal_type.AudioResampler
+	audioConverter internal_type.AudioConverter
 }
 
 // NewDenoiser creates a new denoiser instance
@@ -33,9 +32,18 @@ func NewRnnoiseDenoiser(
 	if err != nil {
 		return nil, err
 	}
+	sampler, err := internal_audio_resampler.GetResampler(logger)
+	if err != nil {
+		return nil, err
+	}
+	converter, err := internal_audio_resampler.GetConverter(logger)
+	if err != nil {
+		return nil, err
+	}
+
 	return &rnnoiseDenoiser{
-		audioSampler:   default_resampler.NewDefaultAudioResampler(logger),
-		audioConverter: default_resampler.NewDefaultAudioConverter(logger),
+		audioSampler:   sampler,
+		audioConverter: converter,
 		rnNoise:        rn,
 		denoiserConfig: &protos.AudioConfig{
 			SampleRate:  48000,

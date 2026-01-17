@@ -5,16 +5,9 @@
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
 package internal_type
 
-import (
-	"context"
-)
+import "context"
 
-// Activity represents a detected Audio segment.
-
-type VADCallback func(InterruptionPacket) error
-
-type Vad interface {
-	Name() string
-	Process(ctx context.Context, frame UserAudioPacket) error
-	Close() error
+type Recorder interface {
+	Record(context.Context, Packet) error
+	Persist() ([]byte, error)
 }

@@ -85,10 +85,9 @@ func (cst *sarvamSpeechToText) speechToTextCallback(conn *websocket.Conn, ctx co
 		switch response.Type {
 		case "data":
 			if transcriptionData, err := response.AsTranscription(); err == nil {
-				cst.logger.Debugf("sarvam-stt: transcription received: %+v", transcriptionData)
 				if cst.transformerOptions.OnPacket != nil {
 					cst.transformerOptions.OnPacket(
-						internal_type.InterruptionPacket{Source: "word"},
+						internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 						internal_type.SpeechToTextPacket{
 							Script:     transcriptionData.Transcript,
 							Confidence: 0.9,
@@ -139,9 +138,9 @@ func (cst *sarvamSpeechToText) Initialize() error {
 	return nil
 }
 
-func (cst *sarvamSpeechToText) Transform(ctx context.Context, in []byte) error {
+func (cst *sarvamSpeechToText) Transform(ctx context.Context, in internal_type.UserAudioPacket) error {
 
-	in, err := cst.speechToTextMessage(in)
+	vl, err := cst.speechToTextMessage(in.Audio)
 	if err != nil {
 		return fmt.Errorf("sarvam-stt: unable to encode byte to base64: %w", err)
 	}
@@ -154,7 +153,7 @@ func (cst *sarvamSpeechToText) Transform(ctx context.Context, in []byte) error {
 		return fmt.Errorf("sarvam-stt: websocket connection is not initialized")
 	}
 
-	if err := connection.WriteMessage(websocket.TextMessage, in); err != nil {
+	if err := connection.WriteMessage(websocket.TextMessage, vl); err != nil {
 		return fmt.Errorf("sarvam-stt: failed to send audio data: %w", err)
 	}
 

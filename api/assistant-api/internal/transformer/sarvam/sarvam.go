@@ -13,7 +13,8 @@ import (
 	"net/url"
 
 	internal_audio "github.com/rapidaai/api/assistant-api/internal/audio"
-	default_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler/default"
+	internal_audio_resampler "github.com/rapidaai/api/assistant-api/internal/audio/resampler"
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
@@ -32,7 +33,7 @@ type sarvamOption struct {
 	modelOpts   utils.Option
 	key         string
 	encoder     *base64.Encoding
-	resampler   internal_audio.AudioResampler
+	resampler   internal_type.AudioResampler
 }
 
 func NewSarvamOption(logger commons.Logger, vaultCredential *protos.VaultCredential, audioConfig *protos.AudioConfig, option utils.Option) (*sarvamOption, error) {
@@ -40,13 +41,18 @@ func NewSarvamOption(logger commons.Logger, vaultCredential *protos.VaultCredent
 	if !ok {
 		return nil, fmt.Errorf("sarvam: illegal vault config")
 	}
+
+	resampler, err := internal_audio_resampler.GetResampler(logger)
+	if err != nil {
+		return nil, err
+	}
 	return &sarvamOption{
 		logger:      logger,
 		audioConfig: audioConfig,
 		modelOpts:   option,
 		key:         cx.(string),
 		encoder:     base64.StdEncoding,
-		resampler:   default_resampler.NewDefaultAudioResampler(logger),
+		resampler:   resampler,
 	}, nil
 }
 

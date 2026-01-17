@@ -69,7 +69,7 @@ func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credentia
 }
 
 // Transform implements internal_transformer.SpeechToTextTransformer.
-func (google *googleSpeechToText) Transform(c context.Context, byf []byte) error {
+func (google *googleSpeechToText) Transform(c context.Context, in internal_type.UserAudioPacket) error {
 	google.mu.Lock()
 	strm := google.stream
 	google.mu.Unlock()
@@ -80,7 +80,7 @@ func (google *googleSpeechToText) Transform(c context.Context, byf []byte) error
 
 	return strm.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_Audio{
-			Audio: byf,
+			Audio: in.Audio,
 		},
 	})
 }
@@ -127,7 +127,7 @@ func (g *googleSpeechToText) speechToTextCallback(stram speechpb.Speech_Streamin
 						}
 					}
 					g.options.OnPacket(
-						internal_type.InterruptionPacket{Source: "word"},
+						internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 						internal_type.SpeechToTextPacket{
 							Script:     alt.GetTranscript(),
 							Confidence: float64(alt.GetConfidence()),

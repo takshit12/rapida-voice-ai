@@ -17,6 +17,7 @@ import (
 	"time"
 
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
+	internal_audio_recorder "github.com/rapidaai/api/assistant-api/internal/audio/recorder"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_conversation_gorm "github.com/rapidaai/api/assistant-api/internal/entity/conversations"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
@@ -80,7 +81,7 @@ func (r *GenericRequestor) Disconnect() {
 	// Phase 5: Export telemetry and cleanup
 	r.exportTelemetry(ctx)
 	r.closeExecutor(ctx)
-	r.stopIdleTimer()
+	r.stopTimers()
 
 	r.logger.Benchmark("session.Disconnect", time.Since(startTime))
 }
@@ -394,10 +395,13 @@ func (r *GenericRequestor) closeExecutor(ctx context.Context) {
 	}
 }
 
-// stopIdleTimer stops the idle timeout timer if it is currently active.
-func (r *GenericRequestor) stopIdleTimer() {
+// stopTimers stops all active timers (idle timeout and max session duration).
+func (r *GenericRequestor) stopTimers() {
 	if r.idleTimeoutTimer != nil {
 		r.idleTimeoutTimer.Stop()
+	}
+	if r.maxSessionTimer != nil {
+		r.maxSessionTimer.Stop()
 	}
 }
 
@@ -535,9 +539,12 @@ func (r *GenericRequestor) startBackgroundTasks(
 	// Initialize audio recorder when both input and output are configured
 	utils.Go(ctx, func() {
 		if audioInputConfig != nil && audioOutputConfig != nil {
-			if err := r.recorder.Initialize(audioInputConfig, audioOutputConfig); err != nil {
+			rc, err := internal_audio_recorder.GetRecorder(r.logger, audioInputConfig, audioOutputConfig)
+			if err != nil {
 				r.logger.Tracef(ctx, "failed to initialize audio recorder: %+v", err)
+				return
 			}
+			r.recorder = rc
 		}
 	})
 

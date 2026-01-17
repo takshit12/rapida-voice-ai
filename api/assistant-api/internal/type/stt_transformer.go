@@ -22,7 +22,7 @@ type SpeechToTextTransformer interface {
 	Name() string
 
 	//
-	Transformers[[]byte]
+	Transformers[UserAudioPacket]
 }
 
 // SpeechToTextTransformerOptions defines the interface for handling audio transformation events.

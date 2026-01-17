@@ -100,8 +100,7 @@ func (r *GenericRequestor) initializeMaxSessionDuration(ctx context.Context, beh
 	}
 
 	timeoutDuration := time.Duration(*behavior.MaxSessionDuration) * time.Minute
-	time.AfterFunc(timeoutDuration, func() {
-		r.logger.Infof("conversation timeout reached for assistant: %s", r.assistant.Id)
+	r.maxSessionTimer = time.AfterFunc(timeoutDuration, func() {
 		r.OnPacket(ctx, internal_type.LLMToolPacket{
 			ContextID: r.messaging.GetId(),
 			Action:    protos.AssistantConversationAction_END_CONVERSATION,

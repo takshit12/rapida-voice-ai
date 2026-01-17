@@ -7,8 +7,6 @@ package internal_adapter_generic
 
 import (
 	"context"
-	"errors"
-	"io"
 	"time"
 
 	internal_denoiser "github.com/rapidaai/api/assistant-api/internal/denoiser"
@@ -193,32 +191,4 @@ func (listening *GenericRequestor) initializeVAD(ctx context.Context, audioConfi
 	listening.vad = vad
 	listening.logger.Benchmark("listen.initializeVAD", time.Since(start))
 	return nil
-}
-
-func (listening *GenericRequestor) ListenAudio(ctx context.Context, in []byte) ([]byte, error) {
-	if listening.denoiser != nil {
-		dnOut, _, err := listening.denoiser.Denoise(ctx, in)
-		if err != nil {
-			listening.logger.Warnf("error while denoising process | will process actual audio byte")
-		} else {
-			in = dnOut
-		}
-	}
-	if listening.vad != nil {
-		utils.Go(ctx, func() {
-			if err := listening.vad.Process(in); err != nil {
-				listening.logger.Warnf("error while processing with vad %s", err.Error())
-			}
-		})
-	}
-	if listening.speechToTextTransformer != nil {
-		utils.Go(ctx, func() {
-			if err := listening.speechToTextTransformer.Transform(ctx, in); err != nil {
-				if !errors.Is(err, io.EOF) {
-					listening.logger.Tracef(ctx, "error while transforming input %s and error %s", listening.speechToTextTransformer.Name(), err.Error())
-				}
-			}
-		})
-	}
-	return in, nil
 }

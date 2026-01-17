@@ -7,12 +7,14 @@ package internal_recorder
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"sort"
 	"sync"
 	"time"
 
+	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	protos "github.com/rapidaai/protos"
 )
@@ -26,15 +28,7 @@ type AudioChunk struct {
 	ID        int64 // Add unique identifier for each chunk
 }
 
-type Recorder interface {
-	Initialize(userAudioConfig, systemAudioConfig *protos.AudioConfig) error
-	User(in []byte) error
-	Interrupt() error
-	System(out []byte) error
-	Persist() ([]byte, error)
-}
-
-type recorder struct {
+type audioRecorder struct {
 	logger           commons.Logger
 	mu               sync.Mutex   // Ensure thread-safe access
 	audioChunks      []AudioChunk // All audio chunks with timestamps
@@ -44,21 +38,30 @@ type recorder struct {
 	chunkIDCounter   int64 // Counter for unique chunk IDs
 }
 
-func NewRecorder(logger commons.Logger) Recorder {
-	return &recorder{
-		logger:      logger,
-		audioChunks: []AudioChunk{},
-		mu:          sync.Mutex{},
-	}
+func NewDefaultAudioRecorder(logger commons.Logger, userConfig, systemConfig *protos.AudioConfig) (internal_type.Recorder, error) {
+	return &audioRecorder{
+		logger:       logger,
+		audioChunks:  []AudioChunk{},
+		mu:           sync.Mutex{},
+		userConfig:   userConfig,
+		systemConfig: systemConfig,
+	}, nil
 }
 
-func (r *recorder) Initialize(userConfig, systemConfig *protos.AudioConfig) error {
-	r.userConfig = userConfig
-	r.systemConfig = systemConfig
+func (r *audioRecorder) Record(ctx context.Context, p internal_type.Packet) error {
+	switch vl := p.(type) {
+	case internal_type.UserAudioPacket:
+		return r.user(vl.Audio)
+	case internal_type.InterruptionPacket:
+		return r.interrupt()
+	case internal_type.TextToSpeechAudioPacket:
+		return r.system(vl.AudioChunk)
+	default:
+	}
 	return nil
 }
 
-func (r *recorder) User(in []byte) error {
+func (r *audioRecorder) user(in []byte) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -74,7 +77,7 @@ func (r *recorder) User(in []byte) error {
 	r.audioChunks = append(r.audioChunks, chunk)
 	return nil
 }
-func (r *recorder) Interrupt() error {
+func (r *audioRecorder) interrupt() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	interruptTime := time.Now()
@@ -99,7 +102,7 @@ func (r *recorder) Interrupt() error {
 	return nil
 }
 
-func (r *recorder) System(out []byte) error {
+func (r *audioRecorder) system(out []byte) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -116,7 +119,7 @@ func (r *recorder) System(out []byte) error {
 	return nil
 }
 
-func (r *recorder) removeInterruptedSystemAudio(interruptTime time.Time) {
+func (r *audioRecorder) removeInterruptedSystemAudio(interruptTime time.Time) {
 	silencedCount := 0
 	modifiedCount := 0
 
@@ -178,12 +181,12 @@ func (r *recorder) removeInterruptedSystemAudio(interruptTime time.Time) {
 	// r.logger.Info(fmt.Sprintf("Interruption processed: silenced %d chunks, modified %d chunks", silencedCount, modifiedCount))
 }
 
-func (r *recorder) createSilentAudioData(byteLength int) []byte {
+func (r *audioRecorder) createSilentAudioData(byteLength int) []byte {
 	// Generate silence: zero bytes for the specified length
 	return make([]byte, byteLength)
 }
 
-func (r *recorder) trimAudioChunkData(data []byte, keepDuration time.Duration, config *protos.AudioConfig) []byte {
+func (r *audioRecorder) trimAudioChunkData(data []byte, keepDuration time.Duration, config *protos.AudioConfig) []byte {
 	if config == nil || keepDuration <= 0 {
 		return []byte{}
 	}
@@ -224,7 +227,7 @@ func (r *recorder) trimAudioChunkData(data []byte, keepDuration time.Duration, c
 	return trimmedData
 }
 
-func (r *recorder) calculateSystemAudioPlayTime(targetChunk AudioChunk) time.Time {
+func (r *audioRecorder) calculateSystemAudioPlayTime(targetChunk AudioChunk) time.Time {
 	var latestEndTime time.Time
 	isFirstSystemChunk := true
 
@@ -251,7 +254,7 @@ func (r *recorder) calculateSystemAudioPlayTime(targetChunk AudioChunk) time.Tim
 	return playStartTime
 }
 
-func (r *recorder) Persist() ([]byte, error) {
+func (r *audioRecorder) Persist() ([]byte, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -289,7 +292,7 @@ func (r *recorder) Persist() ([]byte, error) {
 	return wavData, nil
 }
 
-func (r *recorder) getTargetAudioConfig() *protos.AudioConfig {
+func (r *audioRecorder) getTargetAudioConfig() *protos.AudioConfig {
 	if r.userConfig != nil {
 		return r.userConfig
 	}
@@ -302,7 +305,7 @@ func (r *recorder) getTargetAudioConfig() *protos.AudioConfig {
 	return nil
 }
 
-func (r *recorder) mergeAudioChunks(targetConfig *protos.AudioConfig) ([]byte, error) {
+func (r *audioRecorder) mergeAudioChunks(targetConfig *protos.AudioConfig) ([]byte, error) {
 	if len(r.audioChunks) == 0 {
 		return nil, fmt.Errorf("no audio chunks to merge")
 	}
@@ -347,7 +350,7 @@ func (r *recorder) mergeAudioChunks(targetConfig *protos.AudioConfig) ([]byte, e
 	return pcmData, nil
 }
 
-func (r *recorder) calculateChunkDuration(chunk AudioChunk) time.Duration {
+func (r *audioRecorder) calculateChunkDuration(chunk AudioChunk) time.Duration {
 	if chunk.Config == nil {
 		return 0
 	}
@@ -366,7 +369,7 @@ func (r *recorder) calculateChunkDuration(chunk AudioChunk) time.Duration {
 	return time.Duration(duration * float64(time.Second))
 }
 
-func (r *recorder) addChunkToOutput(chunk AudioChunk, output []int32, startTime time.Time, targetConfig *protos.AudioConfig) error {
+func (r *audioRecorder) addChunkToOutput(chunk AudioChunk, output []int32, startTime time.Time, targetConfig *protos.AudioConfig) error {
 	if chunk.Config == nil {
 		return fmt.Errorf("chunk has no audio configuration")
 	}
@@ -411,7 +414,7 @@ func (r *recorder) addChunkToOutput(chunk AudioChunk, output []int32, startTime 
 	return nil
 }
 
-func (r *recorder) convertToSamples(data []byte, config *protos.AudioConfig) ([]int32, error) {
+func (r *audioRecorder) convertToSamples(data []byte, config *protos.AudioConfig) ([]int32, error) {
 	var samples []int32
 
 	switch config.AudioFormat {
@@ -433,7 +436,7 @@ func (r *recorder) convertToSamples(data []byte, config *protos.AudioConfig) ([]
 	return samples, nil
 }
 
-func (r *recorder) muLawToLinear(muLawByte byte) int32 {
+func (r *audioRecorder) muLawToLinear(muLawByte byte) int32 {
 	// μ-law to linear PCM conversion
 	muLawByte = ^muLawByte
 	sign := muLawByte & 0x80
@@ -451,7 +454,7 @@ func (r *recorder) muLawToLinear(muLawByte byte) int32 {
 	return sample << 2 // Scale to 16-bit range
 }
 
-func (r *recorder) createWAVFile(pcmData []byte, config *protos.AudioConfig) ([]byte, error) {
+func (r *audioRecorder) createWAVFile(pcmData []byte, config *protos.AudioConfig) ([]byte, error) {
 	var buf bytes.Buffer
 
 	// WAV header

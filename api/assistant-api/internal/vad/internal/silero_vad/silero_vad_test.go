@@ -6,6 +6,7 @@
 package internal_silero_vad
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -57,26 +58,26 @@ func newSileroOrSkip(t *testing.T, inputCfg *protos.AudioConfig, threshold float
 	return silero
 }
 
-func generateSilence(samples int) []byte {
-	return make([]byte, samples*2)
+func generateSilence(samples int) internal_type.UserAudioPacket {
+	return internal_type.UserAudioPacket{Audio: make([]byte, samples*2)}
 }
 
-func generateSineWave(samples int, frequency, amplitude float64) []byte {
+func generateSineWave(samples int, frequency, amplitude float64) internal_type.UserAudioPacket {
 	data := make([]byte, samples*2)
 	for i := 0; i < samples; i++ {
 		sample := int16(amplitude * 32767 * math.Sin(2*math.Pi*float64(i)*frequency/16000))
 		binary.LittleEndian.PutUint16(data[i*2:i*2+2], uint16(sample))
 	}
-	return data
+	return internal_type.UserAudioPacket{Audio: data}
 }
 
-func generateNoise(samples int) []byte {
+func generateNoise(samples int) internal_type.UserAudioPacket {
 	data := make([]byte, samples*2)
 	for i := 0; i < samples; i++ {
 		sample := int16((i*7919)%65536 - 32768)
 		binary.LittleEndian.PutUint16(data[i*2:i*2+2], uint16(sample))
 	}
-	return data
+	return internal_type.UserAudioPacket{Audio: data}
 }
 
 // Core functionality tests
@@ -113,7 +114,7 @@ func TestSileroVAD_Process_Silence_NoCallback(t *testing.T) {
 
 	vad := newSileroOrSkip(t, inputConfig, 0.5, callback)
 
-	err := vad.Process(generateSilence(16000))
+	err := vad.Process(context.Background(), generateSilence(16000))
 	require.NoError(t, err)
 	assert.False(t, callbackCalled)
 }
@@ -128,7 +129,7 @@ func TestSileroVAD_Process_Speech_AllowsCallback(t *testing.T) {
 
 	vad := newSileroOrSkip(t, inputConfig, 0.2, callback)
 
-	err := vad.Process(generateSineWave(16000, 440, 0.9))
+	err := vad.Process(context.Background(), generateSineWave(16000, 440, 0.9))
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, result.EndAt, result.StartAt)
 }
@@ -154,7 +155,7 @@ func TestSileroVAD_Process_DifferentSampleRates(t *testing.T) {
 
 			vad := newSileroOrSkip(t, inputConfig, 0.5, callback)
 
-			err := vad.Process(generateSilence(tt.samples))
+			err := vad.Process(context.Background(), generateSilence(tt.samples))
 			require.NoError(t, err)
 		})
 	}
@@ -178,7 +179,7 @@ func TestSileroVAD_Process_DifferentChannels(t *testing.T) {
 			inputConfig := &protos.AudioConfig{SampleRate: 16000, AudioFormat: protos.AudioConfig_LINEAR16, Channels: tt.channels}
 			vad := newSileroOrSkip(t, inputConfig, 0.5, callback)
 
-			err := vad.Process(generateSilence(tt.samples))
+			err := vad.Process(context.Background(), generateSilence(tt.samples))
 			require.NoError(t, err)
 		})
 	}
@@ -191,7 +192,7 @@ func TestSileroVAD_Process_CorruptedData(t *testing.T) {
 	vad := newSileroOrSkip(t, inputConfig, 0.5, callback)
 
 	corrupted := make([]byte, 999) // Odd length
-	err := vad.Process(corrupted)
+	err := vad.Process(context.Background(), internal_type.UserAudioPacket{Audio: corrupted})
 	_ = err // Accept error or nil; should not panic
 }
 
@@ -205,7 +206,7 @@ func TestSileroVAD_Process_VerySmallChunks(t *testing.T) {
 	for _, size := range sizes {
 		size := size
 		t.Run(fmt.Sprintf("%d_samples", size), func(t *testing.T) {
-			err := vad.Process(generateSilence(size))
+			err := vad.Process(context.Background(), generateSilence(size))
 			_ = err
 		})
 	}
@@ -223,7 +224,7 @@ func TestSileroVAD_Process_Concurrent(t *testing.T) {
 	for i := 0; i < workers; i++ {
 		go func() {
 			defer wg.Done()
-			_ = vad.Process(generateSilence(1600))
+			_ = vad.Process(context.Background(), generateSilence(1600))
 		}()
 	}
 	wg.Wait()
@@ -275,7 +276,7 @@ func TestSileroVAD_Process_NoisePatterns(t *testing.T) {
 
 	vad := newSileroOrSkip(t, inputConfig, 0.5, callback)
 
-	err := vad.Process(generateNoise(16000))
+	err := vad.Process(context.Background(), generateNoise(16000))
 	require.NoError(t, err)
 }
 
@@ -297,7 +298,7 @@ func TestSileroVAD_Process_MaxAmplitude(t *testing.T) {
 		binary.LittleEndian.PutUint16(data[i*2:i*2+2], uint16(val))
 	}
 
-	err := vad.Process(data)
+	err := vad.Process(context.Background(), internal_type.UserAudioPacket{Audio: data})
 	require.NoError(t, err)
 }
 
@@ -309,7 +310,7 @@ func TestSileroVAD_Process_RepeatedCalls(t *testing.T) {
 
 	chunk := generateSilence(1600)
 	for i := 0; i < 50; i++ {
-		err := vad.Process(chunk)
+		err := vad.Process(context.Background(), chunk)
 		require.NoError(t, err)
 	}
 }
@@ -325,7 +326,7 @@ func TestSileroVAD_StatefulProcessing(t *testing.T) {
 	vad := newSileroOrSkip(t, inputConfig, 0.3, callback)
 
 	for i := 0; i < 10; i++ {
-		err := vad.Process(generateSineWave(1600, 440, 0.8))
+		err := vad.Process(context.Background(), generateSineWave(1600, 440, 0.8))
 		require.NoError(t, err)
 	}
 

@@ -117,7 +117,7 @@ func (aai *assemblyaiSTT) speechToTextCallback(conn *websocket.Conn, ctx context
 				}
 				averageConfidence := confidence / float64(len(transcript.Words))
 				aai.options.OnPacket(
-					internal_type.InterruptionPacket{Source: "word"},
+					internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 					internal_type.SpeechToTextPacket{
 						Script:     transcript.Transcript,
 						Language:   "en",
@@ -136,7 +136,7 @@ func (aai *assemblyaiSTT) speechToTextCallback(conn *websocket.Conn, ctx context
 	}
 }
 
-func (aai *assemblyaiSTT) Transform(ctx context.Context, in []byte) error {
+func (aai *assemblyaiSTT) Transform(ctx context.Context, in internal_type.UserAudioPacket) error {
 	aai.mu.Lock()
 	defer aai.mu.Unlock()
 
@@ -144,7 +144,7 @@ func (aai *assemblyaiSTT) Transform(ctx context.Context, in []byte) error {
 		return fmt.Errorf("assembly-ai-stt: websocket connection is not initialized")
 	}
 
-	if err := aai.connection.WriteMessage(websocket.BinaryMessage, in); err != nil {
+	if err := aai.connection.WriteMessage(websocket.BinaryMessage, in.Content()); err != nil {
 		aai.logger.Errorf("assembly-ai-stt: error sending audio: %v", err)
 		return fmt.Errorf("error sending audio: %w", err)
 	}

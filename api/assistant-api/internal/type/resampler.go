@@ -3,7 +3,7 @@
 //
 // Licensed under GPL-2.0 with Rapida Additional Terms.
 // See LICENSE.md or contact sales@rapida.ai for commercial usage.
-package internal_audio
+package internal_type
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"github.com/rapidaai/protos"
 )
 
-// AudioInfo holds information about audio data
 type AudioInfo struct {
 	SampleRate        uint32
 	Format            protos.AudioConfig_AudioFormat

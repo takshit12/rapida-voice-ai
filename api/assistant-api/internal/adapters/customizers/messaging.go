@@ -21,7 +21,7 @@ type Messaging interface {
 	GetMessage(actor type_enums.MessageActor) (*types.Message, error)
 	GetId() string
 
-	Transition(state InteractionState) error
+	// Transition(state InteractionState) error
 
 	// input mode
 	GetInputMode() type_enums.MessageMode

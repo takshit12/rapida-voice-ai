@@ -11,7 +11,6 @@ import (
 
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_adapter_request_customizers "github.com/rapidaai/api/assistant-api/internal/adapters/customizers"
-	internal_recorder "github.com/rapidaai/api/assistant-api/internal/recorder"
 	internal_streamers "github.com/rapidaai/api/assistant-api/internal/streamers"
 	internal_assistant_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry/assistant"
 	internal_assistant_telemetry_exporters "github.com/rapidaai/api/assistant-api/internal/telemetry/assistant/exporters"
@@ -90,7 +89,7 @@ type GenericRequestor struct {
 	sentenceAssembler internal_type.LLMSentenceAssembler
 	synthesizers      []internal_synthesizers.Synthesizer
 
-	recorder       internal_recorder.Recorder
+	recorder       internal_type.Recorder
 	templateParser parsers.StringTemplateParser
 
 	// executor
@@ -109,6 +108,7 @@ type GenericRequestor struct {
 	// experience
 	idleTimeoutTimer *time.Timer
 	idleTimeoutCount uint64
+	maxSessionTimer  *time.Timer
 }
 
 func NewGenericRequestor(
@@ -155,7 +155,6 @@ func NewGenericRequestor(
 				&config.AppConfig, opensearch,
 			)),
 
-		recorder:          internal_recorder.NewRecorder(logger),
 		messaging:         internal_adapter_request_customizers.NewMessaging(logger),
 		assistantExecutor: internal_agent_executor_llm.NewAssistantExecutor(logger),
 
@@ -325,12 +324,4 @@ func (gr *GenericRequestor) CreateConversationRecording(
 		return err
 	}
 	return nil
-}
-
-func (gr *GenericRequestor) Recorder() internal_recorder.Recorder {
-	return gr.recorder
-}
-
-func (gr *GenericRequestor) AssistantExecutor() internal_agent_executor.AssistantExecutor {
-	return gr.assistantExecutor
 }
