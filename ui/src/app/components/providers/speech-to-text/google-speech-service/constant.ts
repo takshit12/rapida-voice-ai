@@ -25,7 +25,7 @@ export const GetGoogleDefaultOptions = (current: Metadata[]): Metadata[] => {
 
   addMetadata('rapida.credential_id');
   addMetadata('listen.language');
-  addMetadata('listen.threshold');
+  addMetadata('listen.threshold', '0.5');
   addMetadata('listen.model');
   addMetadata('listen.region');
 
