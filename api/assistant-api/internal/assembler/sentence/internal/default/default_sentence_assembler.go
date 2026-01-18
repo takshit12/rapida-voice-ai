@@ -45,6 +45,8 @@ import (
 // SentenceTokenizer implements sentence-level tokenization for streaming text.
 type sentenceAssembler struct {
 	logger commons.Logger
+	ctx    context.Context
+
 	result chan internal_type.Packet
 
 	mu sync.RWMutex
@@ -69,15 +71,15 @@ type sentenceAssembler struct {
 //	if err != nil {
 //		return err
 //	}
-func NewDefaultLLMSentenceAssembler(logger commons.Logger, options utils.Option) (internal_type.LLMSentenceAssembler, error) {
-	st := &sentenceAssembler{logger: logger, result: make(chan internal_type.Packet, 16)}
+func NewDefaultLLMSentenceAssembler(context context.Context, logger commons.Logger, options utils.Option) (internal_type.LLMSentenceAssembler, error) {
+	st := &sentenceAssembler{
+		ctx:    context,
+		logger: logger,
+		result: make(chan internal_type.Packet, 16),
+	}
 	if err := st.initializeBoundaries(options, logger); err != nil {
 		return nil, err
 	}
-	if !st.hasBoundaries {
-		logger.Debug("No sentence boundaries defined — will emit only on completion")
-	}
-
 	return st, nil
 }
 
@@ -139,7 +141,7 @@ func filterBoundaries(boundaries []string) []string {
 //		Sentence:   "Hello world.",
 //		IsComplete: true,
 //	})
-func (st *sentenceAssembler) Assemble(ctx context.Context, sentences ...internal_type.Packet) error {
+func (st *sentenceAssembler) Assemble(ctx context.Context, sentences ...internal_type.LLMPacket) error {
 	for _, sentence := range sentences {
 		toEmit := st.extractAndQueue(sentence)
 		// Send queued results while respecting context cancellation
@@ -157,17 +159,12 @@ func (st *sentenceAssembler) Assemble(ctx context.Context, sentences ...internal
 // extractAndQueue extracts complete sentences from the input and returns them
 // in emission order. It safely manages buffer state and context switching.
 
-func (st *sentenceAssembler) extractAndQueue(sentence internal_type.Packet) []internal_type.Packet {
+func (st *sentenceAssembler) extractAndQueue(sentence internal_type.LLMPacket) []internal_type.Packet {
 	st.mu.Lock()
 	defer st.mu.Unlock()
 	var toEmit []internal_type.Packet
 
 	switch input := sentence.(type) {
-	case internal_type.InterruptionPacket:
-		st.buffer.Reset()
-		st.currentContext = ""
-		return nil
-
 	case internal_type.LLMStreamPacket:
 		// Handle context switch - just clean buffer, do NOT emit
 		if input.ContextID != st.currentContext && st.currentContext != "" {

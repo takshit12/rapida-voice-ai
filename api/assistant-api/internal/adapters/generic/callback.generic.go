@@ -152,13 +152,21 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 				talking.logger.Errorf("assistant executor error: %v", err)
 			}
 
-			if err := talking.messaging.Transition(internal_adapter_request_customizers.LLMGenerated); err != nil {
+			if err := talking.messaging.Transition(internal_adapter_request_customizers.LLMGenerating); err != nil {
 				talking.logger.Errorf("messaging transition error: %v", err)
 			}
 
-			if err := talking.sentenceAssembler.Assemble(ctx, internal_type.LLMStreamPacket{ContextID: vl.ContextId(), Text: vl.Text}, internal_type.LLMMessagePacket{ContextID: vl.ContextId()}); err != nil {
+			if err := talking.callSentenceAssembler(ctx, internal_type.LLMStreamPacket{ContextID: vl.ContextId(), Text: vl.Text}); err != nil {
 				talking.logger.Debugf("unable to send static packet to tokenizer %v", err)
 			}
+
+			if err := talking.messaging.Transition(internal_adapter_request_customizers.LLMGenerated); err != nil {
+				talking.logger.Errorf("messaging transition error: %v", err)
+			}
+			if err := talking.callSentenceAssembler(ctx, internal_type.LLMMessagePacket{ContextID: vl.ContextId()}); err != nil {
+				talking.logger.Debugf("unable to send static packet to tokenizer %v", err)
+			}
+
 			continue
 		case internal_type.InterruptionPacket:
 			ctx, span, _ := talking.Tracer().StartSpan(talking.Context(), utils.AssistantUtteranceStage)

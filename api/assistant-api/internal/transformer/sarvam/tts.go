@@ -17,6 +17,7 @@ import (
 	sarvam_internal "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -30,12 +31,15 @@ type sarvamTextToSpeech struct {
 	connection *websocket.Conn
 	contextId  string
 
-	logger  commons.Logger
-	options *internal_type.TextToSpeechInitializeOptions
+	logger   commons.Logger
+	onPacket func(pkt ...internal_type.Packet) error
 }
 
-func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
-	sarvamOpts, err := NewSarvamOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.TextToSpeechTransformer, error) {
+	sarvamOpts, err := NewSarvamOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("sarvam-tts: initializing sarvam failed %+v", err)
 		return nil, err
@@ -46,7 +50,7 @@ func NewSarvamTextToSpeech(ctx context.Context, logger commons.Logger, credentia
 		ctxCancel:    ctxCancel,
 		logger:       logger,
 		sarvamOption: sarvamOpts,
-		options:      opts,
+		onPacket:     onPacket,
 	}, nil
 }
 
@@ -116,7 +120,7 @@ func (rt *sarvamTextToSpeech) textToSpeechCallback(conn *websocket.Conn, ctx con
 				rt.logger.Errorf("sarvam-tts: error decoding audio data: %v", err)
 				continue
 			}
-			rt.options.OnSpeech(internal_type.TextToSpeechAudioPacket{
+			rt.onPacket(internal_type.TextToSpeechAudioPacket{
 				ContextID:  rt.contextId,
 				AudioChunk: rawAudioData,
 			})

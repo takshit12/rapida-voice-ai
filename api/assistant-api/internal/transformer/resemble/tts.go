@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/websocket"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	protos "github.com/rapidaai/protos"
 )
 
@@ -32,17 +33,19 @@ type resembleTTS struct {
 	contextId  string
 	connection *websocket.Conn
 
-	logger  commons.Logger
-	options *internal_type.TextToSpeechInitializeOptions
+	logger   commons.Logger
+	onPacket func(pkt ...internal_type.Packet) error
 }
 
 func NewResembleTextToSpeech(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	options *internal_type.TextToSpeechInitializeOptions,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option,
 ) (internal_type.TextToSpeechTransformer, error) {
-	rsmblOpts, err := NewResembleOption(logger, credential, options.AudioConfig, options.ModelOptions)
+	rsmblOpts, err := NewResembleOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("resemble-tts: initializing resembleai failed %+v", err)
 		return nil, err
@@ -54,7 +57,7 @@ func NewResembleTextToSpeech(
 		ctx:            ct,
 		ctxCancel:      ctxCancel,
 		logger:         logger,
-		options:        options,
+		onPacket:       onPacket,
 	}, nil
 }
 
@@ -116,7 +119,7 @@ func (rt *resembleTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Co
 			rt.mu.Lock()
 			contextId := rt.contextId
 			rt.mu.Unlock()
-			rt.options.OnSpeech(internal_type.TextToSpeechEndPacket{ContextID: contextId})
+			rt.onPacket(internal_type.TextToSpeechEndPacket{ContextID: contextId})
 			return
 
 		case "audio":
@@ -136,7 +139,7 @@ func (rt *resembleTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Co
 			rt.mu.Lock()
 			contextId := rt.contextId
 			rt.mu.Unlock()
-			rt.options.OnSpeech(internal_type.TextToSpeechAudioPacket{ContextID: contextId, AudioChunk: rawAudioData})
+			rt.onPacket(internal_type.TextToSpeechAudioPacket{ContextID: contextId, AudioChunk: rawAudioData})
 
 		default:
 			rt.logger.Debugf("resemble-tts: received unknown message type: %s", messageType)

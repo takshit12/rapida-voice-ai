@@ -21,6 +21,7 @@ import (
 	elevenlabs_internal "github.com/rapidaai/api/assistant-api/internal/transformer/elevenlabs/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -35,11 +36,13 @@ type elevenlabsTTS struct {
 
 	logger     commons.Logger
 	connection *websocket.Conn
-	options    *internal_type.TextToSpeechInitializeOptions
+	onPacket   func(pkt ...internal_type.Packet) error
 }
 
-func NewElevenlabsTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
-	eleOpts, err := NewElevenLabsOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+func NewElevenlabsTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.TextToSpeechTransformer, error) {
+	eleOpts, err := NewElevenLabsOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("elevenlabs-tts: intializing elevenlabs failed %+v", err)
 		return nil, err
@@ -48,7 +51,7 @@ func NewElevenlabsTextToSpeech(ctx context.Context, logger commons.Logger, crede
 	return &elevenlabsTTS{
 		ctx:              ctx2,
 		ctxCancel:        contextCancel,
-		options:          opts,
+		onPacket:         onPacket,
 		logger:           logger,
 		elevenLabsOption: eleOpts,
 	}, nil
@@ -102,7 +105,7 @@ func (elt *elevenlabsTTS) textToSpeechCallback(conn *websocket.Conn, ctx context
 
 			if rawAudioData, err := base64.StdEncoding.DecodeString(audioData.Audio); err == nil {
 				if audioData.ContextId != nil {
-					elt.options.OnSpeech(internal_type.TextToSpeechAudioPacket{
+					elt.onPacket(internal_type.TextToSpeechAudioPacket{
 						ContextID:  *audioData.ContextId,
 						AudioChunk: rawAudioData,
 					})
@@ -111,7 +114,7 @@ func (elt *elevenlabsTTS) textToSpeechCallback(conn *websocket.Conn, ctx context
 
 			if audioData.IsFinal != nil && *audioData.IsFinal {
 				if audioData.ContextId != nil {
-					elt.options.OnSpeech(internal_type.TextToSpeechEndPacket{
+					elt.onPacket(internal_type.TextToSpeechEndPacket{
 						ContextID: *audioData.ContextId,
 					})
 				}

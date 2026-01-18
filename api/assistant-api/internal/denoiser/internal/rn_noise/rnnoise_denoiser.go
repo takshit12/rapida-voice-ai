@@ -26,6 +26,7 @@ type rnnoiseDenoiser struct {
 
 // NewDenoiser creates a new denoiser instance
 func NewRnnoiseDenoiser(
+	ctx context.Context,
 	logger commons.Logger, inputConfig *protos.AudioConfig, options utils.Option,
 ) (internal_type.Denoiser, error) {
 	rn, err := NewRNNoise()

@@ -15,6 +15,7 @@ import (
 	sarvam_internal "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -28,8 +29,8 @@ type sarvamSpeechToText struct {
 	mu         sync.Mutex
 	connection *websocket.Conn
 
-	logger             commons.Logger
-	transformerOptions *internal_type.SpeechToTextInitializeOptions
+	logger   commons.Logger
+	onPacket func(pkt ...internal_type.Packet) error
 }
 
 // Name implements internal_transformer.SpeechToTextTransformer.
@@ -41,10 +42,12 @@ func NewSarvamSpeechToText(
 	ctx context.Context,
 	logger commons.Logger,
 	credential *protos.VaultCredential,
-	opts *internal_type.SpeechToTextInitializeOptions,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option,
 ) (internal_type.SpeechToTextTransformer, error) {
 
-	sarvamOpts, err := NewSarvamOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+	sarvamOpts, err := NewSarvamOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("sarvam-stt: initializing sarvam failed %+v", err)
 		return nil, err
@@ -53,11 +56,11 @@ func NewSarvamSpeechToText(
 	ct, ctxCancel := context.WithCancel(ctx)
 
 	return &sarvamSpeechToText{
-		ctx:                ct,
-		ctxCancel:          ctxCancel,
-		logger:             logger,
-		sarvamOption:       sarvamOpts,
-		transformerOptions: opts,
+		ctx:          ct,
+		ctxCancel:    ctxCancel,
+		logger:       logger,
+		sarvamOption: sarvamOpts,
+		onPacket:     onPacket,
 	}, nil
 }
 
@@ -85,8 +88,8 @@ func (cst *sarvamSpeechToText) speechToTextCallback(conn *websocket.Conn, ctx co
 		switch response.Type {
 		case "data":
 			if transcriptionData, err := response.AsTranscription(); err == nil {
-				if cst.transformerOptions.OnPacket != nil {
-					cst.transformerOptions.OnPacket(
+				if cst.onPacket != nil {
+					cst.onPacket(
 						internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 						internal_type.SpeechToTextPacket{
 							Script:     transcriptionData.Transcript,

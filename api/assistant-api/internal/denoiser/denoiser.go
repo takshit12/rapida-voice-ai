@@ -6,6 +6,8 @@
 package internal_denoiser
 
 import (
+	"context"
+
 	internal_denoiser_krisp "github.com/rapidaai/api/assistant-api/internal/denoiser/internal/krisp"
 	internal_denoiser_rnnoise "github.com/rapidaai/api/assistant-api/internal/denoiser/internal/rn_noise"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -17,16 +19,18 @@ import (
 type DenoiserIdentifier string
 
 const (
-	RN_NOISE DenoiserIdentifier = "rn_noise"
-	KRISP    DenoiserIdentifier = "krisp"
+	RN_NOISE                   DenoiserIdentifier = "rn_noise"
+	KRISP                      DenoiserIdentifier = "krisp"
+	DenoiserOptionsKeyProvider                    = "microphone.denoising.provider"
 )
 
 // logger, audioConfig, opts
-func GetDenoiser(aa DenoiserIdentifier, logger commons.Logger, inCfg *protos.AudioConfig, options utils.Option) (internal_type.Denoiser, error) {
-	switch aa {
+func GetDenoiser(ctx context.Context, logger commons.Logger, inCfg *protos.AudioConfig, options utils.Option) (internal_type.Denoiser, error) {
+	provider, _ := options.GetString(DenoiserOptionsKeyProvider)
+	switch DenoiserIdentifier(provider) {
 	case KRISP:
-		return internal_denoiser_krisp.NewKrispDenoiser(logger, inCfg, options)
+		return internal_denoiser_krisp.NewKrispDenoiser(ctx, logger, inCfg, options)
 	default:
-		return internal_denoiser_rnnoise.NewRnnoiseDenoiser(logger, inCfg, options)
+		return internal_denoiser_rnnoise.NewRnnoiseDenoiser(ctx, logger, inCfg, options)
 	}
 }

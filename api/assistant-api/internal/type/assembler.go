@@ -20,7 +20,7 @@ type LLMSentenceAssembler interface {
 	// Tokenize consumes a tokenizer input (such as an LLMStreamChunk
 	// or Finalize signal). Implementations should respect context
 	// cancellation and deadlines.
-	Assemble(ctx context.Context, in ...Packet) error
+	Assemble(ctx context.Context, in ...LLMPacket) error
 
 	// Result returns a read-only channel on which tokenized outputs
 	// are delivered.

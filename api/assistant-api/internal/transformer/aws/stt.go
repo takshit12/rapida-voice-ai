@@ -10,6 +10,7 @@ import (
 
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -17,6 +18,8 @@ func NewAWSSpeechToText(
 	ctx context.Context,
 	logger commons.Logger,
 	vaultCredential *protos.VaultCredential,
-	opts *internal_type.SpeechToTextInitializeOptions) (internal_type.SpeechToTextTransformer, error) {
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.SpeechToTextTransformer, error) {
 	return nil, nil
 }

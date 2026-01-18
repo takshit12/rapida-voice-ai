@@ -17,6 +17,7 @@ import (
 	"cloud.google.com/go/speech/apiv2/speechpb"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -26,9 +27,9 @@ type googleSpeechToText struct {
 
 	logger commons.Logger
 
-	client  *speech.Client
-	stream  speechpb.Speech_StreamingRecognizeClient
-	options *internal_type.SpeechToTextInitializeOptions
+	client   *speech.Client
+	stream   speechpb.Speech_StreamingRecognizeClient
+	onPacket func(pkt ...internal_type.Packet) error
 
 	// context management
 	ctx       context.Context
@@ -40,10 +41,12 @@ func (g *googleSpeechToText) Name() string {
 	return "google-speech-to-text"
 }
 
-func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.SpeechToTextInitializeOptions,
+func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option,
 ) (internal_type.SpeechToTextTransformer, error) {
 	start := time.Now()
-	googleOption, err := NewGoogleOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+	googleOption, err := NewGoogleOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("google-stt: Error while GoogleOption err: %v", err)
 		return nil, err
@@ -64,7 +67,7 @@ func NewGoogleSpeechToText(ctx context.Context, logger commons.Logger, credentia
 		logger:       logger,
 		client:       client,
 		googleOption: googleOption,
-		options:      opts,
+		onPacket:     onPacket,
 	}, nil
 }
 
@@ -112,10 +115,10 @@ func (g *googleSpeechToText) speechToTextCallback(stram speechpb.Speech_Streamin
 					continue
 				}
 				alt := result.Alternatives[0]
-				if g.options.OnPacket != nil && len(alt.GetTranscript()) > 0 {
+				if g.onPacket != nil && len(alt.GetTranscript()) > 0 {
 					if v, err := g.mdlOpts.GetFloat64("listen.threshold"); err == nil {
 						if alt.GetConfidence() < float32(v) {
-							g.options.OnPacket(
+							g.onPacket(
 								internal_type.SpeechToTextPacket{
 									Script:     alt.GetTranscript(),
 									Confidence: float64(alt.GetConfidence()),
@@ -126,7 +129,7 @@ func (g *googleSpeechToText) speechToTextCallback(stram speechpb.Speech_Streamin
 							continue
 						}
 					}
-					g.options.OnPacket(
+					g.onPacket(
 						internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 						internal_type.SpeechToTextPacket{
 							Script:     alt.GetTranscript(),

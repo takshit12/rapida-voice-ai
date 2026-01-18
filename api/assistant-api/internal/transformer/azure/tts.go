@@ -16,6 +16,7 @@ import (
 	"github.com/Microsoft/cognitive-services-speech-sdk-go/speech"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -31,11 +32,15 @@ type azureTextToSpeech struct {
 	stream      *audio.PullAudioOutputStream
 	audioConfig *audio.AudioConfig
 	client      *speech.SpeechSynthesizer
-	options     *internal_type.TextToSpeechInitializeOptions
+	onPacket    func(pkt ...internal_type.Packet) error
 }
 
-func NewAzureTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
-	azureOption, err := NewAzureOption(logger, credential, iOption.AudioConfig, iOption.ModelOptions)
+func NewAzureTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.TextToSpeechTransformer, error) {
+
+	azureOption, err := NewAzureOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("azure-tts: Unable to initilize azure option", err)
 		return nil, err
@@ -47,7 +52,7 @@ func NewAzureTextToSpeech(ctx context.Context, logger commons.Logger, credential
 
 		azureOption: azureOption,
 		logger:      logger,
-		options:     iOption,
+		onPacket:    onPacket,
 	}, nil
 }
 
@@ -165,7 +170,7 @@ func (azCallback *azureTextToSpeech) OnSpeech(event speech.SpeechSynthesisEventA
 	ctxId := azCallback.contextId
 	azCallback.mu.Unlock()
 
-	azCallback.options.OnSpeech(internal_type.TextToSpeechAudioPacket{
+	azCallback.onPacket(internal_type.TextToSpeechAudioPacket{
 		ContextID:  ctxId,
 		AudioChunk: event.Result.AudioData,
 	})
@@ -177,7 +182,7 @@ func (azCallback *azureTextToSpeech) OnComplete(event speech.SpeechSynthesisEven
 	ctxId := azCallback.contextId
 	azCallback.mu.Unlock()
 
-	azCallback.options.OnSpeech(internal_type.TextToSpeechEndPacket{
+	azCallback.onPacket(internal_type.TextToSpeechEndPacket{
 		ContextID: ctxId,
 	})
 }

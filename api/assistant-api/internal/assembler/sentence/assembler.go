@@ -6,6 +6,8 @@
 package internal_sentence_assembler
 
 import (
+	"context"
+
 	internal_default "github.com/rapidaai/api/assistant-api/internal/assembler/sentence/internal/default"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
@@ -15,16 +17,18 @@ import (
 type SentenceAssemblerType string
 
 const (
-	SentenceAssemblerDefault SentenceAssemblerType = "default"
+	SentenceAssemblerDefault    SentenceAssemblerType = "default"
+	OptionsKeySentenceAssembler string                = "speaker.sentence.assembler"
 )
 
-func NewLLMSentenceAssembler(
+func GetLLMSentenceAssembler(
+	context context.Context,
 	logger commons.Logger,
 	options utils.Option,
 ) (internal_type.LLMSentenceAssembler, error) {
-	typ, _ := options.GetString("speaker.sentence.assembler")
+	typ, _ := options.GetString(OptionsKeySentenceAssembler)
 	switch SentenceAssemblerType(typ) {
 	default:
-		return internal_default.NewDefaultLLMSentenceAssembler(logger, options)
+		return internal_default.NewDefaultLLMSentenceAssembler(context, logger, options)
 	}
 }

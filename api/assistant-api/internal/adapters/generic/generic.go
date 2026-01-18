@@ -26,7 +26,6 @@ import (
 	internal_services "github.com/rapidaai/api/assistant-api/internal/services"
 	internal_assistant_service "github.com/rapidaai/api/assistant-api/internal/services/assistant"
 	internal_knowledge_service "github.com/rapidaai/api/assistant-api/internal/services/knowledge"
-	internal_synthesizers "github.com/rapidaai/api/assistant-api/internal/synthesizes"
 	internal_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	endpoint_client "github.com/rapidaai/pkg/clients/endpoint"
 	integration_client "github.com/rapidaai/pkg/clients/integration"
@@ -84,10 +83,7 @@ type GenericRequestor struct {
 
 	// speak
 	textToSpeechTransformer internal_type.TextToSpeechTransformer
-
-	// speak intelligence
-	sentenceAssembler internal_type.LLMSentenceAssembler
-	synthesizers      []internal_synthesizers.Synthesizer
+	sentenceAssembler       internal_type.LLMSentenceAssembler
 
 	recorder       internal_type.Recorder
 	templateParser parsers.StringTemplateParser

@@ -319,7 +319,7 @@ func (r *GenericRequestor) closeSessionResources(ctx context.Context) {
 	// Close speech-to-text listener
 	utils.Go(r.Context(), func() {
 		defer waitGroup.Done()
-		if err := r.CloseListener(ctx); err != nil {
+		if err := r.disconnectMicrophone(ctx); err != nil {
 			r.logger.Tracef(ctx, "failed to close input transformer: %+v", err)
 		}
 	})
@@ -327,7 +327,7 @@ func (r *GenericRequestor) closeSessionResources(ctx context.Context) {
 	// Close text-to-speech speaker
 	utils.Go(r.Context(), func() {
 		defer waitGroup.Done()
-		if err := r.CloseSpeaker(); err != nil {
+		if err := r.disconnectSpeaker(); err != nil {
 			r.logger.Tracef(ctx, "failed to close output transformer: %+v", err)
 		}
 	})
@@ -511,12 +511,12 @@ func (r *GenericRequestor) connectSpeakerAndInitializeBehavior(
 	audioOutputConfig *protos.AudioConfig,
 ) {
 	if audioOutputConfig != nil {
-		if err := r.ConnectSpeaker(ctx, audioOutputConfig); err != nil {
+		if err := r.connectSpeaker(ctx, audioOutputConfig); err != nil {
 			r.logger.Tracef(ctx, "failed to connect speaker: %+v", err)
 		}
 	}
 
-	if err := r.InitializeBehavior(ctx); err != nil {
+	if err := r.initializeBehavior(ctx); err != nil {
 		r.logger.Errorf("failed to initialize assistant behavior: %+v", err)
 	}
 }
@@ -555,7 +555,7 @@ func (r *GenericRequestor) startBackgroundTasks(
 	// Establish speech-to-text listener connection
 	utils.Go(ctx, func() {
 		if audioInputConfig != nil {
-			if err := r.ConnectListener(ctx, audioInputConfig); err != nil {
+			if err := r.connectMicrophone(ctx, audioInputConfig); err != nil {
 				r.logger.Tracef(ctx, "failed to connect listener: %+v", err)
 			}
 		}

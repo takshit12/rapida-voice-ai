@@ -59,13 +59,7 @@ func (pc *packetCollector) Clear() {
 func createTestCallback(opts utils.Option) (*packetCollector, commons.Logger, msginterfaces.LiveMessageCallback) {
 	logger, _ := commons.NewApplicationLogger()
 	collector := newPacketCollector()
-
-	options := &internal_type.SpeechToTextInitializeOptions{
-		OnPacket:     collector.OnPacket,
-		ModelOptions: opts,
-	}
-
-	callback := NewDeepgramSttCallback(logger, options)
+	callback := NewDeepgramSttCallback(logger, collector.OnPacket, opts)
 	return collector, logger, callback
 }
 

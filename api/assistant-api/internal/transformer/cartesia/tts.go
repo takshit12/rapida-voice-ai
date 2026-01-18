@@ -17,6 +17,7 @@ import (
 	cartesia_internal "github.com/rapidaai/api/assistant-api/internal/transformer/cartesia/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -31,11 +32,14 @@ type cartesiaTTS struct {
 
 	logger     commons.Logger
 	connection *websocket.Conn
-	options    *internal_type.TextToSpeechInitializeOptions
+	onPacket   func(pkt ...internal_type.Packet) error
 }
 
-func NewCartesiaTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
-	cartesiaOpts, err := NewCartesiaOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+func NewCartesiaTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.TextToSpeechTransformer, error) {
+	cartesiaOpts, err := NewCartesiaOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("intializing cartesia failed %+v", err)
 		return nil, err
@@ -47,7 +51,7 @@ func NewCartesiaTextToSpeech(ctx context.Context, logger commons.Logger, credent
 		logger:         logger,
 		ctx:            ct,
 		ctxCancel:      ctxCancel,
-		options:        opts,
+		onPacket:       onPacket,
 	}, nil
 }
 
@@ -83,7 +87,7 @@ func (cst *cartesiaTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.C
 				continue
 			}
 			if payload.Done {
-				_ = cst.options.OnSpeech(internal_type.TextToSpeechEndPacket{
+				_ = cst.onPacket(internal_type.TextToSpeechEndPacket{
 					ContextID: payload.ContextID,
 				})
 				continue
@@ -96,7 +100,7 @@ func (cst *cartesiaTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.C
 				cst.logger.Error("cartesia-tts: failed to decode audio payload error: %v", err)
 				continue
 			}
-			_ = cst.options.OnSpeech(internal_type.TextToSpeechAudioPacket{
+			_ = cst.onPacket(internal_type.TextToSpeechAudioPacket{
 				ContextID:  payload.ContextID,
 				AudioChunk: decoded,
 			})

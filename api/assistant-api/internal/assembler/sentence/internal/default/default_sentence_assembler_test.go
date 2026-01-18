@@ -93,7 +93,7 @@ func TestNewDefaultLLMSentenceAssembler(t *testing.T) {
 			logger, _ := commons.NewApplicationLogger()
 			opts := newMockOptions(tt.boundaries)
 
-			tokenizer, err := NewDefaultLLMSentenceAssembler(logger, opts)
+			tokenizer, err := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 			if tt.shouldError && err != nil {
 				return
 			}
@@ -118,7 +118,7 @@ func TestNewDefaultLLMSentenceAssembler(t *testing.T) {
 func TestSingleSentence(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -152,7 +152,7 @@ func TestSingleSentence(t *testing.T) {
 func TestMultipleSentences(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -205,7 +205,7 @@ func TestMultipleBoundaries(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+		tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 
 		// Count results through channel
 		resultCount := 0
@@ -242,7 +242,7 @@ func TestMultipleBoundaries(t *testing.T) {
 func TestContextSwitching(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -298,7 +298,7 @@ func TestContextSwitching(t *testing.T) {
 func TestIsCompleteFlag(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -347,7 +347,7 @@ func TestIsCompleteFlag(t *testing.T) {
 func TestEmptyInput(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -370,7 +370,7 @@ func TestEmptyInput(t *testing.T) {
 func TestNoBoundariesDefined(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions("")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -411,7 +411,7 @@ func TestNoBoundariesDefined(t *testing.T) {
 func TestContextCancellation(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -439,7 +439,7 @@ func TestContextCancellation(t *testing.T) {
 func TestConcurrentContexts(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -480,7 +480,7 @@ func TestConcurrentContexts(t *testing.T) {
 func TestBufferStateMaintenance(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -520,7 +520,7 @@ func TestBufferStateMaintenance(t *testing.T) {
 func TestWhitespaceHandling(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -553,7 +553,7 @@ func TestWhitespaceHandling(t *testing.T) {
 func TestMultipleClose(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 
 	// Close multiple times should not panic
 	err1 := tokenizer.Close()
@@ -567,7 +567,7 @@ func TestMultipleClose(t *testing.T) {
 func TestResultChannelClosure(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 
 	resultChan := tokenizer.Result()
 	tokenizer.Close()
@@ -584,7 +584,7 @@ func TestSpecialCharacterBoundaries(t *testing.T) {
 
 	// Test with regex special characters
 	opts := newMockOptions(".?!*+")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -607,7 +607,7 @@ func TestSpecialCharacterBoundaries(t *testing.T) {
 func TestLargeBatch(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -632,7 +632,7 @@ func TestLargeBatch(t *testing.T) {
 func TestLLMStreamingInput(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".!?")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -734,7 +734,7 @@ func TestLLMStreamingInput(t *testing.T) {
 func TestLLMStreamingWithPauses(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".!?")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -776,7 +776,7 @@ func TestLLMStreamingWithPauses(t *testing.T) {
 func TestLLMStreamingWithContextSwitch(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".!?")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -829,7 +829,7 @@ func TestLLMStreamingWithContextSwitch(t *testing.T) {
 func TestLLMStreamingForcedCompletion(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".!?")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -879,7 +879,7 @@ func TestLLMStreamingForcedCompletion(t *testing.T) {
 func TestLLMStreamingUnformattedButComplete(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".!?") // boundaries exist but are NOT used
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	ctx := context.Background()
@@ -946,7 +946,7 @@ func TestLLMStreamingUnformattedButComplete(t *testing.T) {
 func TestStringRepresentation(t *testing.T) {
 	logger, _ := commons.NewApplicationLogger()
 	opts := newMockOptions(".")
-	tokenizer, _ := NewDefaultLLMSentenceAssembler(logger, opts)
+	tokenizer, _ := NewDefaultLLMSentenceAssembler(t.Context(), logger, opts)
 	defer tokenizer.Close()
 
 	st := tokenizer.(*sentenceAssembler)

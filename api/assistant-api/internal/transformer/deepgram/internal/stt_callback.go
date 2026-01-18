@@ -10,21 +10,25 @@ import (
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 )
 
 // Implement the LiveMessageCallback interface
 type deepgramSttCallback struct {
-	logger  commons.Logger
-	options *internal_type.SpeechToTextInitializeOptions
+	logger   commons.Logger
+	onPacket func(pkt ...internal_type.Packet) error
+	options  utils.Option
 }
 
 func NewDeepgramSttCallback(
 	logger commons.Logger,
-	options *internal_type.SpeechToTextInitializeOptions,
+	onPacket func(pkt ...internal_type.Packet) error,
+	options utils.Option,
 ) msginterfaces.LiveMessageCallback {
 	return &deepgramSttCallback{
-		logger:  logger,
-		options: options,
+		logger:   logger,
+		onPacket: onPacket,
+		options:  options,
 	}
 
 }
@@ -39,9 +43,9 @@ func (d *deepgramSttCallback) Message(mr *msginterfaces.MessageResponse) error {
 	for _, alternative := range mr.Channel.Alternatives {
 		if alternative.Transcript != "" {
 
-			if v, err := d.options.ModelOptions.GetFloat64("listen.threshold"); err == nil {
+			if v, err := d.options.GetFloat64("listen.threshold"); err == nil {
 				if float32(alternative.Confidence) < float32(v) {
-					d.options.OnPacket(
+					d.onPacket(
 						internal_type.SpeechToTextPacket{
 							Script:     alternative.Transcript,
 							Confidence: alternative.Confidence,
@@ -52,7 +56,7 @@ func (d *deepgramSttCallback) Message(mr *msginterfaces.MessageResponse) error {
 					return nil
 				}
 			}
-			d.options.OnPacket(
+			d.onPacket(
 				internal_type.InterruptionPacket{Source: "word"},
 				internal_type.SpeechToTextPacket{
 					Script:     alternative.Transcript,

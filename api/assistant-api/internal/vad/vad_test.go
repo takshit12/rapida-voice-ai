@@ -7,16 +7,13 @@
 package internal_vad
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/protos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap/zapcore"
 )
 
 // MockVADCallback implements the VADCallback interface for testing
@@ -26,14 +23,16 @@ func MockVADCallback(result internal_type.InterruptionPacket) error {
 
 // TestGetVAD_SILERO_VAD tests VAD factory with SILERO_VAD identifier
 func TestGetVAD_SILERO_VAD(t *testing.T) {
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
 		Channels:    1,
 	}
 
-	vad, err := GetVAD(t.Context(), SILERO_VAD, logger, audioConfig, MockVADCallback, nil)
+	vad, err := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: "invalid_vad",
+	})
 
 	require.NoError(t, err, "GetVAD should not return error for SILERO_VAD")
 	require.NotNil(t, vad, "GetVAD should return non-nil VAD instance")
@@ -42,14 +41,16 @@ func TestGetVAD_SILERO_VAD(t *testing.T) {
 
 // TestGetVAD_TEN_VAD tests VAD factory with TEN_VAD identifier
 func TestGetVAD_TEN_VAD(t *testing.T) {
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
 		Channels:    1,
 	}
 
-	vad, err := GetVAD(t.Context(), TEN_VAD, logger, audioConfig, MockVADCallback, nil)
+	vad, err := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: TEN_VAD,
+	})
 
 	require.NoError(t, err, "GetVAD should not return error for TEN_VAD")
 	require.NotNil(t, vad, "GetVAD should return non-nil VAD instance")
@@ -58,15 +59,16 @@ func TestGetVAD_TEN_VAD(t *testing.T) {
 
 // TestGetVAD_InvalidIdentifier tests VAD factory with invalid identifier defaults to SILERO_VAD
 func TestGetVAD_InvalidIdentifier(t *testing.T) {
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
 		Channels:    1,
 	}
-	invalidIdentifier := VADIdentifier("invalid_vad")
 
-	vad, err := GetVAD(t.Context(), invalidIdentifier, logger, audioConfig, MockVADCallback, nil)
+	vad, err := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: "invalid_vad",
+	})
 
 	require.NoError(t, err, "GetVAD should default to SILERO_VAD for invalid identifier")
 	require.NotNil(t, vad, "GetVAD should return non-nil VAD instance")
@@ -81,7 +83,11 @@ func TestGetVAD_WithNilLogger(t *testing.T) {
 		Channels:    1,
 	}
 
-	vad, err := GetVAD(t.Context(), SILERO_VAD, nil, audioConfig, MockVADCallback, nil)
+	logger, _ := commons.NewApplicationLogger()
+
+	vad, err := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: SILERO_VAD,
+	})
 
 	if err != nil {
 		t.Logf("GetVAD returned error with nil logger: %v", err)
@@ -92,10 +98,11 @@ func TestGetVAD_WithNilLogger(t *testing.T) {
 
 // TestGetVAD_WithNilAudioConfig tests VAD factory with nil audio config
 func TestGetVAD_WithNilAudioConfig(t *testing.T) {
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 
-	vad, err := GetVAD(t.Context(), SILERO_VAD, logger, nil, MockVADCallback, nil)
-
+	vad, err := GetVAD(t.Context(), logger, nil, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: SILERO_VAD,
+	})
 	if err != nil {
 		t.Logf("GetVAD returned error with nil audio config: %v", err)
 	} else if vad != nil {
@@ -105,14 +112,16 @@ func TestGetVAD_WithNilAudioConfig(t *testing.T) {
 
 // TestGetVAD_WithNilCallback tests VAD factory with nil callback
 func TestGetVAD_WithNilCallback(t *testing.T) {
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
 		Channels:    1,
 	}
 
-	vad, err := GetVAD(t.Context(), SILERO_VAD, logger, audioConfig, nil, nil)
+	vad, err := GetVAD(t.Context(), logger, audioConfig, nil, map[string]interface{}{
+		OptionsKeyVadProvider: SILERO_VAD,
+	})
 
 	if err != nil {
 		t.Logf("GetVAD returned error with nil callback: %v", err)
@@ -150,7 +159,7 @@ func TestGetVAD_WithDifferentAudioFormats(t *testing.T) {
 		},
 	}
 
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -160,7 +169,9 @@ func TestGetVAD_WithDifferentAudioFormats(t *testing.T) {
 				Channels:    1,
 			}
 
-			vad, err := GetVAD(t.Context(), SILERO_VAD, logger, audioConfig, MockVADCallback, nil)
+			vad, err := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+				OptionsKeyVadProvider: SILERO_VAD,
+			})
 
 			require.NoError(t, err, "GetVAD should not error for %s", tc.name)
 			require.NotNil(t, vad, "GetVAD should return VAD instance for %s", tc.name)
@@ -170,15 +181,19 @@ func TestGetVAD_WithDifferentAudioFormats(t *testing.T) {
 
 // TestGetVAD_ConsistentResults tests that multiple calls return consistent VAD instances
 func TestGetVAD_ConsistentResults(t *testing.T) {
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
 		Channels:    1,
 	}
 
-	vad1, err1 := GetVAD(t.Context(), SILERO_VAD, logger, audioConfig, MockVADCallback, nil)
-	vad2, err2 := GetVAD(t.Context(), SILERO_VAD, logger, audioConfig, MockVADCallback, nil)
+	vad1, err1 := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: SILERO_VAD,
+	})
+	vad2, err2 := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+		OptionsKeyVadProvider: SILERO_VAD,
+	})
 
 	require.NoError(t, err1)
 	require.NoError(t, err2)
@@ -195,7 +210,7 @@ func TestGetVAD_AllIdentifiers(t *testing.T) {
 		TEN_VAD,
 	}
 
-	logger := createMockLogger(t)
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
@@ -204,7 +219,9 @@ func TestGetVAD_AllIdentifiers(t *testing.T) {
 
 	for _, identifier := range identifiers {
 		t.Run(string(identifier), func(t *testing.T) {
-			vad, err := GetVAD(t.Context(), identifier, logger, audioConfig, MockVADCallback, nil)
+			vad, err := GetVAD(t.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+				OptionsKeyVadProvider: identifier,
+			})
 
 			require.NoError(t, err, "GetVAD should not error for identifier: %s", identifier)
 			require.NotNil(t, vad, "GetVAD should return VAD instance for identifier: %s", identifier)
@@ -241,7 +258,7 @@ func TestVADIdentifier_String(t *testing.T) {
 
 // BenchmarkGetVAD_SILERO_VAD benchmarks VAD factory with SILERO_VAD
 func BenchmarkGetVAD_SILERO_VAD(b *testing.B) {
-	logger := createMockLogger(&testing.T{})
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
@@ -250,13 +267,15 @@ func BenchmarkGetVAD_SILERO_VAD(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = GetVAD(b.Context(), SILERO_VAD, logger, audioConfig, MockVADCallback, nil)
+		_, _ = GetVAD(b.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+			OptionsKeyVadProvider: SILERO_VAD,
+		})
 	}
 }
 
 // BenchmarkGetVAD_TEN_VAD benchmarks VAD factory with TEN_VAD
 func BenchmarkGetVAD_TEN_VAD(b *testing.B) {
-	logger := createMockLogger(&testing.T{})
+	logger, _ := commons.NewApplicationLogger()
 	audioConfig := &protos.AudioConfig{
 		AudioFormat: protos.AudioConfig_LINEAR16,
 		SampleRate:  16000,
@@ -265,88 +284,8 @@ func BenchmarkGetVAD_TEN_VAD(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = GetVAD(b.Context(), TEN_VAD, logger, audioConfig, MockVADCallback, nil)
+		_, _ = GetVAD(b.Context(), logger, audioConfig, MockVADCallback, map[string]interface{}{
+			OptionsKeyVadProvider: TEN_VAD,
+		})
 	}
-}
-
-// Helper function to create a mock logger for testing
-func createMockLogger(t *testing.T) commons.Logger {
-	return &mockLogger{t: t}
-}
-
-// mockLogger is a simple logger implementation for testing
-type mockLogger struct {
-	t *testing.T
-}
-
-func (m *mockLogger) Level() zapcore.Level {
-	return zapcore.InfoLevel
-}
-
-func (m *mockLogger) Debug(args ...interface{}) {
-	m.t.Logf("[DEBUG] %v", args)
-}
-
-func (m *mockLogger) Debugf(template string, args ...interface{}) {
-	m.t.Logf("[DEBUG] "+template, args...)
-}
-
-func (m *mockLogger) Info(args ...interface{}) {
-	m.t.Logf("[INFO] %v", args)
-}
-
-func (m *mockLogger) Infof(template string, args ...interface{}) {
-	m.t.Logf("[INFO] "+template, args...)
-}
-
-func (m *mockLogger) Warn(args ...interface{}) {
-	m.t.Logf("[WARN] %v", args)
-}
-
-func (m *mockLogger) Warnf(template string, args ...interface{}) {
-	m.t.Logf("[WARN] "+template, args...)
-}
-
-func (m *mockLogger) Error(args ...interface{}) {
-	m.t.Logf("[ERROR] %v", args)
-}
-
-func (m *mockLogger) Errorf(template string, args ...interface{}) {
-	m.t.Logf("[ERROR] "+template, args...)
-}
-
-func (m *mockLogger) DPanic(args ...interface{}) {
-	m.t.Logf("[DPANIC] %v", args)
-}
-
-func (m *mockLogger) DPanicf(template string, args ...interface{}) {
-	m.t.Logf("[DPANIC] "+template, args...)
-}
-
-func (m *mockLogger) Panic(args ...interface{}) {
-	m.t.Logf("[PANIC] %v", args)
-}
-
-func (m *mockLogger) Panicf(template string, args ...interface{}) {
-	m.t.Logf("[PANIC] "+template, args...)
-}
-
-func (m *mockLogger) Fatal(args ...interface{}) {
-	m.t.Fatalf("[FATAL] %v", args)
-}
-
-func (m *mockLogger) Fatalf(template string, args ...interface{}) {
-	m.t.Fatalf("[FATAL] "+template, args...)
-}
-
-func (m *mockLogger) Benchmark(operation string, duration time.Duration) {
-	m.t.Logf("[BENCHMARK] %s: %v", operation, duration)
-}
-
-func (m *mockLogger) Tracef(ctx context.Context, format string, args ...interface{}) {
-	m.t.Logf("[TRACE] "+format, args...)
-}
-
-func (m *mockLogger) Sync() error {
-	return nil
 }

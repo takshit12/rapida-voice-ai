@@ -12,6 +12,7 @@ import (
 
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 	"github.com/stretchr/testify/assert"
 )
@@ -78,7 +79,6 @@ func TestGetTextToSpeechTransformer(t *testing.T) {
 	mockLogger, _ := commons.NewApplicationLogger()
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	tests := []struct {
 		name            string
@@ -99,7 +99,7 @@ func TestGetTextToSpeechTransformer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transformer, err := GetTextToSpeechTransformer(tt.transformerType, ctx, mockLogger, credential, opts)
+			transformer, err := GetTextToSpeechTransformer(ctx, mockLogger, tt.transformerType.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 
 			if tt.transformerType == AudioTransformer("invalid") {
 				// Invalid transformer type should return factory error
@@ -120,8 +120,6 @@ func TestGetSpeechToTextTransformer(t *testing.T) {
 	mockLogger, _ := commons.NewApplicationLogger()
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.SpeechToTextInitializeOptions{}
-
 	tests := []struct {
 		name            string
 		transformerType AudioTransformer
@@ -141,7 +139,7 @@ func TestGetSpeechToTextTransformer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transformer, err := GetSpeechToTextTransformer(tt.transformerType, ctx, mockLogger, credential, opts)
+			transformer, err := GetSpeechToTextTransformer(ctx, mockLogger, tt.transformerType.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 
 			if tt.transformerType == AudioTransformer("invalid") {
 				// Invalid transformer type should return factory error
@@ -162,8 +160,6 @@ func TestInvalidAudioTransformerTypesCombinations(t *testing.T) {
 	ctx := context.Background()
 	mockLogger, _ := commons.NewApplicationLogger()
 	credential := &protos.VaultCredential{}
-	optsTTS := &internal_type.TextToSpeechInitializeOptions{}
-	optsSTT := &internal_type.SpeechToTextInitializeOptions{}
 
 	tests := []struct {
 		name       string
@@ -197,7 +193,7 @@ func TestInvalidAudioTransformerTypesCombinations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, ttsErr := GetTextToSpeechTransformer(tt.ttsType, ctx, mockLogger, credential, optsTTS)
+			_, ttsErr := GetTextToSpeechTransformer(ctx, mockLogger, tt.ttsType.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 			if tt.wantTTSErr {
 				assert.Error(t, ttsErr)
 				assert.Equal(t, "illegal text to speech idenitfier", ttsErr.Error())
@@ -205,7 +201,7 @@ func TestInvalidAudioTransformerTypesCombinations(t *testing.T) {
 				assert.NoError(t, ttsErr)
 			}
 
-			_, sttErr := GetSpeechToTextTransformer(tt.sttType, ctx, mockLogger, credential, optsSTT)
+			_, sttErr := GetSpeechToTextTransformer(ctx, mockLogger, tt.sttType.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 			if tt.wantSTTErr {
 				assert.Error(t, sttErr)
 				assert.Equal(t, "illegal speech to text idenitfier", sttErr.Error())
@@ -222,7 +218,6 @@ func TestInvalidAudioTransformerTypesTTS(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	invalidTypes := []string{
 		"",
@@ -234,7 +229,7 @@ func TestInvalidAudioTransformerTypesTTS(t *testing.T) {
 
 	for _, invalidType := range invalidTypes {
 		t.Run("Invalid_"+invalidType, func(t *testing.T) {
-			transformer, err := GetTextToSpeechTransformer(AudioTransformer(invalidType), ctx, mockLogger, credential, opts)
+			transformer, err := GetTextToSpeechTransformer(ctx, mockLogger, AudioTransformer(invalidType).String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 			assert.Error(t, err)
 			assert.Nil(t, transformer)
 			assert.Equal(t, "illegal text to speech idenitfier", err.Error())
@@ -248,7 +243,6 @@ func TestInvalidAudioTransformerTypesSTT(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	invalidTypes := []string{
 		"",
@@ -260,7 +254,7 @@ func TestInvalidAudioTransformerTypesSTT(t *testing.T) {
 
 	for _, invalidType := range invalidTypes {
 		t.Run("Invalid_"+invalidType, func(t *testing.T) {
-			transformer, err := GetSpeechToTextTransformer(AudioTransformer(invalidType), ctx, mockLogger, credential, opts)
+			transformer, err := GetSpeechToTextTransformer(ctx, mockLogger, AudioTransformer(invalidType).String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 			assert.Error(t, err)
 			assert.Nil(t, transformer)
 			assert.Equal(t, "illegal speech to text idenitfier", err.Error())
@@ -274,7 +268,6 @@ func TestAllTextToSpeechTransformersCallFactory(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	transformerTypes := []AudioTransformer{
 		DEEPGRAM,
@@ -289,7 +282,7 @@ func TestAllTextToSpeechTransformersCallFactory(t *testing.T) {
 	for _, tt := range transformerTypes {
 		t.Run(tt.String(), func(t *testing.T) {
 			// Just ensure factory can be called without panic
-			_, _ = GetTextToSpeechTransformer(tt, ctx, mockLogger, credential, opts)
+			_, _ = GetTextToSpeechTransformer(ctx, mockLogger, tt.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 		})
 	}
 }
@@ -300,7 +293,6 @@ func TestAllSpeechToTextTransformersCallFactory(t *testing.T) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	transformerTypes := []AudioTransformer{
 		DEEPGRAM,
@@ -315,7 +307,7 @@ func TestAllSpeechToTextTransformersCallFactory(t *testing.T) {
 	for _, tt := range transformerTypes {
 		t.Run(tt.String(), func(t *testing.T) {
 			// Just ensure factory can be called without panic
-			_, _ = GetSpeechToTextTransformer(tt, ctx, mockLogger, credential, opts)
+			_, _ = GetSpeechToTextTransformer(ctx, mockLogger, tt.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 		})
 	}
 }
@@ -326,11 +318,10 @@ func BenchmarkGetTextToSpeechTransformer(b *testing.B) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.TextToSpeechInitializeOptions{}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = GetTextToSpeechTransformer(DEEPGRAM, ctx, mockLogger, credential, opts)
+		_, _ = GetTextToSpeechTransformer(ctx, mockLogger, DEEPGRAM.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 	}
 }
 
@@ -340,10 +331,9 @@ func BenchmarkGetSpeechToTextTransformer(b *testing.B) {
 
 	ctx := context.Background()
 	credential := &protos.VaultCredential{}
-	opts := &internal_type.SpeechToTextInitializeOptions{}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = GetSpeechToTextTransformer(DEEPGRAM, ctx, mockLogger, credential, opts)
+		_, _ = GetSpeechToTextTransformer(ctx, mockLogger, DEEPGRAM.String(), credential, &protos.AudioConfig{}, func(pkt ...internal_type.Packet) error { return nil }, utils.Option{})
 	}
 }

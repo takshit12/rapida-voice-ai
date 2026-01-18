@@ -18,6 +18,7 @@ import (
 	azure_internal "github.com/rapidaai/api/assistant-api/internal/transformer/azure/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -31,11 +32,37 @@ type azureSpeechToText struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	logger            commons.Logger
-	client            *speech.SpeechRecognizer
-	azureAudioConfig  *audio.AudioConfig
-	inputstream       *audio.PushAudioInputStream
-	transformerOption *internal_type.SpeechToTextInitializeOptions
+	logger           commons.Logger
+	client           *speech.SpeechRecognizer
+	azureAudioConfig *audio.AudioConfig
+	inputstream      *audio.PushAudioInputStream
+	onPacket         func(pkt ...internal_type.Packet) error
+}
+
+// NewAzureSpeechToText creates a new Azure Speech-to-Text transformer instance.
+func NewAzureSpeechToText(
+	ctx context.Context,
+	logger commons.Logger,
+	credential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option,
+) (internal_type.SpeechToTextTransformer, error) {
+	azureOpt, err := NewAzureOption(logger, credential, audioConfig, opts)
+	if err != nil {
+		logger.Errorf("azure-stt: unable to initialize azure option: %v", err)
+		return nil, err
+	}
+
+	childCtx, cancel := context.WithCancel(ctx)
+
+	return &azureSpeechToText{
+		ctx:         childCtx,
+		ctxCancel:   cancel,
+		logger:      logger,
+		onPacket:    onPacket,
+		azureOption: azureOpt,
+	}, nil
 }
 
 // Initialize sets up the Azure Speech-to-Text recognizer with audio stream and event handlers.
@@ -107,30 +134,6 @@ func (s *azureSpeechToText) Transform(_ context.Context, in internal_type.UserAu
 	return nil
 }
 
-// NewAzureSpeechToText creates a new Azure Speech-to-Text transformer instance.
-func NewAzureSpeechToText(
-	ctx context.Context,
-	logger commons.Logger,
-	credential *protos.VaultCredential,
-	options *internal_type.SpeechToTextInitializeOptions,
-) (internal_type.SpeechToTextTransformer, error) {
-	azureOpt, err := NewAzureOption(logger, credential, options.AudioConfig, options.ModelOptions)
-	if err != nil {
-		logger.Errorf("azure-stt: unable to initialize azure option: %v", err)
-		return nil, err
-	}
-
-	childCtx, cancel := context.WithCancel(ctx)
-
-	return &azureSpeechToText{
-		ctx:               childCtx,
-		ctxCancel:         cancel,
-		logger:            logger,
-		transformerOption: options,
-		azureOption:       azureOpt,
-	}, nil
-}
-
 func (s *azureSpeechToText) OnSessionStarted(event speech.SessionEventArgs) {
 	defer event.Close()
 }
@@ -160,7 +163,7 @@ func (s *azureSpeechToText) OnRecognizing(event speech.SpeechRecognitionEventArg
 		language = "en-US"
 	}
 
-	s.transformerOption.OnPacket(
+	s.onPacket(
 		internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 		internal_type.SpeechToTextPacket{
 			Script:     result.Text,
@@ -204,7 +207,7 @@ func (s *azureSpeechToText) OnRecognized(event speech.SpeechRecognitionEventArgs
 		return
 	}
 
-	s.transformerOption.OnPacket(
+	s.onPacket(
 		internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 		internal_type.SpeechToTextPacket{
 			Script:     text,

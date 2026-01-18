@@ -53,7 +53,7 @@ func (r *GenericRequestor) GetBehavior() (*internal_assistant_entity.AssistantDe
 
 // InitializeBehavior sets up the initial behavior configuration including greeting,
 // idle timeout, and max session duration timers.
-func (r *GenericRequestor) InitializeBehavior(ctx context.Context) error {
+func (r *GenericRequestor) initializeBehavior(ctx context.Context) error {
 	behavior, err := r.GetBehavior()
 	if err != nil {
 		r.logger.Errorf("error while fetching deployment behavior: %v", err)

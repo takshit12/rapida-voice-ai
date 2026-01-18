@@ -18,7 +18,7 @@ type krispDenoiser struct {
 	logger commons.Logger
 }
 
-func NewKrispDenoiser(logger commons.Logger, inCfg *protos.AudioConfig, options utils.Option) (internal_type.Denoiser, error) {
+func NewKrispDenoiser(ctx context.Context, logger commons.Logger, inCfg *protos.AudioConfig, options utils.Option) (internal_type.Denoiser, error) {
 	return &krispDenoiser{logger: logger}, nil
 }
 

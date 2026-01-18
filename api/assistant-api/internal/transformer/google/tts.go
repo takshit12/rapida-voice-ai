@@ -16,6 +16,7 @@ import (
 	"cloud.google.com/go/texttospeech/apiv1/texttospeechpb"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -27,11 +28,11 @@ type googleTextToSpeech struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	contextId          string                                                // Tracks context ID for audio synthesis.
-	logger             commons.Logger                                        // Logger for debugging and error reporting.
-	client             *texttospeech.Client                                  // Google TTS client.
-	streamClient       texttospeechpb.TextToSpeech_StreamingSynthesizeClient // Streaming client for real-time TTS.
-	transformerOptions *internal_type.TextToSpeechInitializeOptions          // Options for TTS initialization.
+	contextId    string                                                // Tracks context ID for audio synthesis.
+	logger       commons.Logger                                        // Logger for debugging and error reporting.
+	client       *texttospeech.Client                                  // Google TTS client.
+	streamClient texttospeechpb.TextToSpeech_StreamingSynthesizeClient // Streaming client for real-time TTS.
+	onPacket     func(pkt ...internal_type.Packet) error               // Callback for handling audio packets.
 }
 
 // Name returns the name of this transformer implementation.
@@ -40,9 +41,11 @@ func (*googleTextToSpeech) Name() string {
 }
 
 // NewGoogleTextToSpeech creates a new instance of googleTextToSpeech.
-func NewGoogleTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
+func NewGoogleTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.TextToSpeechTransformer, error) {
 	// Initialize Google TTS options.
-	googleOption, err := NewGoogleOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+	googleOption, err := NewGoogleOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		// Log and return error if initialization fails.
 		logger.Errorf("intializing google failed %+v", err)
@@ -63,10 +66,10 @@ func NewGoogleTextToSpeech(ctx context.Context, logger commons.Logger, credentia
 		ctx:       xctx,
 		ctxCancel: contextCancel,
 
-		logger:             logger,
-		transformerOptions: opts,
-		client:             client,
-		googleOption:       googleOption,
+		logger:       logger,
+		onPacket:     onPacket,
+		client:       client,
+		googleOption: googleOption,
 	}, nil
 }
 
@@ -164,7 +167,7 @@ func (g *googleTextToSpeech) textToSpeechCallback(streamClient texttospeechpb.Te
 				g.mu.Lock()
 				ctxId := g.contextId
 				g.mu.Unlock()
-				g.transformerOptions.OnSpeech(internal_type.TextToSpeechAudioPacket{
+				g.onPacket(internal_type.TextToSpeechAudioPacket{
 					ContextID:  ctxId,
 					AudioChunk: resp.GetAudioContent(),
 				})

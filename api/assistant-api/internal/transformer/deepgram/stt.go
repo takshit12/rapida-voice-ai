@@ -20,6 +20,7 @@ import (
 	deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	utils "github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -29,18 +30,20 @@ type deepgramSTT struct {
 	// context management
 	ctx       context.Context
 	ctxCancel context.CancelFunc
-
-	logger  commons.Logger
-	client  *client.WSCallback
-	options *internal_type.SpeechToTextInitializeOptions
+	logger    commons.Logger
+	client    *client.WSCallback
+	onPacket  func(pkt ...internal_type.Packet) error
 }
 
 func (*deepgramSTT) Name() string {
 	return "deepgram-speech-to-text"
 }
 
-func NewDeepgramSpeechToText(ctx context.Context, logger commons.Logger, vaultCredential *protos.VaultCredential, opts *internal_type.SpeechToTextInitializeOptions) (internal_type.SpeechToTextTransformer, error) {
-	deepgramOpts, err := NewDeepgramOption(logger, vaultCredential, opts.AudioConfig, opts.ModelOptions)
+func NewDeepgramSpeechToText(ctx context.Context, logger commons.Logger, vaultCredential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.SpeechToTextTransformer, error) {
+	deepgramOpts, err := NewDeepgramOption(logger, vaultCredential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("deepgram-stt: Key from credential failed %+v", err)
 		return nil, err
@@ -48,21 +51,19 @@ func NewDeepgramSpeechToText(ctx context.Context, logger commons.Logger, vaultCr
 	//
 	ct, ctxCancel := context.WithCancel(ctx)
 	return &deepgramSTT{
-		ctx:       ct,
-		ctxCancel: ctxCancel,
-
-		options:        opts,
+		ctx:            ct,
+		ctxCancel:      ctxCancel,
 		logger:         logger,
 		deepgramOption: deepgramOpts,
+		onPacket:       onPacket,
 	}, nil
 }
 
 // The `Initialize` method in the `deepgram` struct is responsible for establishing a connection to the
 // Deepgram service using the WebSocket client `dg.client`.
 func (dg *deepgramSTT) Initialize() error {
-
 	dgClient, err := client.NewWSUsingCallback(dg.ctx, dg.GetKey(), &interfaces.ClientOptions{APIKey: dg.GetKey(), EnableKeepAlive: true}, dg.SpeechToTextOptions(), deepgram_internal.
-		NewDeepgramSttCallback(dg.logger, dg.options))
+		NewDeepgramSttCallback(dg.logger, dg.onPacket, dg.deepgramOption.mdlOpts))
 
 	if err != nil {
 		dg.logger.Errorf("deepgram-stt: unable create dg client with error %+v", err.Error())

@@ -16,6 +16,7 @@ import (
 	cartesia_internal "github.com/rapidaai/api/assistant-api/internal/transformer/cartesia/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	protos "github.com/rapidaai/protos"
 )
 
@@ -28,8 +29,8 @@ type cartesiaSpeechToText struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	connection         *websocket.Conn
-	transformerOptions *internal_type.SpeechToTextInitializeOptions
+	connection *websocket.Conn
+	onPacket   func(pkt ...internal_type.Packet) error
 }
 
 // Name implements internal_transformer.SpeechToTextTransformer.
@@ -37,19 +38,22 @@ func (*cartesiaSpeechToText) Name() string {
 	return "cartesia-speech-to-text"
 }
 
-func NewCartesiaSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, transformerOptions *internal_type.SpeechToTextInitializeOptions) (internal_type.SpeechToTextTransformer, error) {
-	cartesiaOpts, err := NewCartesiaOption(logger, credential, transformerOptions.AudioConfig, transformerOptions.ModelOptions)
+func NewCartesiaSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.SpeechToTextTransformer, error) {
+	cartesiaOpts, err := NewCartesiaOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("cartesia-stt: intializing cartesia failed %+v", err)
 		return nil, err
 	}
 	ct, ctxCancel := context.WithCancel(ctx)
 	return &cartesiaSpeechToText{
-		ctx:                ct,
-		ctxCancel:          ctxCancel,
-		logger:             logger,
-		cartesiaOption:     cartesiaOpts,
-		transformerOptions: transformerOptions,
+		ctx:            ct,
+		ctxCancel:      ctxCancel,
+		logger:         logger,
+		cartesiaOption: cartesiaOpts,
+		onPacket:       onPacket,
 	}, nil
 }
 
@@ -84,8 +88,8 @@ func (cst *cartesiaSpeechToText) speechToTextCallback(conn *websocket.Conn, ctx 
 			}
 			var resp cartesia_internal.SpeechToTextOutput
 			if err := json.Unmarshal(msg, &resp); err == nil && resp.Text != "" {
-				if cst.transformerOptions.OnPacket != nil {
-					cst.transformerOptions.OnPacket(
+				if cst.onPacket != nil {
+					cst.onPacket(
 						internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 						internal_type.SpeechToTextPacket{
 							Script:   resp.Text,

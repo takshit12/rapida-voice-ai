@@ -19,6 +19,7 @@ import (
 	deepgram_internal "github.com/rapidaai/api/assistant-api/internal/transformer/deepgram/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	utils "github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -33,18 +34,18 @@ type deepgramTTS struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	contextId string
-
-	// mutex
-	mu sync.Mutex
+	mu        sync.Mutex
 
 	logger     commons.Logger
 	connection *websocket.Conn
-	options    *internal_type.TextToSpeechInitializeOptions
+	onPacket   func(pkt ...internal_type.Packet) error
 }
 
-func NewDeepgramTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, opts *internal_type.TextToSpeechInitializeOptions) (internal_type.TextToSpeechTransformer, error) {
+func NewDeepgramTextToSpeech(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option) (internal_type.TextToSpeechTransformer, error) {
 
-	dGoptions, err := NewDeepgramOption(logger, credential, opts.AudioConfig, opts.ModelOptions)
+	dGoptions, err := NewDeepgramOption(logger, credential, audioConfig, opts)
 	if err != nil {
 		logger.Errorf("deepgram-tts: error while intializing deepgram text to speech")
 		return nil, err
@@ -56,7 +57,7 @@ func NewDeepgramTextToSpeech(ctx context.Context, logger commons.Logger, credent
 		ctx:            ctx2,
 		ctxCancel:      cancel,
 		logger:         logger,
-		options:        opts,
+		onPacket:       onPacket,
 	}, nil
 }
 
@@ -103,7 +104,7 @@ func (t *deepgramTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Con
 			}
 
 			if msgType == websocket.BinaryMessage {
-				t.options.OnSpeech(internal_type.TextToSpeechAudioPacket{
+				t.onPacket(internal_type.TextToSpeechAudioPacket{
 					ContextID:  t.contextId,
 					AudioChunk: data,
 				})
@@ -121,7 +122,7 @@ func (t *deepgramTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Con
 				continue
 
 			case "Flushed":
-				t.options.OnSpeech(internal_type.TextToSpeechEndPacket{
+				t.onPacket(internal_type.TextToSpeechEndPacket{
 					ContextID: t.contextId,
 				})
 				continue

@@ -18,6 +18,7 @@ import (
 	assemblyai_internal "github.com/rapidaai/api/assistant-api/internal/transformer/assembly-ai/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
+	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
 )
 
@@ -31,18 +32,20 @@ type assemblyaiSTT struct {
 	// mutex for thread-safe access
 	mu         sync.Mutex
 	connection *websocket.Conn
-
-	logger  commons.Logger
-	options *internal_type.SpeechToTextInitializeOptions
+	logger     commons.Logger
+	onPacket   func(pkt ...internal_type.Packet) error
 }
 
-func NewAssemblyaiSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential, iOption *internal_type.SpeechToTextInitializeOptions,
+func NewAssemblyaiSpeechToText(ctx context.Context, logger commons.Logger, credential *protos.VaultCredential,
+	audioConfig *protos.AudioConfig,
+	onPacket func(pkt ...internal_type.Packet) error,
+	opts utils.Option,
 ) (internal_type.SpeechToTextTransformer, error) {
 	ayOptions, err := NewAssemblyaiOption(
 		logger,
 		credential,
-		iOption.AudioConfig,
-		iOption.ModelOptions,
+		audioConfig,
+		opts,
 	)
 	if err != nil {
 		logger.Errorf("assembly-ai-stt: key from credential failed %v", err)
@@ -53,8 +56,8 @@ func NewAssemblyaiSpeechToText(ctx context.Context, logger commons.Logger, crede
 		ctx:              ct,
 		ctxCancel:        ctxCancel,
 		logger:           logger,
-		options:          iOption,
 		assemblyaiOption: ayOptions,
+		onPacket:         onPacket,
 	}, nil
 }
 
@@ -116,7 +119,7 @@ func (aai *assemblyaiSTT) speechToTextCallback(conn *websocket.Conn, ctx context
 					confidence += v.Confidence
 				}
 				averageConfidence := confidence / float64(len(transcript.Words))
-				aai.options.OnPacket(
+				aai.onPacket(
 					internal_type.InterruptionPacket{Source: internal_type.InterruptionSourceWord},
 					internal_type.SpeechToTextPacket{
 						Script:     transcript.Transcript,

@@ -18,15 +18,15 @@ import (
 type VADIdentifier string
 
 const (
-	SILERO_VAD VADIdentifier = "silero_vad"
-	TEN_VAD    VADIdentifier = "ten_vad"
+	SILERO_VAD            VADIdentifier = "silero_vad"
+	TEN_VAD               VADIdentifier = "ten_vad"
+	OptionsKeyVadProvider               = "microphone.vad.provider"
 )
 
 // logger, audioConfig, opts
-func GetVAD(ctx context.Context, aa VADIdentifier, logger commons.Logger, intputAudio *protos.AudioConfig,
-	callback internal_type.VADCallback,
-	options utils.Option) (internal_type.Vad, error) {
-	switch aa {
+func GetVAD(ctx context.Context, logger commons.Logger, intputAudio *protos.AudioConfig, callback internal_type.VADCallback, options utils.Option) (internal_type.Vad, error) {
+	typ, _ := options.GetString(OptionsKeyVadProvider)
+	switch VADIdentifier(typ) {
 	case SILERO_VAD:
 		return internal_vad_silero.NewSileroVAD(ctx, logger, intputAudio, callback, options)
 	default:
