@@ -202,14 +202,6 @@ export const ConfigureAudioOutputProvider: React.FC<
                   text-to-speech systems.
                 </InputHelper>
               </FieldSet>
-            </div>
-          </InputGroup>
-          <InputGroup
-            initiallyExpanded={false}
-            title="Speech Synthesis Markup Language (SSML)"
-            className="mx-0 my-0 mt-6"
-          >
-            <div className="space-y-6 w-full max-w-6xl">
               <FieldSet className="relative">
                 <FormLabel>Conjunction Boundaries</FormLabel>
                 <Dropdown
@@ -260,9 +252,9 @@ export const ConfigureAudioOutputProvider: React.FC<
                   min={100}
                   max={300}
                   className="bg-light-background w-16"
-                  value={getParamValue('microphone.eos.timeout', '240')}
+                  value={getParamValue('speaker.conjunction.break', '240')}
                   onChange={e =>
-                    updateParameter('microphone.eos.timeout', e.target.value)
+                    updateParameter('speaker.conjunction.break', e.target.value)
                   }
                 />
               </FieldSet>

@@ -100,7 +100,6 @@ func (eos *SilenceBasedEOS) Analyze(ctx context.Context, pkt internaltype.Packet
 		})
 
 	case internaltype.InterruptionPacket:
-		eos.logger.Debugf("testing -> vad packet received %+v", p)
 		eos.mu.RLock()
 		seg := eos.state.segment
 		eos.mu.RUnlock()
@@ -115,7 +114,6 @@ func (eos *SilenceBasedEOS) Analyze(ctx context.Context, pkt internaltype.Packet
 		})
 
 	case internaltype.SpeechToTextPacket:
-		eos.logger.Debugf("testing -> speech to text packet received %+v", p)
 		eos.mu.Lock()
 		if p.Interim {
 			seg := eos.state.segment

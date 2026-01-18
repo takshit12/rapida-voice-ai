@@ -183,13 +183,8 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			case internal_type.InterruptionSourceWord:
 				span.AddAttributes(ctx, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("word_interrupt")})
 				talking.resetIdleTimeoutTimer(talking.Context())
-
-				if err := talking.textAssembler.Assemble(ctx, vl); err != nil {
-					talking.logger.Debugf("unable to send interruption packet to assembler %v", err)
-				}
 				//
 				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupted); err != nil {
-					talking.logger.Errorf("messaging transition error: %v", err)
 					continue
 				}
 				talking.Notify(ctx, &protos.AssistantConversationInterruption{Type: protos.AssistantConversationInterruption_INTERRUPTION_TYPE_WORD, Time: timestamppb.Now()})
