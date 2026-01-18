@@ -100,15 +100,19 @@ func (r *GenericRequestor) initializeMaxSessionDuration(ctx context.Context, beh
 
 	timeoutDuration := time.Duration(*behavior.MaxSessionDuration) * time.Minute
 	r.maxSessionTimer = time.AfterFunc(timeoutDuration, func() {
+		inputMessage, err := r.messaging.GetMessage()
+		if err != nil {
+			inputMessage = r.messaging.Create("")
+		}
 		r.OnPacket(ctx, internal_type.LLMToolPacket{
-			ContextID: r.messaging.GetId(),
+			ContextID: inputMessage.GetId(),
 			Action:    protos.AssistantConversationAction_END_CONVERSATION,
 		})
 	})
 }
 
 // OnError handles error scenarios by sending a configured or default error message.
-func (r *GenericRequestor) OnError(ctx context.Context, messageID string) error {
+func (r *GenericRequestor) OnError(ctx context.Context) error {
 	behavior, err := r.GetBehavior()
 	if err != nil {
 		r.logger.Warnf("no error message configured for assistant")
@@ -122,7 +126,12 @@ func (r *GenericRequestor) OnError(ctx context.Context, messageID string) error 
 		mistakeContent = r.templateParser.Parse(*behavior.Mistake, r.GetArgs())
 	}
 
-	if err := r.OnPacket(ctx, internal_type.StaticPacket{ContextID: messageID, Text: mistakeContent}); err != nil {
+	inputMessage, err := r.messaging.GetMessage()
+	if err != nil {
+		inputMessage = r.messaging.Create("")
+	}
+
+	if err := r.OnPacket(ctx, internal_type.StaticPacket{ContextID: inputMessage.GetId(), Text: mistakeContent}); err != nil {
 		r.logger.Errorf("error while sending error message: %v", err)
 	}
 
@@ -143,11 +152,16 @@ func (r *GenericRequestor) onIdleTimeout(ctx context.Context) error {
 		return nil
 	}
 
+	inputMessage, err := r.messaging.GetMessage()
+	if err != nil {
+		inputMessage = r.messaging.Create("")
+	}
+
 	// Check if max backoff retries reached
 	if behavior.IdealTimeoutBackoff != nil && *behavior.IdealTimeoutBackoff > 0 {
 		if r.idleTimeoutCount >= *behavior.IdealTimeoutBackoff {
 			r.OnPacket(ctx, internal_type.LLMToolPacket{
-				ContextID: r.messaging.GetId(),
+				ContextID: inputMessage.GetId(),
 				Action:    protos.AssistantConversationAction_END_CONVERSATION,
 			})
 			return nil
@@ -155,14 +169,13 @@ func (r *GenericRequestor) onIdleTimeout(ctx context.Context) error {
 	}
 
 	r.idleTimeoutCount++
-
 	timeoutContent := r.getIdleTimeoutMessage(behavior)
 	if timeoutContent == "" {
 		r.logger.Warnf("empty idle timeout message")
 		return nil
 	}
 
-	if err := r.OnPacket(ctx, internal_type.StaticPacket{ContextID: r.messaging.GetId(), Text: timeoutContent}); err != nil {
+	if err := r.OnPacket(ctx, internal_type.StaticPacket{ContextID: inputMessage.GetId(), Text: timeoutContent}); err != nil {
 		r.logger.Errorf("error while sending idle timeout message: %v", err)
 	}
 

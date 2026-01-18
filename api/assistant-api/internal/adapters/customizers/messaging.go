@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
@@ -17,17 +16,10 @@ import (
 
 type Messaging interface {
 	Create(msg string) *types.Message
-	GetActor() type_enums.MessageActor
-	GetMessage(actor type_enums.MessageActor) (*types.Message, error)
-	GetId() string
-
-	// Transition(state InteractionState) error
-
-	// input mode
+	GetMessage() (*types.Message, error)
+	Transition(state InteractionState) error
 	GetInputMode() type_enums.MessageMode
 	SwitchInputMode(mm type_enums.MessageMode)
-
-	// output mode
 	GetOutputMode() type_enums.MessageMode
 	SwitchOutputMode(mm type_enums.MessageMode)
 }
@@ -35,14 +27,17 @@ type Messaging interface {
 type InteractionState int
 
 const (
-	Unknown        InteractionState = 1
-	UserSpeaking   InteractionState = 2
-	UserCompleted  InteractionState = 3
-	AgentSpeaking  InteractionState = 4
-	AgentCompleted InteractionState = 5
-	Interrupt      InteractionState = 6
-	Interrupted    InteractionState = 7
-	LLMGenerating  InteractionState = 8
+	Unknown       InteractionState = 1
+	UserSpeaking  InteractionState = 2
+	UserCompleted InteractionState = 3
+
+	//
+	Interrupt   InteractionState = 6
+	Interrupted InteractionState = 7
+
+	//
+	LLMGenerating InteractionState = 8
+	LLMGenerated  InteractionState = 5
 )
 
 func (s InteractionState) String() string {
@@ -53,10 +48,8 @@ func (s InteractionState) String() string {
 		return "UserSpeaking"
 	case UserCompleted:
 		return "UserCompleted"
-	case AgentSpeaking:
-		return "AgentSpeaking"
-	case AgentCompleted:
-		return "AgentCompleted"
+	case LLMGenerated:
+		return "LLMGenerated"
 	case Interrupt:
 		return "Interrupt"
 	case Interrupted:
@@ -71,7 +64,6 @@ func (s InteractionState) String() string {
 type messaging struct {
 	logger commons.Logger
 	in     *types.Message
-	out    *types.Message
 	actor  type_enums.MessageActor
 	state  InteractionState
 
@@ -116,12 +108,11 @@ func (ms *messaging) SwitchInputMode(mm type_enums.MessageMode) {
 	ms.inputMode = mm
 }
 
-// ============================================================================
-// actor handling
-// ============================================================================
-
-func (ms *messaging) GetActor() type_enums.MessageActor {
-	return ms.actor
+func (ms *messaging) GetMessage() (*types.Message, error) {
+	if ms.in != nil {
+		return ms.in, nil
+	}
+	return nil, fmt.Errorf("invalid message for acting user")
 }
 
 func (ms *messaging) Create(msg string) *types.Message {
@@ -145,85 +136,33 @@ func (ms *messaging) Create(msg string) *types.Message {
 	return ms.in
 }
 
-func (ms *messaging) GetMessage(actor type_enums.MessageActor) (*types.Message, error) {
-	if actor.ActingAssistant() {
-		if ms.out == nil {
-			return nil, fmt.Errorf("invalid message for acting assistant")
-		}
-		return ms.out, nil
-	}
-	if ms.in != nil {
-		return ms.in, nil
-	}
-	return nil, fmt.Errorf("invalid message for acting user")
-}
-
-// ============================================================================
-// state handling
-// ============================================================================
-func (ms *messaging) GetId() string {
-	in, err := ms.GetMessage(type_enums.UserActor)
-	if err != nil {
-		return uuid.NewString()
-	}
-	return in.GetId()
-}
-
 func (ms *messaging) Transition(newState InteractionState) error {
 	ms.mutex.Lock()
 	defer ms.mutex.Unlock()
 
 	switch newState {
 	case Unknown:
-		// ms.logger.Debugf("Transition error: invalid transition: cannot transition to Unknown state")
 		return fmt.Errorf("Transition: invalid transition: cannot transition to Unknown state")
-
 	case UserSpeaking:
-		if ms.state == AgentSpeaking {
-			// ms.logger.Debugf("Transition error: invalid transition: user can't speak when agent is speaking")
-			return fmt.Errorf("Transition: invalid transition: user can't speak when agent is speaking")
-		}
-
-	case AgentSpeaking:
-		if ms.state == UserSpeaking || ms.state == Interrupted || ms.state == Interrupt {
-			// ms.logger.Debugf("Transition error: invalid transition: agent can't speak when user is speaking")
-			return fmt.Errorf("Transition: invalid transition: agent can't speak when user is speaking")
-		}
-
 	case UserCompleted:
-		if ms.state == UserCompleted {
-			// ms.logger.Debugf("Transition error: invalid transition: already completed by the user")
-			return fmt.Errorf("Transition: invalid transition: already completed by the user")
-		}
 	case LLMGenerating:
-
-	case AgentCompleted:
-		// flushing old
-		ms.out = nil
-	// case AgentCompleted:
-	//
-
+	case LLMGenerated:
 	case Interrupt:
 		if ms.state == Interrupted || ms.state == Interrupt {
-			// ms.logger.Debugf("Transition error: invalid transition: user can't interrupt multiple times")
 			return fmt.Errorf("Transition: invalid transition: agent can't interrupt multiple times")
 		}
-
-		if ms.state == AgentCompleted || ms.state == AgentSpeaking {
+		if ms.state == LLMGenerated || ms.state == LLMGenerating {
 			ms.in = nil
 		}
-
 	case Interrupted:
 		if ms.state == Interrupted {
-			// ms.logger.Debugf("Transition error: invalid transition: user can't interrupted multiple times")
 			return fmt.Errorf("Transition: invalid transition: agent can't interrupted multiple times")
 		}
-		if ms.state == AgentCompleted || ms.state == AgentSpeaking {
+		if ms.state == LLMGenerated || ms.state == LLMGenerating {
 			ms.in = nil
 		}
 
 	default:
-		// ms.logger.Debugf("Transition error: invalid transition: unknown state %v", newState)
 		return fmt.Errorf("Transition: invalid transition: unknown state %v", newState)
 	}
 
