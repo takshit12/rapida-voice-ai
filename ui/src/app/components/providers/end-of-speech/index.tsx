@@ -80,7 +80,7 @@ export const EndOfSpeechProvider: React.FC<EndOfSpeechProviderProps> = ({
           </div>
           <InputHelper>
             Duration of silence after which Rapida starts finalizing a message
-            EOS: Based on silence and max time (1000-4000ms).
+            EOS: Based on silence and max time (500-4000ms).
           </InputHelper>
         </FieldSet>
       </div>

@@ -83,8 +83,8 @@ func (eos *SilenceBasedEOS) Name() string {
 
 // Analyze processes incoming speech packets
 func (eos *SilenceBasedEOS) Analyze(ctx context.Context, pkt internaltype.Packet) error {
+	eos.logger.Debugf("testing -> SilenceBasedEOS Analyze: received packet of type %T and %+v", pkt, pkt)
 	switch p := pkt.(type) {
-
 	case internaltype.UserTextPacket:
 		if p.Text == "" {
 			return nil

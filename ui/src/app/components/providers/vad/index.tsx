@@ -78,7 +78,7 @@ export const VADProvider: React.FC<VADProviderProps> = ({
           </div>
           <InputHelper>
             The probability threshold above which we detect speech. A good
-            default is 0.8.
+            default is 0.6.
           </InputHelper>
         </FieldSet>
       </div>

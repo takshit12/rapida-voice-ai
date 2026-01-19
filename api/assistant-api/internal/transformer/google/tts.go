@@ -75,13 +75,11 @@ func NewGoogleTextToSpeech(ctx context.Context, logger commons.Logger, credentia
 
 // Initialize sets up the streaming synthesis functionality.
 func (google *googleTextToSpeech) Initialize() error {
-
 	// Start a streaming synthesis session.
 	stream, err := google.client.StreamingSynthesize(google.ctx)
 	if err != nil {
-		// Log any initialization errors.
-		google.logger.Errorf("error while creating by directional for google tts %+v", err)
-		return err
+		google.logger.Errorf("failed to create bidirectional stream for google tts: %v", err)
+		return fmt.Errorf("failed to create bidirectional stream: %w", err)
 	}
 
 	req := texttospeechpb.StreamingSynthesizeRequest{
@@ -90,21 +88,24 @@ func (google *googleTextToSpeech) Initialize() error {
 			StreamingConfig: google.TextToSpeechOptions(),
 		},
 	}
+
 	google.mu.Lock()
 	if google.streamClient != nil {
 		_ = google.streamClient.CloseSend()
 	}
 	google.streamClient = stream
+	currentContextId := google.contextId
 	google.mu.Unlock()
 
 	// Send the initial configuration request.
 	if err = stream.Send(&req); err != nil {
-		// Log errors in sending initialization request.
-		google.logger.Errorf("error while intiializing google text to speech")
-		return err
+		google.logger.Errorf("failed to initialize google text to speech: %v", err)
+		return fmt.Errorf("failed to send config request: %w", err)
 	}
+
 	// Launch callback goroutine for processing streaming responses.
-	go google.textToSpeechCallback(stream, google.ctx)
+	// Pass the current context ID to the callback
+	go google.textToSpeechCallback(stream, google.ctx, currentContextId)
 	google.logger.Debugf("google-tts: connection established")
 	return nil
 }
@@ -112,14 +113,26 @@ func (google *googleTextToSpeech) Initialize() error {
 // Transform handles streaming synthesis requests for input text.
 func (google *googleTextToSpeech) Transform(ctx context.Context, in internal_type.LLMPacket) error {
 	google.mu.Lock()
+	contextChanged := in.ContextId() != google.contextId && google.contextId != ""
 	if in.ContextId() != google.contextId {
 		google.contextId = in.ContextId()
 	}
 	sCli := google.streamClient
 	google.mu.Unlock()
 
+	// If context changed, reinitialize the stream to prevent old chunks from leaking
+	if contextChanged {
+		google.logger.Debugf("google-tts: context changed from old to %s, reinitializing stream", in.ContextId())
+		if err := google.Initialize(); err != nil {
+			return fmt.Errorf("failed to reinitialize stream on context change: %w", err)
+		}
+		google.mu.Lock()
+		sCli = google.streamClient
+		google.mu.Unlock()
+	}
+
 	if sCli == nil {
-		return fmt.Errorf("you are calling transform without initilize")
+		return fmt.Errorf("google-tts: calling transform without initialize")
 	}
 
 	switch input := in.(type) {
@@ -131,7 +144,8 @@ func (google *googleTextToSpeech) Transform(ctx context.Context, in internal_typ
 				},
 			},
 		}); err != nil {
-			google.logger.Errorf("unable to Synthesize text %v", err)
+			google.logger.Errorf("google-tts: failed to synthesize text: %v", err)
+			return fmt.Errorf("failed to synthesize text: %w", err)
 		}
 		return nil
 	case internal_type.LLMMessagePacket:
@@ -139,12 +153,10 @@ func (google *googleTextToSpeech) Transform(ctx context.Context, in internal_typ
 	default:
 		return fmt.Errorf("google-tts: unsupported input type %T", in)
 	}
-
 }
 
 // textToSpeechCallback processes streaming responses asynchronously.
-func (g *googleTextToSpeech) textToSpeechCallback(streamClient texttospeechpb.TextToSpeech_StreamingSynthesizeClient, ctx context.Context) {
-
+func (g *googleTextToSpeech) textToSpeechCallback(streamClient texttospeechpb.TextToSpeech_StreamingSynthesizeClient, ctx context.Context, initialContextId string) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -159,18 +171,38 @@ func (g *googleTextToSpeech) textToSpeechCallback(streamClient texttospeechpb.Te
 					return
 				}
 				if strings.Contains(err.Error(), "Stream aborted due to long duration elapsed without input sent") {
+					g.logger.Debugf("google-tts: stream aborted due to timeout, reinitializing")
 					go g.Initialize()
 					return
 				}
+				g.logger.Errorf("google-tts: error receiving from stream: %v", err)
+				return
 			}
-			if resp != nil {
-				g.mu.Lock()
-				ctxId := g.contextId
-				g.mu.Unlock()
-				g.onPacket(internal_type.TextToSpeechAudioPacket{
-					ContextID:  ctxId,
-					AudioChunk: resp.GetAudioContent(),
-				})
+
+			if resp == nil {
+				continue
+			}
+
+			// Check if context has changed - discard chunks from old context
+			g.mu.Lock()
+			currentContextId := g.contextId
+			g.mu.Unlock()
+
+			// Use current context ID for first message (when initialContextId is empty)
+			// or if context matches the initial context
+			effectiveContextId := initialContextId
+			if effectiveContextId == "" {
+				effectiveContextId = currentContextId
+			} else if currentContextId != initialContextId {
+				g.logger.Debugf("google-tts: discarding chunk from old context %s, current is %s", initialContextId, currentContextId)
+				return // Stop processing this stream as context has changed
+			}
+
+			if err := g.onPacket(internal_type.TextToSpeechAudioPacket{
+				ContextID:  effectiveContextId,
+				AudioChunk: resp.GetAudioContent(),
+			}); err != nil {
+				g.logger.Errorf("google-tts: failed to send packet: %v", err)
 			}
 		}
 	}

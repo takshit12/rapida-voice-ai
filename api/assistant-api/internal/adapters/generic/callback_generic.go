@@ -192,12 +192,10 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			default:
 				// might be noise at first
 				if vl.StartAt < 3 {
-					talking.logger.Warn("interrupt: very early interruption")
 					continue
 				}
 				span.AddAttributes(ctx, internal_telemetry.KV{K: "activity_type", V: internal_telemetry.StringValue("vad_interrupt")})
 				if err := talking.messaging.Transition(internal_adapter_request_customizers.Interrupt); err != nil {
-					talking.logger.Errorf("messaging transition error: %v", err)
 					continue
 				}
 				talking.Notify(ctx, &protos.AssistantConversationInterruption{Type: protos.AssistantConversationInterruption_INTERRUPTION_TYPE_VAD, Time: timestamppb.Now()})
@@ -284,9 +282,7 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 				}
 			}
 			// end of speech analyzer in case histoyrical data is to be used
-			if err := talking.callEndOfSpeech(ctx, vl); err != nil {
-				talking.logger.Errorf("end of speech error: %v", err)
-			}
+
 		case internal_type.LLMMessagePacket:
 			talking.resetIdleTimeoutTimer(talking.Context())
 			inputMessage, err := talking.messaging.GetMessage()
@@ -302,9 +298,6 @@ func (talking *GenericRequestor) OnPacket(ctx context.Context, pkts ...internal_
 			}
 			if err := talking.callCreateMessage(ctx, vl); err != nil {
 				talking.logger.Errorf("error creating message: %v", err)
-			}
-			if err := talking.callEndOfSpeech(ctx, vl); err != nil {
-				talking.logger.Errorf("end of speech error: %v", err)
 			}
 
 			if err := talking.callTextAssembler(ctx, vl); err != nil {
