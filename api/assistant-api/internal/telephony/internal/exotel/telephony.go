@@ -34,16 +34,23 @@ type exotelTelephony struct {
 	appCfg *config.AssistantConfig
 }
 
-func (tpc *exotelTelephony) CatchAllStatusCallback(ctx *gin.Context) (*string, []*types.Metric, []*types.Event, error) {
-	return nil, nil, nil, nil
+func NewExotelTelephony(config *config.AssistantConfig, logger commons.Logger) (internal_type.Telephony, error) {
+	return &exotelTelephony{
+		logger: logger,
+		appCfg: config,
+	}, nil
+}
+
+func (tpc *exotelTelephony) CatchAllStatusCallback(ctx *gin.Context) ([]types.Telemetry, error) {
+	return nil, nil
 }
 
 // EventCallback implements [Telephony].
-func (tpc *exotelTelephony) StatusCallback(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64) ([]*types.Metric, []*types.Event, error) {
+func (tpc *exotelTelephony) StatusCallback(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64) ([]types.Telemetry, error) {
 	form, err := c.MultipartForm()
 	if err != nil {
 		tpc.logger.Errorf("failed to parse multipart form-data with error %+v", err)
-		return nil, nil, fmt.Errorf("failed to parse multipart form-data")
+		return nil, fmt.Errorf("failed to parse multipart form-data")
 	}
 
 	eventDetails := make(map[string]interface{})
@@ -55,19 +62,9 @@ func (tpc *exotelTelephony) StatusCallback(c *gin.Context, auth types.SimplePrin
 		}
 	}
 	callStatus := eventDetails["Status"]
-	return []*types.Metric{types.NewMetric("STATUS", fmt.Sprintf("%v", callStatus), utils.Ptr("Status of call or update"))},
-		[]*types.Event{types.NewEvent(fmt.Sprintf("%v", callStatus), eventDetails)},
-		nil
+	return []types.Telemetry{types.NewMetric("STATUS", fmt.Sprintf("%v", callStatus), utils.Ptr("Status of call or update")), types.NewEvent(fmt.Sprintf("%v", callStatus), eventDetails)}, nil
 
 }
-
-func NewExotelTelephony(config *config.AssistantConfig, logger commons.Logger) (internal_type.Telephony, error) {
-	return &exotelTelephony{
-		logger: logger,
-		appCfg: config,
-	}, nil
-}
-
 func (tpc *exotelTelephony) ClientUrl(vaultCredential *protos.VaultCredential, opts utils.Option) (*string, error) {
 	accountSid, ok := vaultCredential.GetValue().AsMap()["account_sid"]
 	if !ok {
@@ -101,7 +98,7 @@ func (tpc *exotelTelephony) AppUrl(
 
 }
 
-func (tpc *exotelTelephony) MakeCall(
+func (tpc *exotelTelephony) OutboundCall(
 	auth types.SimplePrinciple,
 	// customer number
 	toPhone string,
@@ -109,25 +106,20 @@ func (tpc *exotelTelephony) MakeCall(
 	fromPhone string,
 	assistantId, assistantConversationId uint64,
 	vaultCredential *protos.VaultCredential,
-	opts utils.Option) ([]*types.Metadata, []*types.Metric, []*types.Event, error) {
-	mtds := []*types.Metadata{
+	opts utils.Option) ([]types.Telemetry, error) {
+	mtds := []types.Telemetry{
 		types.NewMetadata("telephony.toPhone", toPhone),
 		types.NewMetadata("telephony.fromPhone", fromPhone),
 		types.NewMetadata("telephony.provider", "exotel"),
 	}
-	event := []*types.Event{
-		types.NewEvent("api-call", map[string]interface{}{}),
-	}
 	clientUrl, err := tpc.ClientUrl(vaultCredential, opts)
 	if err != nil {
-		event = append(event, types.NewEvent("FAILED", "Failed to build url, check credentials"))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewEvent("FAILED", "Failed to build url, check credentials"), &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of telephony api"}), err
 	}
 
 	appUrl, err := tpc.AppUrl(vaultCredential, opts)
 	if err != nil {
-		event = append(event, types.NewEvent("FAILED", "Failed to build app url"))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewEvent("FAILED", "Failed to build app url"), &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of telephony api"}), err
 	}
 
 	formData := url.Values{}
@@ -137,53 +129,46 @@ func (tpc *exotelTelephony) MakeCall(
 	formData.Set("Url", *appUrl)
 	formData.Set("StatusCallback", fmt.Sprintf("https://%s/%s", tpc.appCfg.PublicAssistantHost, internal_type.GetEventPath("exotel", auth, assistantId, assistantConversationId)))
 	// for exotel there is no way to set dynamic path so pass it as custom filed
-	formData.Set("CustomField",
-		internal_type.GetAnswerPath("exotel", auth, assistantId,
-			assistantConversationId,
-			toPhone,
-		))
+	formData.Set("CustomField", internal_type.GetAnswerPath("exotel", auth, assistantId,
+		assistantConversationId,
+		toPhone,
+	))
 
 	client := &http.Client{Timeout: 60 * time.Second}
 	req, err := http.NewRequest("POST", *clientUrl, strings.NewReader(formData.Encode()))
 	if err != nil {
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of telephony api"}), err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := client.Do(req)
 	if err != nil {
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of telephony api"}), err
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of telephony api"}), err
 	}
 	if resp.StatusCode != http.StatusOK {
 		tpc.logger.Errorf("Unexpected HTTP Status: %d, Response Body: %s\n", resp.StatusCode, string(bodyBytes))
-		event = append(event, types.NewEvent("Failed", string(bodyBytes)))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony API - HTTP error"))}, event, fmt.Errorf("status code %d: %s", resp.StatusCode, string(bodyBytes))
+		return append(mtds, types.NewEvent("Failed", string(bodyBytes)), &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of telephony API HTTP error"}), fmt.Errorf("status code %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var jsonResponse internal_exotel.MakeCallResponse
 	// Wrap the JSON decoding in a detailed error message
 	if err := json.Unmarshal(bodyBytes, &jsonResponse); err != nil {
-		event = append(event, types.NewEvent(jsonResponse.Call.Status, "Failed to decode response"))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of transaction"))}, event, err
+		return append(mtds, types.NewEvent(jsonResponse.Call.Status, "Failed to decode response"), &types.Metric{Name: "STATUS", Value: "FAILED", Description: "Status of transaction"}), err
 	}
-
-	mtds = append(mtds, types.NewMetadata("telephony.uuid", jsonResponse.Call.Sid))
-	event = append(event, types.NewEvent(jsonResponse.Call.Status, jsonResponse))
-	return mtds, []*types.Metric{types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))}, event, nil
+	return append(mtds, types.NewMetadata("telephony.uuid", jsonResponse.Call.Sid), types.NewEvent(jsonResponse.Call.Status, jsonResponse), &types.Metric{Name: "STATUS", Value: "SUCCESS", Description: "Status of telephony api"}), nil
 }
 
-func (tpc *exotelTelephony) IncomingCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
+func (tpc *exotelTelephony) InboundCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
 	response := map[string]string{
 		"url": fmt.Sprintf("wss://%s/%s",
 			tpc.appCfg.PublicAssistantHost,
 			internal_type.GetAnswerPath("exotel", auth, assistantId, assistantConversationId, clientNumber)),
 	}
-
 	c.JSON(http.StatusOK, response)
 	return nil
 }
@@ -192,8 +177,9 @@ func (tpc *exotelTelephony) Streamer(c *gin.Context, connection *websocket.Conn,
 	return NewExotelWebsocketStreamer(tpc.logger, connection, assistant, conversation, vlt)
 }
 
-func (tpc *exotelTelephony) AcceptCall(c *gin.Context) (*string, *string, error) {
+func (tpc *exotelTelephony) ReceiveCall(c *gin.Context) (*string, []types.Telemetry, error) {
 	queryParams := make(map[string]string)
+	telemetry := []types.Telemetry{}
 	for key, values := range c.Request.URL.Query() {
 		if len(values) > 0 {
 			queryParams[key] = values[0]
@@ -204,19 +190,14 @@ func (tpc *exotelTelephony) AcceptCall(c *gin.Context) (*string, *string, error)
 	if ok {
 		response := map[string]string{"url": fmt.Sprintf("wss://%s/%s", tpc.appCfg.PublicAssistantHost, socketUrl)}
 		c.JSON(http.StatusOK, response)
-		return nil, nil, fmt.Errorf("outbound call triggered")
+		return nil, telemetry, fmt.Errorf("outbound call triggered")
 	}
 
 	clientNumber, ok := queryParams["CallFrom"]
 	if !ok || clientNumber == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid caller"})
-		return nil, nil, fmt.Errorf("missing or empty 'from' query parameter")
+		return nil, telemetry, fmt.Errorf("missing or empty 'from' query parameter")
 	}
 
-	assistantID := c.Param("assistantId")
-	if assistantID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
-		return nil, nil, fmt.Errorf("missing assistantId path parameter")
-	}
-	return utils.Ptr(clientNumber), utils.Ptr(assistantID), nil
+	return utils.Ptr(clientNumber), telemetry, nil
 }

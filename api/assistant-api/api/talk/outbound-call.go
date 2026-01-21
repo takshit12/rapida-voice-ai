@@ -16,6 +16,7 @@ import (
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
 	"github.com/rapidaai/protos"
+	"golang.org/x/sync/errgroup"
 )
 
 // InitiateAssistantTalk implements protos.TalkServiceServer.
@@ -76,13 +77,7 @@ func (cApi *ConversationGrpcApi) CreatePhoneCall(ctx context.Context, ir *protos
 		return utils.ErrorWithCode[protos.CreatePhoneCallResponse](200, err, "Unable to create conversation arguments, please check and try again.")
 	}
 	conversation.Arguments = arguments
-	// updating metadata
-	metadatas, err := cApi.assistantConversationService.ApplyConversationMetadata(ctx, auth, assistant.Id, conversation.Id, types.NewMetadataList(mtd))
-	if err != nil {
-		cApi.logger.Debugf("unable to create metadatas %v", err)
-		return utils.ErrorWithCode[protos.CreatePhoneCallResponse](200, err, "Unable to create conversation metadata, please check and try again.")
-	}
-	conversation.Metadatas = metadatas
+
 	credentialID, err := assistant.AssistantPhoneDeployment.GetOptions().GetUint64("rapida.credential_id")
 	if err != nil {
 		cApi.assistantConversationService.ApplyConversationMetrics(ctx, auth, assistant.Id, conversation.Id, []*types.Metric{types.NewStatusMetric(type_enums.RECORD_FAILED)})
@@ -111,28 +106,48 @@ func (cApi *ConversationGrpcApi) CreatePhoneCall(ctx context.Context, ir *protos
 		fromPhone = fromNumber
 	}
 
-	meta, metric, event, err := telephony.MakeCall(auth, toNumber, fromPhone, ir.GetAssistant().GetAssistantId(), conversation.Id, vltC, assistant.AssistantPhoneDeployment.GetOptions())
+	telemetries, err := telephony.OutboundCall(auth, toNumber, fromPhone, ir.GetAssistant().GetAssistantId(), conversation.Id, vltC, assistant.AssistantPhoneDeployment.GetOptions())
 	if err != nil {
 		cApi.logger.Errorf("telephony call return error %v", err)
 	}
 
-	if metric != nil {
-		metrics, err := cApi.assistantConversationService.ApplyConversationMetrics(ctx, auth, assistant.Id, conversation.Id, metric)
-		if err == nil {
+	evnts, mtrs, metadatas := types.GetDifferentTelemetry(telemetries)
+	var wg errgroup.Group
+	wg.Go(func() error {
+		mtdas, err := cApi.assistantConversationService.ApplyConversationMetadata(ctx, auth, assistant.Id, conversation.Id, append(metadatas, types.NewMetadataList(mtd)...))
+		if err != nil {
+			cApi.logger.Errorf("failed to apply conversation metadata: %v", err)
+			return err
+		}
+		conversation.Metadatas = mtdas
+		return nil
+	})
+
+	wg.Go(func() error {
+		if len(mtrs) > 0 {
+			metrics, err := cApi.assistantConversationService.ApplyConversationMetrics(ctx, auth, assistant.Id, conversation.Id, mtrs)
+			if err != nil {
+				cApi.logger.Errorf("failed to apply conversation metrics: %v", err)
+				return err
+			}
 			conversation.Metrics = append(conversation.Metrics, metrics...)
 		}
-	}
-	if meta != nil {
-		mtds, err := cApi.assistantConversationService.ApplyConversationMetadata(ctx, auth, assistant.Id, conversation.Id, meta)
-		if err == nil {
-			conversation.Metadatas = append(conversation.Metadatas, mtds...)
-		}
-	}
-	if event != nil {
-		evts, err := cApi.assistantConversationService.ApplyConversationTelephonyEvent(ctx, auth, assistant.AssistantPhoneDeployment.TelephonyProvider, assistant.Id, conversation.Id, event)
-		if err == nil {
+		return nil
+	})
+	wg.Go(func() error {
+		if len(evnts) > 0 {
+			evts, err := cApi.assistantConversationService.ApplyConversationTelephonyEvent(ctx, auth, assistant.AssistantPhoneDeployment.TelephonyProvider, assistant.Id, conversation.Id, evnts)
+			if err != nil {
+				cApi.logger.Errorf("failed to apply telephony events: %v", err)
+				return err
+			}
 			conversation.TelephonyEvents = append(conversation.TelephonyEvents, evts...)
 		}
+		return nil
+	})
+	if err := wg.Wait(); err != nil {
+		cApi.logger.Errorf("failed to process telemetry for outbound call: %v", err)
+		return utils.ErrorWithCode[protos.CreatePhoneCallResponse](500, err, "Failed to process call telemetry")
 	}
 
 	out := &protos.AssistantConversation{}

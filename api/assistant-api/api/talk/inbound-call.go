@@ -21,7 +21,7 @@ import (
 	"github.com/rapidaai/pkg/types"
 	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
-	protos "github.com/rapidaai/protos"
+	"github.com/rapidaai/protos"
 )
 
 func (cApi *ConversationApi) UnviersalCallback(c *gin.Context) {
@@ -29,7 +29,7 @@ func (cApi *ConversationApi) UnviersalCallback(c *gin.Context) {
 	if err != nil {
 		cApi.logger.Errorf("failed to read event body with error %+v", err)
 	}
-	cApi.logger.Debugf("event from exotel | body: %s", string(body))
+	cApi.logger.Debugf("event body: %s", string(body))
 }
 
 func (cApi *ConversationApi) Callback(c *gin.Context) {
@@ -54,30 +54,31 @@ func (cApi *ConversationApi) Callback(c *gin.Context) {
 	}
 
 	tlp := c.Param("telephony")
-	_telephony, err := telephony.GetTelephony(
-		telephony.Telephony(tlp),
-		cApi.cfg,
-		cApi.logger,
-	)
+	_telephony, err := telephony.GetTelephony(telephony.Telephony(tlp), cApi.cfg, cApi.logger)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid telephony"})
 		return
 	}
 
-	mtr, evts, err := _telephony.StatusCallback(c, iAuth, assistantId, conversationId)
+	mtr, err := _telephony.StatusCallback(c, iAuth, assistantId, conversationId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event to process"})
 		return
 	}
-
-	if _, err := cApi.assistantConversationService.ApplyConversationTelephonyEvent(c, iAuth, tlp, assistantId, conversationId, evts); err != nil {
-		c.Status(http.StatusOK)
-		return
+	evnts, mtrs, _ := types.GetDifferentTelemetry(mtr)
+	if len(mtrs) > 0 {
+		if _, err := cApi.assistantConversationService.ApplyConversationMetrics(c, iAuth, assistantId, conversationId, mtrs); err != nil {
+			cApi.logger.Errorf("failed to apply conversation metrics in callback: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process metrics"})
+			return
+		}
 	}
-
-	if _, err := cApi.assistantConversationService.ApplyConversationMetrics(c, iAuth, assistantId, conversationId, mtr); err != nil {
-		c.Status(http.StatusOK)
-		return
+	if len(evnts) > 0 {
+		if _, err := cApi.assistantConversationService.ApplyConversationTelephonyEvent(c, iAuth, tlp, assistantId, conversationId, evnts); err != nil {
+			cApi.logger.Errorf("failed to apply telephony events in callback: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process events"})
+			return
+		}
 	}
 	c.Status(http.StatusCreated)
 	return
@@ -104,13 +105,20 @@ func (cApi *ConversationApi) CallReciever(c *gin.Context) {
 		return
 	}
 
-	clientNumber, assistantIdStr, err := _telephony.AcceptCall(c)
-	if err != nil {
-		cApi.logger.Errorf(err.Error())
+	assistantID := c.Param("assistantId")
+	if assistantID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
 		return
 	}
 
-	assistantId, err := strconv.ParseUint(*assistantIdStr, 10, 64)
+	clientNumber, telemetries, err := _telephony.ReceiveCall(c)
+	if err != nil {
+		cApi.logger.Errorf("failed to receive call: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to process incoming call"})
+		return
+	}
+
+	assistantId, err := strconv.ParseUint(assistantID, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
 		return
@@ -129,12 +137,50 @@ func (cApi *ConversationApi) CallReciever(c *gin.Context) {
 		return
 	}
 
-	//
-	if _, err := cApi.assistantConversationService.ApplyConversationMetrics(c, iAuth, assistantId, conversation.Id, []*types.Metric{types.NewStatusMetric(type_enums.RECORD_CONNECTED)}); err != nil {
-		cApi.logger.Errorf("error while applying metrics %v", err)
+	evnts, mtrs, metadatas := types.GetDifferentTelemetry(telemetries)
+	var wg errgroup.Group
+	wg.Go(func() error {
+		if len(metadatas) > 0 {
+			mtdas, err := cApi.assistantConversationService.ApplyConversationMetadata(c, iAuth, assistant.Id, conversation.Id, metadatas)
+			if err != nil {
+				cApi.logger.Errorf("failed to apply conversation metadata: %v", err)
+				return err
+			}
+			conversation.Metadatas = mtdas
+		}
+		return nil
+	})
+
+	wg.Go(func() error {
+		if len(mtrs) > 0 {
+			metrics, err := cApi.assistantConversationService.ApplyConversationMetrics(c, iAuth, assistant.Id, conversation.Id, mtrs)
+			if err != nil {
+				cApi.logger.Errorf("failed to apply conversation metrics: %v", err)
+				return err
+			}
+			conversation.Metrics = append(conversation.Metrics, metrics...)
+		}
+		return nil
+	})
+	wg.Go(func() error {
+		if len(evnts) > 0 {
+			evts, err := cApi.assistantConversationService.ApplyConversationTelephonyEvent(c, iAuth, assistant.AssistantPhoneDeployment.TelephonyProvider, assistant.Id, conversation.Id, evnts)
+			if err != nil {
+				cApi.logger.Errorf("failed to apply telephony events: %v", err)
+				return err
+			}
+			conversation.TelephonyEvents = append(conversation.TelephonyEvents, evts...)
+		}
+		return nil
+	})
+	if err := wg.Wait(); err != nil {
+		cApi.logger.Errorf("failed to process telemetry for inbound call: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process call telemetry"})
+		return
 	}
 
-	if err := _telephony.IncomingCall(c, iAuth, assistant.Id, *clientNumber, conversation.Id); err != nil {
+	if err := _telephony.InboundCall(c, iAuth, assistant.Id, *clientNumber, conversation.Id); err != nil {
+		cApi.logger.Errorf("failed to initiate inbound call: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unable to initiate talker"})
 		return
 	}
@@ -199,7 +245,6 @@ func (cApi *ConversationApi) CallTalker(c *gin.Context) {
 			return err
 		}
 
-		cApi.logger.Debugf("got aith %+v", auth)
 		vltC, err = cApi.vaultClient.GetCredential(c, auth, credentialID)
 		if err != nil {
 			return err
@@ -223,9 +268,8 @@ func (cApi *ConversationApi) CallTalker(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid phone deployment"})
 		return
 	}
-	talker, err := internal_adapter.GetTalker(
-		utils.PhoneCall, c, cApi.cfg, cApi.logger, cApi.postgres, cApi.opensearch, cApi.redis, cApi.storage,
-		_telephony.Streamer(c, websocketConnection, assistant, assistantConversation, vltC))
+
+	talker, err := internal_adapter.GetTalker(utils.PhoneCall, c, cApi.cfg, cApi.logger, cApi.postgres, cApi.opensearch, cApi.redis, cApi.storage, _telephony.Streamer(c, websocketConnection, assistant, assistantConversation, vltC))
 	if err != nil {
 		cApi.logger.Errorf("error while recieving call %v", err)
 		cApi.assistantConversationService.ApplyConversationMetrics(c, auth, assistantId, conversationId, []*types.Metric{{Name: type_enums.STATUS.String(), Value: type_enums.RECORD_FAILED.String(), Description: "Internal server error"}})

@@ -61,20 +61,20 @@ func (tpc *twilioTelephony) clientParam(vaultCredential *protos.VaultCredential)
 	}, nil
 }
 
-func (tpc *twilioTelephony) CatchAllStatusCallback(ctx *gin.Context) (*string, []*types.Metric, []*types.Event, error) {
-	return nil, nil, nil, nil
+func (tpc *twilioTelephony) CatchAllStatusCallback(ctx *gin.Context) ([]types.Telemetry, error) {
+	return nil, nil
 }
-func (tpc *twilioTelephony) StatusCallback(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64) ([]*types.Metric, []*types.Event, error) {
+func (tpc *twilioTelephony) StatusCallback(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64) ([]types.Telemetry, error) {
 	body, err := c.GetRawData() // Extract raw request body
 	if err != nil {
 		tpc.logger.Errorf("failed to read event body with error %+v", err)
-		return nil, nil, fmt.Errorf("not implimented")
+		return nil, fmt.Errorf("not implimented")
 	}
 
 	values, err := url.ParseQuery(string(body))
 	if err != nil {
 		tpc.logger.Errorf("failed to parse body with error %+v", err)
-		return nil, nil, fmt.Errorf("failed to parse request body")
+		return nil, fmt.Errorf("failed to parse request body")
 	}
 
 	eventDetails := make(map[string]interface{})
@@ -90,24 +90,20 @@ func (tpc *twilioTelephony) StatusCallback(c *gin.Context, auth types.SimplePrin
 	if streamEvent, ok := eventDetails["StreamEvent"]; ok {
 		callStatusOrStreamEvent = streamEvent
 	}
-	return []*types.Metric{types.NewMetric("STATUS", fmt.Sprintf("%v", callStatusOrStreamEvent), utils.Ptr("Status of conversation"))}, []*types.Event{types.NewEvent(fmt.Sprintf("%v", callStatusOrStreamEvent), eventDetails)}, nil
+	return []types.Telemetry{types.NewMetric("STATUS", fmt.Sprintf("%v", callStatusOrStreamEvent), utils.Ptr("Status of conversation")), types.NewEvent(fmt.Sprintf("%v", callStatusOrStreamEvent), eventDetails)}, nil
 
 }
 
-func (tpc *twilioTelephony) MakeCall(auth types.SimplePrinciple, toPhone string, fromPhone string, assistantId, assistantConversationId uint64, vaultCredential *protos.VaultCredential, opts utils.Option) ([]*types.Metadata, []*types.Metric, []*types.Event, error) {
-	mtds := []*types.Metadata{
+func (tpc *twilioTelephony) OutboundCall(auth types.SimplePrinciple, toPhone string, fromPhone string, assistantId, assistantConversationId uint64, vaultCredential *protos.VaultCredential, opts utils.Option) ([]types.Telemetry, error) {
+	mtds := []types.Telemetry{
 		types.NewMetadata("telephony.toPhone", toPhone),
 		types.NewMetadata("telephony.fromPhone", fromPhone),
 		types.NewMetadata("telephony.provider", "twilio"),
 	}
-	event := []*types.Event{
-		types.NewEvent("api-call", map[string]interface{}{}),
-	}
 
 	client, err := tpc.client(vaultCredential)
 	if err != nil {
-		mtds = append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("authentication error: %s", err.Error())))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("authentication error: %s", err.Error())), types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))), err
 	}
 	callParams := &openapi.CreateCallParams{}
 	callParams.SetTo(toPhone)
@@ -133,13 +129,13 @@ func (tpc *twilioTelephony) MakeCall(auth types.SimplePrinciple, toPhone string,
 	)
 	resp, err := client.Api.CreateCall(callParams)
 	if err != nil || resp.Status == nil || resp.Sid == nil {
-		mtds = append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("API error: %s", err.Error())))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("API error: %s", err.Error())), types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))), err
 	}
 
-	event = append(event, types.NewEvent(*resp.Status, resp))
-	mtds = append(mtds, types.NewMetadata("telephony.uuid", *resp.Sid))
-	return mtds, []*types.Metric{types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))}, event, nil
+	return append(mtds,
+		types.NewMetadata("telephony.uuid", *resp.Sid),
+		types.NewEvent(*resp.Status, resp),
+		types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))), nil
 }
 
 func (tpc *twilioTelephony) CreateTwinML(mediaServer string, name, path string, callback string, assistantId uint64, clientNumber string) string {
@@ -162,7 +158,7 @@ func (tpc *twilioTelephony) CreateTwinML(mediaServer string, name, path string, 
 	)
 }
 
-func (tpc *twilioTelephony) IncomingCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
+func (tpc *twilioTelephony) InboundCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
 	c.Data(http.StatusOK, "text/xml", []byte(
 		tpc.CreateTwinML(
 			tpc.appCfg.PublicAssistantHost,
@@ -180,24 +176,25 @@ func (tpc *twilioTelephony) Streamer(c *gin.Context, connection *websocket.Conn,
 	return NewTwilioWebsocketStreamer(tpc.logger, connection, assistant, conversation, vlt)
 }
 
-func (tpc *twilioTelephony) AcceptCall(c *gin.Context) (*string, *string, error) {
+func (tpc *twilioTelephony) ReceiveCall(c *gin.Context) (*string, []types.Telemetry, error) {
 	queryParams := make(map[string]string)
+	telemetry := []types.Telemetry{}
 	for key, values := range c.Request.URL.Query() {
 		if len(values) > 0 {
 			queryParams[key] = values[0]
 		}
 	}
 
-	clientNumber, ok := queryParams["from"]
+	clientNumber, ok := queryParams["From"]
 	if !ok || clientNumber == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
-		return nil, nil, fmt.Errorf("missing or empty 'from' query parameter")
+		return nil, telemetry, fmt.Errorf("missing or empty 'from' query parameter")
 	}
 
-	assistantID := c.Param("assistantId")
-	if assistantID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
-		return nil, nil, fmt.Errorf("missing assistantId path parameter")
+	if v, ok := queryParams["CallSid"]; ok && v != "" {
+		telemetry = append(telemetry,
+			types.NewMetadata("telephony.uuid", v),
+		)
 	}
-	return utils.Ptr(clientNumber), utils.Ptr(assistantID), nil
+	return utils.Ptr(clientNumber), append(telemetry, types.NewEvent("webhook", queryParams), types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))), nil
 }

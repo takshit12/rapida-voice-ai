@@ -45,6 +45,10 @@ func (d *Event) SetValue(src interface{}) error {
 	return nil
 }
 
+func (d *Event) Type() string {
+	return "event"
+}
+
 func NewEvent(k string, v interface{}) *Event {
 	md := &Event{
 		EventType: k,

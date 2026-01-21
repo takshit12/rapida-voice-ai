@@ -37,54 +37,50 @@ func NewVonageTelephony(config *config.AssistantConfig, logger commons.Logger) (
 	}, nil
 }
 
-func (tpc *vonageTelephony) CatchAllStatusCallback(ctx *gin.Context) (*string, []*types.Metric, []*types.Event, error) {
-	return nil, nil, nil, nil
+func (tpc *vonageTelephony) CatchAllStatusCallback(ctx *gin.Context) ([]types.Telemetry, error) {
+	return nil, nil
 }
-func (tpc *vonageTelephony) StatusCallback(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64) ([]*types.Metric, []*types.Event, error) {
+func (tpc *vonageTelephony) StatusCallback(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64) ([]types.Telemetry, error) {
 	body, err := c.GetRawData() // Extract raw request body
 	if err != nil {
 		tpc.logger.Errorf("failed to read request body with error %+v", err)
-		return nil, nil, fmt.Errorf("failed to read request body")
+		return nil, fmt.Errorf("failed to read request body")
 	}
 
 	// Parse the JSON body
 	var payload map[string]interface{}
 	if err := json.Unmarshal(body, &payload); err != nil {
 		tpc.logger.Errorf("failed to parse request body: %+v", err)
-		return nil, nil, fmt.Errorf("failed to parse request body")
+		return nil, fmt.Errorf("failed to parse request body")
 	}
 
 	// Extract status from payload
 	status, ok := payload["status"].(string)
 	if !ok {
 		tpc.logger.Errorf("status not found or invalid in payload")
-		return nil, nil, fmt.Errorf("status not found in payload")
+		return nil, fmt.Errorf("status not found in payload")
 	}
 	tpc.logger.Debugf("event processed | status: %s, payload: %+v", status, payload)
-	return []*types.Metric{types.NewMetric("STATUS", status, utils.Ptr("Status of conversation"))}, []*types.Event{types.NewEvent(status, payload)}, nil
+	return []types.Telemetry{types.NewMetric("STATUS", status, utils.Ptr("Status of conversation")), types.NewEvent(status, payload)}, nil
 }
 
-func (vt *vonageTelephony) MakeCall(
+func (vt *vonageTelephony) OutboundCall(
 	auth types.SimplePrinciple,
 	toPhone string,
 	fromPhone string,
 	assistantId, assistantConversationId uint64,
 	vaultCredential *protos.VaultCredential,
 	opts utils.Option,
-) ([]*types.Metadata, []*types.Metric, []*types.Event, error) {
-	mtds := []*types.Metadata{
+) ([]types.Telemetry, error) {
+	mtds := []types.Telemetry{
 		types.NewMetadata("telephony.toPhone", toPhone),
 		types.NewMetadata("telephony.fromPhone", fromPhone),
 		types.NewMetadata("telephony.provider", "vonage"),
 	}
-	event := []*types.Event{
-		types.NewEvent("api-call", map[string]interface{}{}),
-	}
 
 	cAuth, err := vt.Auth(vaultCredential)
 	if err != nil {
-		mtds = append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("authentication error: %s", err.Error())))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("authentication error: %s", err.Error())), types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))), err
 	}
 	ct := vonage.NewVoiceClient(cAuth)
 
@@ -108,22 +104,21 @@ func (vt *vonageTelephony) MakeCall(
 		})
 
 	if apiError != nil {
-		mtds = append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("API error: %s", apiError.Error())))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("API error: %s", apiError.Error())), types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))), apiError
 	}
 
 	if vErr.Error != nil {
-		mtds = append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("Calling error: %v", vErr.Error)))
-		return mtds, []*types.Metric{types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))}, event, err
+		return append(mtds, types.NewMetadata("telephony.error", fmt.Sprintf("Calling error: %v", vErr.Error)), types.NewMetric("STATUS", "FAILED", utils.Ptr("Status of telephony api"))), fmt.Errorf("failed to create call")
 	}
 
-	mtds = append(mtds, types.NewMetadata("telephony.conversation_uuid", result.ConversationUuid))
-	mtds = append(mtds, types.NewMetadata("telephony.uuid", result.Uuid))
-	event = append(event, types.NewEvent(result.Status, result))
-	return mtds, []*types.Metric{types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))}, event, nil
+	return append(mtds,
+		types.NewMetadata("telephony.conversation_uuid", result.ConversationUuid),
+		types.NewMetadata("telephony.uuid", result.Uuid),
+		types.NewEvent(result.Status, result),
+		types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))), nil
 }
 
-func (vt *vonageTelephony) IncomingCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
+func (vt *vonageTelephony) InboundCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error {
 	c.JSON(http.StatusOK, []gin.H{
 		{
 			"action":    "connect",
@@ -147,8 +142,9 @@ func (tpc *vonageTelephony) Streamer(c *gin.Context, connection *websocket.Conn,
 	return NewVonageWebsocketStreamer(tpc.logger, connection, assistant, assistantConversation, vltC)
 }
 
-func (tpc *vonageTelephony) AcceptCall(c *gin.Context) (*string, *string, error) {
+func (tpc *vonageTelephony) ReceiveCall(c *gin.Context) (*string, []types.Telemetry, error) {
 	queryParams := make(map[string]string)
+	telemetry := []types.Telemetry{}
 	for key, values := range c.Request.URL.Query() {
 		if len(values) > 0 {
 			queryParams[key] = values[0]
@@ -158,15 +154,21 @@ func (tpc *vonageTelephony) AcceptCall(c *gin.Context) (*string, *string, error)
 	clientNumber, ok := queryParams["from"]
 	if !ok || clientNumber == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
-		return nil, nil, fmt.Errorf("missing or empty 'from' query parameter")
+		return nil, telemetry, fmt.Errorf("missing or empty 'from' query parameter")
 	}
 
-	assistantID := c.Param("assistantId")
-	if assistantID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assistant ID"})
-		return nil, nil, fmt.Errorf("missing assistantId path parameter")
+	if v, ok := queryParams["conversation_uuid"]; ok && v != "" {
+		telemetry = append(telemetry,
+			types.NewMetadata("telephony.conversation_uuid", v),
+		)
 	}
-	return utils.Ptr(clientNumber), utils.Ptr(assistantID), nil
+
+	if v, ok := queryParams["uuid"]; ok && v != "" {
+		telemetry = append(telemetry,
+			types.NewMetadata("telephony.uuid", v),
+		)
+	}
+	return utils.Ptr(clientNumber), append(telemetry, types.NewEvent("webhook", queryParams), types.NewMetric("STATUS", "SUCCESS", utils.Ptr("Status of telephony api"))), nil
 }
 
 func (tpc *vonageTelephony) Auth(vaultCredential *protos.VaultCredential) (vonage.Auth, error) {

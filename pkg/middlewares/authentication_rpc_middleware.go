@@ -35,7 +35,6 @@ func NewAuthenticationMiddleware(resolver types.Authenticator, logger commons.Lo
 		}
 		id, err := strconv.ParseUint(authId, 0, 64)
 		if err != nil {
-			logger.Errorf("auth id is not int.")
 			c.Next()
 			return
 		}

@@ -23,21 +23,15 @@ import (
 type Telephony interface {
 	// streamer
 	Streamer(c *gin.Context, connection *websocket.Conn, assistant *internal_assistant_entity.Assistant, assistantConversation *internal_conversation_entity.AssistantConversation, vltC *protos.VaultCredential) internal_streamers.Streamer
-
-	// for creating call throght telephony
-	MakeCall(auth types.SimplePrinciple, toPhone string, fromPhone string, assistantId, assistantConversationId uint64, vaultCredential *protos.VaultCredential, opts utils.Option) ([]*types.Metadata, []*types.Metric, []*types.Event, error)
-
 	//  event callback for a conversation
-	StatusCallback(ctx *gin.Context, auth types.SimplePrinciple, assistantId, assistantConversationId uint64) ([]*types.Metric, []*types.Event, error)
-
+	StatusCallback(ctx *gin.Context, auth types.SimplePrinciple, assistantId, assistantConversationId uint64) ([]types.Telemetry, error)
 	// catch all event callback
-	CatchAllStatusCallback(ctx *gin.Context) (*string, []*types.Metric, []*types.Event, error)
+	CatchAllStatusCallback(ctx *gin.Context) ([]types.Telemetry, error)
 
 	//
-	IncomingCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error
-
-	//
-	AcceptCall(c *gin.Context) (client *string, assistantId *string, err error)
+	ReceiveCall(c *gin.Context) (client *string, telemetry []types.Telemetry, err error)
+	OutboundCall(auth types.SimplePrinciple, toPhone string, fromPhone string, assistantId, assistantConversationId uint64, vaultCredential *protos.VaultCredential, opts utils.Option) ([]types.Telemetry, error)
+	InboundCall(c *gin.Context, auth types.SimplePrinciple, assistantId uint64, clientNumber string, assistantConversationId uint64) error
 }
 
 func GetAnswerPath(provider string, auth types.SimplePrinciple, assistantId uint64, assistantConversationId uint64, toPhone string) string {

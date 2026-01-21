@@ -20,6 +20,10 @@ type Metric struct {
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 }
 
+func (d *Metric) Type() string {
+	return "metric"
+}
+
 func (x *Metric) GetName() string {
 	if x != nil {
 		return x.Name

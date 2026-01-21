@@ -16,6 +16,9 @@ type Metadata struct {
 	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
+func (d *Metadata) Type() string {
+	return "metadata"
+}
 func (d *Metadata) SetValue(src interface{}) error {
 	switch v := src.(type) {
 	case string:
