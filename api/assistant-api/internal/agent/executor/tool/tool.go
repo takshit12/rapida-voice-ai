@@ -9,12 +9,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	internal_agent_executor "github.com/rapidaai/api/assistant-api/internal/agent/executor"
 	internal_tool "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal"
 	internal_tool_local "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal/local"
+	mcp "github.com/rapidaai/api/assistant-api/internal/agent/executor/tool/internal/mcp"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
 	internal_adapter_telemetry "github.com/rapidaai/api/assistant-api/internal/telemetry"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -29,6 +31,8 @@ import (
 
 type toolExecutor struct {
 	logger                 commons.Logger
+	mcpClients             map[string]mcp.MCPClient    // serverUrl -> client
+	mcpTools               map[string]*mcp.MCPToolInfo // toolName -> MCP tool info
 	tools                  map[string]internal_tool.ToolCaller
 	availableToolFunctions []*protos.FunctionDefinition
 }
@@ -38,6 +42,8 @@ func NewToolExecutor(
 ) internal_agent_executor.ToolExecutor {
 	return &toolExecutor{
 		logger:                 logger,
+		mcpClients:             make(map[string]mcp.MCPClient),
+		mcpTools:               make(map[string]*mcp.MCPToolInfo),
 		tools:                  make(map[string]internal_tool.ToolCaller, 0),
 		availableToolFunctions: make([]*protos.FunctionDefinition, 0),
 	}
@@ -60,29 +66,90 @@ func (executor *toolExecutor) GetLocalTool(logger commons.Logger, toolOpts *inte
 	}
 }
 
+// initializeMCPTool connects to an MCP server and fetches all available tools
+func (executor *toolExecutor) initializeMCPTool(ctx context.Context, tool *internal_assistant_entity.AssistantTool, communication internal_type.Communication, tracer internal_adapter_telemetry.Tracer[utils.RapidaStage]) error {
+	opts := tool.GetOptions()
+	// Get MCP server URL
+	serverUrl, err := opts.GetString("mcp.server_url")
+	if err != nil {
+		return fmt.Errorf("mcp.server_url is required: %w", err)
+	}
+
+	// Get or create MCP client for this server
+	client, exists := executor.mcpClients[serverUrl]
+	if !exists {
+		client = mcp.NewDefaultMCPClient(executor.logger, 30*time.Second)
+		executor.mcpClients[serverUrl] = client
+		executor.logger.Infof("Connected to MCP server: %s", serverUrl)
+	}
+
+	// Fetch all available tools from the MCP server
+	tools, err := client.ListTools(ctx, serverUrl)
+	if err != nil {
+		return fmt.Errorf("failed to list tools from MCP server %s: %w", serverUrl, err)
+	}
+
+	executor.logger.Infof("Fetched %d tools from MCP server: %s", len(tools), serverUrl)
+
+	// Register each MCP tool
+	for _, mcpTool := range tools {
+		// Create tool caller for this MCP tool
+		caller := mcp.NewDynamicMCPToolCaller(
+			executor.logger,
+			client,
+			serverUrl,
+			mcpTool,
+		)
+
+		tracer.AddAttributes(ctx, internal_adapter_telemetry.KV{
+			K: mcpTool.Name,
+			V: internal_adapter_telemetry.StringValue("mcp"),
+		})
+
+		// Store the tool
+		executor.tools[mcpTool.Name] = caller
+		executor.mcpTools[mcpTool.Name] = &mcp.MCPToolInfo{
+			ServerUrl:  serverUrl,
+			Definition: mcpTool,
+		}
+		executor.availableToolFunctions = append(executor.availableToolFunctions, mcpTool)
+	}
+
+	return nil
+}
+
 func (executor *toolExecutor) Initialize(ctx context.Context, communication internal_type.Communication) error {
 	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantToolConnectStage)
 	defer span.EndSpan(ctx, utils.AssistantToolConnectStage)
 
-	//
 	start := time.Now()
-	for _, tool := range communication.Assistant().AssistantTools {
-		caller, err := executor.GetLocalTool(executor.logger, tool, communication)
-		if err != nil {
-			executor.logger.Errorf("error while initialize tool action %s", err)
-			continue
-		}
-		span.AddAttributes(ctx, internal_adapter_telemetry.KV{K: caller.Name(), V: internal_adapter_telemetry.StringValue(caller.ExecutionMethod())})
-		tlf, err := caller.Definition()
-		if err != nil {
-			executor.logger.Errorf("unable to generate tool definition %s", err)
-			continue
-		}
-		//
-		executor.tools[caller.Name()] = caller
-		executor.availableToolFunctions = append(executor.availableToolFunctions, tlf)
 
+	// Initialize local tools and MCP connections
+	for _, tool := range communication.Assistant().AssistantTools {
+		if tool.ExecutionMethod == "mcp" {
+			// Handle MCP tool - connect to server and fetch tools
+			if err := executor.initializeMCPTool(ctx, tool, communication, span); err != nil {
+				executor.logger.Errorf("error while initialize MCP tool: %s", err)
+				continue
+			}
+		} else {
+			// Handle local tool
+			caller, err := executor.GetLocalTool(executor.logger, tool, communication)
+			if err != nil {
+				executor.logger.Errorf("error while initialize tool action %s", err)
+				continue
+			}
+			span.AddAttributes(ctx, internal_adapter_telemetry.KV{K: caller.Name(), V: internal_adapter_telemetry.StringValue(caller.ExecutionMethod())})
+			tlf, err := caller.Definition()
+			if err != nil {
+				executor.logger.Errorf("unable to generate tool definition %s", err)
+				continue
+			}
+			executor.tools[caller.Name()] = caller
+			executor.availableToolFunctions = append(executor.availableToolFunctions, tlf)
+		}
 	}
+
 	executor.logger.Benchmark("ToolExecutor.Init", time.Since(start))
 	return nil
 }

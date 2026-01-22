@@ -4,11 +4,6 @@ export const BUILDIN_TOOLS = [
     code: 'knowledge_retrieval',
     name: 'Knowledge Retrieval',
   },
-  //   {
-  //     icon: 'https://cdn-01.rapida.ai/partners/tools/web_search.png',
-  //     code: 'web_search',
-  //     name: 'Web Search',
-  //   },
   {
     icon: 'https://cdn-01.rapida.ai/partners/tools/api_call.png',
     code: 'api_request',
@@ -28,6 +23,11 @@ export const BUILDIN_TOOLS = [
     icon: 'https://cdn-01.rapida.ai/partners/tools/stop.png',
     code: 'end_of_conversation',
     name: 'End of conversation',
+  },
+  {
+    icon: 'https://cdn-01.rapida.ai/partners/tools/api_call.png',
+    code: 'mcp',
+    name: 'MCP Server',
   },
 
   // Add more tools as needed

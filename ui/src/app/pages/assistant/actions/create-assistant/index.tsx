@@ -416,44 +416,56 @@ export function CreateAssistantPage() {
                 </YellowNoticeBlock>
                 {tools.length > 0 ? (
                   <div className="overflow-y-auto grid-cols-2 md:grid-cols-4 grid gap-2 px-4 py-2">
-                    {tools.map((itm, idx) => (
-                      <Card key={idx}>
-                        <header className="flex justify-between">
-                          <SquareFunction
-                            className="w-7 h-7"
-                            strokeWidth={1.5}
-                          />
-                          <CardOptionMenu
-                            options={[
-                              {
-                                option: (
-                                  <span className="text-red-600">
-                                    Delete tool
-                                  </span>
-                                ),
-                                onActionClick: () => {
-                                  setTools(prevTools =>
-                                    prevTools.filter(tool => tool !== itm),
-                                  );
+                    {tools.map((itm, idx) => {
+                      const isMCP = itm.buildinToolConfig.code === 'mcp';
+
+                      return (
+                        <Card key={idx}>
+                          <header className="flex justify-between items-start">
+                            <div className="flex items-center gap-2">
+                              <SquareFunction
+                                className="w-7 h-7"
+                                strokeWidth={1.5}
+                              />
+                              {isMCP && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-medium">
+                                  MCP
+                                </span>
+                              )}
+                            </div>
+                            <CardOptionMenu
+                              options={[
+                                {
+                                  option: (
+                                    <span className="text-red-600">
+                                      Delete tool
+                                    </span>
+                                  ),
+                                  onActionClick: () => {
+                                    setTools(prevTools =>
+                                      prevTools.filter(tool => tool !== itm),
+                                    );
+                                  },
                                 },
-                              },
-                              {
-                                option: 'Edit tool',
-                                onActionClick: () => {
-                                  setEditingTool(itm);
-                                  setConfigureToolOpen(true);
+                                {
+                                  option: 'Edit tool',
+                                  onActionClick: () => {
+                                    setEditingTool(itm);
+                                    setConfigureToolOpen(true);
+                                  },
                                 },
-                              },
-                            ]}
-                            classNames="h-8 w-8 p-1 opacity-60"
-                          />
-                        </header>
-                        <div className="flex-1 mt-3">
-                          <CardTitle>{itm.name}</CardTitle>
-                          <CardDescription>{itm.description}</CardDescription>
-                        </div>
-                      </Card>
-                    ))}
+                              ]}
+                              classNames="h-8 w-8 p-1 opacity-60"
+                            />
+                          </header>
+                          <div className="flex-1 mt-3">
+                            <CardTitle>{itm.name}</CardTitle>
+                            <CardDescription>{itm.description}</CardDescription>
+                            </CardDescription>
+                          </div>
+                        </Card>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="justify-self-center justify-center items-center mx-auto my-auto w-full">

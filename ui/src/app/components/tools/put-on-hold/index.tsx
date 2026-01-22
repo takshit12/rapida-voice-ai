@@ -32,7 +32,7 @@ export const ConfigurePutOnHold: FC<ConfigureToolProps> = ({
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
+        <div className="flex flex-col gap-8 max-w-6xl">
           <div className="grid grid-cols-2 w-full gap-4">
             <FieldSet className="flex justify-between">
               <FormLabel htmlFor="max_hold_time">
@@ -73,11 +73,13 @@ export const ConfigurePutOnHold: FC<ConfigureToolProps> = ({
         </div>
       </InputGroup>
 
-      <ToolDefinitionForm
-        toolDefinition={toolDefinition}
-        onChangeToolDefinition={onChangeToolDefinition}
-        inputClass={inputClass}
-      />
+      {toolDefinition && onChangeToolDefinition && (
+        <ToolDefinitionForm
+          toolDefinition={toolDefinition}
+          onChangeToolDefinition={onChangeToolDefinition}
+          inputClass={inputClass}
+        />
+      )}
     </>
   );
 };

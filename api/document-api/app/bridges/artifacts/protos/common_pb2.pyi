@@ -578,12 +578,14 @@ class AssistantConversationAction(_message.Message):
         ENDPOINT_CALL: _ClassVar[AssistantConversationAction.ActionType]
         PUT_ON_HOLD: _ClassVar[AssistantConversationAction.ActionType]
         END_CONVERSATION: _ClassVar[AssistantConversationAction.ActionType]
+        MCP_TOOL_CALL: _ClassVar[AssistantConversationAction.ActionType]
     ACTION_UNSPECIFIED: AssistantConversationAction.ActionType
     KNOWLEDGE_RETRIEVAL: AssistantConversationAction.ActionType
     API_REQUEST: AssistantConversationAction.ActionType
     ENDPOINT_CALL: AssistantConversationAction.ActionType
     PUT_ON_HOLD: AssistantConversationAction.ActionType
     END_CONVERSATION: AssistantConversationAction.ActionType
+    MCP_TOOL_CALL: AssistantConversationAction.ActionType
     class ArgsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]

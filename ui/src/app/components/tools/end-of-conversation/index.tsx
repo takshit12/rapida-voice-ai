@@ -10,11 +10,15 @@ export const ConfigureEndOfConversation: FC<ConfigureToolProps> = ({
   toolDefinition,
   onChangeToolDefinition,
 }) => (
-  <ToolDefinitionForm
-    toolDefinition={toolDefinition}
-    onChangeToolDefinition={onChangeToolDefinition}
-    inputClass={inputClass}
-    documentationUrl="https://doc.rapida.ai/assistants/tools/add-end-of-conversation-tool"
-    documentationTitle="Know more about End of Conversation that can be supported by rapida"
-  />
+  <>
+    {toolDefinition && onChangeToolDefinition && (
+      <ToolDefinitionForm
+        toolDefinition={toolDefinition}
+        onChangeToolDefinition={onChangeToolDefinition}
+        inputClass={inputClass}
+        documentationUrl="https://doc.rapida.ai/assistants/tools/add-end-of-conversation-tool"
+        documentationTitle="Know more about End of Conversation that can be supported by rapida"
+      />
+    )}
+  </>
 );

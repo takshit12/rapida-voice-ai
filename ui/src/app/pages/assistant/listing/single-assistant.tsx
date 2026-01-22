@@ -15,7 +15,7 @@ import { cn } from '@/utils';
 const SingleAssistant: FC<{ assistant: Assistant }> = ({ assistant }) => {
   const gn = useGlobalNavigation();
   return (
-    <div className="flex flex-col rounded-[2px] border-[0.1px] bg-white dark:bg-gray-950/20 shadow-sm transition-all hover:shadow-lg relative group">
+    <div className="flex flex-col rounded-lg border-[0.1px] bg-white dark:bg-gray-950/20 shadow-sm transition-all hover:shadow-lg relative group">
       <div className="flex justify-between items-start px-4 pt-3 pb-0">
         <div className="flex items-center gap-2.5">
           <div className="flex flex-col space-y-1 w-full relative overflow-hidden">

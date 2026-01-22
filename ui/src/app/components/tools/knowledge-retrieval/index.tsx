@@ -71,9 +71,9 @@ export const ConfigureKnowledgeRetrieval: FC<ConfigureToolProps> = ({
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
+        <div className="flex flex-col gap-8 max-w-6xl">
           <KnowledgeDropdown
-            className={inputClass}
+            className={cn('bg-light-background', inputClass)}
             currentKnowledge={getParamValue('tool.knowledge_id')}
             onChangeKnowledge={(knowledge: Knowledge) => {
               if (knowledge) {
@@ -130,12 +130,14 @@ export const ConfigureKnowledgeRetrieval: FC<ConfigureToolProps> = ({
         </div>
       </InputGroup>
 
-      <ToolDefinitionForm
-        toolDefinition={toolDefinition}
-        onChangeToolDefinition={onChangeToolDefinition}
-        inputClass={inputClass}
-        documentationUrl="https://doc.rapida.ai/assistants/tools/add-knowledge-tool"
-      />
+      {toolDefinition && onChangeToolDefinition && (
+        <ToolDefinitionForm
+          toolDefinition={toolDefinition}
+          onChangeToolDefinition={onChangeToolDefinition}
+          inputClass={inputClass}
+          documentationUrl="https://doc.rapida.ai/assistants/tools/add-knowledge-tool"
+        />
+      )}
     </>
   );
 };

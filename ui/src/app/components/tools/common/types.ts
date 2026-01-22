@@ -11,8 +11,8 @@ export interface ToolDefinition {
 }
 
 export interface ConfigureToolProps {
-  toolDefinition: ToolDefinition;
-  onChangeToolDefinition: (value: ToolDefinition) => void;
+  toolDefinition?: ToolDefinition;
+  onChangeToolDefinition?: (value: ToolDefinition) => void;
   parameters: Metadata[] | null;
   inputClass?: string;
   onParameterChange: (params: Metadata[]) => void;

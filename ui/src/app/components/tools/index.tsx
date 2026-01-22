@@ -29,6 +29,11 @@ import {
   GetPutOnHoldDefaultOptions,
   ValidatePutOnHoldDefaultOptions,
 } from '@/app/components/tools/put-on-hold/constant';
+import { ConfigureMCP } from '@/app/components/tools/mcp';
+import {
+  GetMCPDefaultOptions,
+  ValidateMCPDefaultOptions,
+} from '@/app/components/tools/mcp/constant';
 import {
   APIRequestToolDefintion,
   BUILDIN_TOOLS,
@@ -37,6 +42,7 @@ import {
   PutOnHoldToolDefintion,
   KnowledgeRetrievalToolDefintion,
 } from '@/llm-tools';
+import { ConfigureToolProps } from './common';
 
 // ============================================================================
 // Types
@@ -47,7 +53,8 @@ export type ToolCode =
   | 'api_request'
   | 'endpoint'
   | 'put_on_hold'
-  | 'end_of_conversation';
+  | 'end_of_conversation'
+  | 'mcp';
 
 export interface ToolDefinition {
   name: string;
@@ -60,27 +67,25 @@ export interface BuildinToolConfig {
   parameters: Metadata[];
 }
 
-interface ConfigureToolProps {
-  toolDefinition: ToolDefinition;
-  onChangeToolDefinition: (value: ToolDefinition) => void;
-  parameters: Metadata[] | null;
-  inputClass?: string;
-  onParameterChange: (params: Metadata[]) => void;
-}
-
 // ============================================================================
 // Tool Registry - Single source of truth for tool configurations
 // ============================================================================
 
-const TOOL_REGISTRY: Record<
-  ToolCode,
-  {
-    definition: ToolDefinition;
-    getDefaultOptions: (params: Metadata[]) => Metadata[];
-    validateOptions: (params: Metadata[]) => string | undefined;
-    Component: FC<ConfigureToolProps>;
-  }
-> = {
+/**
+ * Configuration interface for each tool in the registry.
+ * @property definition - Static tool definition (optional for runtime-resolved tools like MCP)
+ * @property getDefaultOptions - Returns default metadata parameters for the tool
+ * @property validateOptions - Validates tool configuration and returns error message if invalid
+ * @property Component - React component for tool configuration UI
+ */
+interface ToolConfig {
+  definition?: ToolDefinition;
+  getDefaultOptions: (params: Metadata[]) => Metadata[];
+  validateOptions: (params: Metadata[]) => string | undefined;
+  Component: FC<ConfigureToolProps>;
+}
+
+const TOOL_REGISTRY: Record<ToolCode, ToolConfig> = {
   knowledge_retrieval: {
     definition: KnowledgeRetrievalToolDefintion,
     getDefaultOptions: GetKnowledgeRetrievalDefaultOptions,
@@ -111,6 +116,13 @@ const TOOL_REGISTRY: Record<
     validateOptions: ValidateEndOfConversationDefaultOptions,
     Component: ConfigureEndOfConversation,
   },
+  mcp: {
+    // MCP tools don't have a static definition - resolved dynamically at runtime
+    definition: undefined,
+    getDefaultOptions: GetMCPDefaultOptions,
+    validateOptions: ValidateMCPDefaultOptions,
+    Component: ConfigureMCP,
+  },
 };
 
 const DEFAULT_TOOL_CODE: ToolCode = 'endpoint';
@@ -119,11 +131,17 @@ const DEFAULT_TOOL_CODE: ToolCode = 'endpoint';
 // Helper Functions
 // ============================================================================
 
+/**
+ * Type guard to check if a string is a valid tool code
+ */
 const isValidToolCode = (code: string): code is ToolCode => {
   return code in TOOL_REGISTRY;
 };
 
-const getToolConfig = (code: string) => {
+/**
+ * Safely retrieves tool configuration with fallback to default
+ */
+const getToolConfig = (code: string): ToolConfig => {
   return isValidToolCode(code)
     ? TOOL_REGISTRY[code]
     : TOOL_REGISTRY[DEFAULT_TOOL_CODE];
@@ -132,12 +150,26 @@ const getToolConfig = (code: string) => {
 /**
  * Returns the default tool definition for a given tool code.
  * If an existing definition has all required fields, it returns the existing one.
+ * MCP tools return a placeholder definition as they are resolved at runtime.
  * This should only be called during initialization, not on every render.
  */
 export const GetDefaultToolDefintion = (
   code: string,
   existing?: Partial<ToolDefinition>,
 ): ToolDefinition => {
+  // For MCP, use existing or return placeholder
+  if (code === 'mcp') {
+    if (existing?.name && existing?.description && existing?.parameters) {
+      return existing as ToolDefinition;
+    }
+    // Return placeholder for MCP - actual definition resolved at runtime
+    return {
+      name: 'mcp_tool',
+      description: 'MCP server tool - resolved at runtime',
+      parameters: JSON.stringify({ type: 'object', properties: {} }),
+    };
+  }
+
   const hasValidExisting =
     existing?.name && existing?.description && existing?.parameters;
 
@@ -145,7 +177,12 @@ export const GetDefaultToolDefintion = (
     return existing as ToolDefinition;
   }
 
-  return getToolConfig(code).definition;
+  const config = getToolConfig(code);
+  if (!config.definition) {
+    throw new Error(`Tool definition not found for code: ${code}`);
+  }
+
+  return config.definition;
 };
 
 /**
@@ -161,13 +198,14 @@ export const GetDefaultToolConfigIfInvalid = (
 
 /**
  * Validates tool parameters and returns an error message if invalid.
+ * Returns undefined if validation passes.
  */
 export const ValidateToolDefaultOptions = (
   code: string,
   parameters: Metadata[],
 ): string | undefined => {
   if (!isValidToolCode(code)) {
-    return undefined;
+    return `Invalid tool code: ${code}`;
   }
   return TOOL_REGISTRY[code].validateOptions(parameters);
 };

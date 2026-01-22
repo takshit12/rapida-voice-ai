@@ -240,7 +240,7 @@ export const ConfigureAssistantDeploymentPage = () => {
       <div className="flex flex-col gap-2 p-4">
         {/* debugger */}
         {assistant?.hasDebuggerdeployment() && (
-          <div className="bg-white dark:bg-gray-900 border">
+          <div className="bg-white dark:bg-gray-900 border rounded-lg">
             <div className="flex items-center justify-between border-b">
               <div className="flex items-center gap-2 justify-between px-4">
                 <h3 className="font-semibold truncate">Debugger</h3>
@@ -248,7 +248,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                   vrsn_dpl_{assistant.getDebuggerdeployment()?.getId()}
                 </span>
               </div>
-              <div className="flex shrink-0 border-x divide-x">
+              <div className="flex shrink-0 border-l divide-x">
                 <IButton
                   onClick={() => {
                     navi.goToConfigureDebugger(assistantId!);
@@ -312,7 +312,7 @@ export const ConfigureAssistantDeploymentPage = () => {
         )}
         {/* phone */}
         {assistant?.hasApideployment() && (
-          <div className="bg-white dark:bg-gray-900 border">
+          <div className="bg-white dark:bg-gray-900 border rounded-lg">
             <div className="flex items-center justify-between border-b">
               <div className="flex items-center gap-2 justify-between px-4">
                 <h3 className="font-semibold truncate">API</h3>
@@ -320,7 +320,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                   vrsn_dpl_{assistant.getApideployment()?.getId()}
                 </span>
               </div>
-              <div className="flex shrink-0 border-x divide-x">
+              <div className="flex shrink-0 border-l divide-x">
                 <IButton
                   onClick={() => {
                     navi.goToConfigureApi(assistantId!);
@@ -419,7 +419,7 @@ export const ConfigureAssistantDeploymentPage = () => {
           </div>
         )}
         {assistant?.hasPhonedeployment() && (
-          <div className="bg-white dark:bg-gray-900 border">
+          <div className="bg-white dark:bg-gray-900 border rounded-lg">
             <div className="flex items-center justify-between border-b">
               <div className="flex items-center gap-2 justify-between px-4">
                 <h3 className="font-semibold truncate">Phone Call</h3>
@@ -428,7 +428,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                 </span>
               </div>
 
-              <div className="flex shrink-0 border-x divide-x">
+              <div className="flex shrink-0 border-l divide-x">
                 <IButton
                   onClick={() => {
                     navi.goToConfigureCall(assistantId!);
@@ -512,7 +512,7 @@ export const ConfigureAssistantDeploymentPage = () => {
         )}
         {/* web widget */}
         {assistant?.hasWebplugindeployment() && (
-          <div className="bg-white dark:bg-gray-900 border">
+          <div className="bg-white dark:bg-gray-900 border rounded-lg">
             <div className="flex items-center justify-between border-b">
               <div className="flex items-center gap-2 justify-between px-4">
                 <h3 className="font-semibold truncate">Web widget</h3>
@@ -520,7 +520,7 @@ export const ConfigureAssistantDeploymentPage = () => {
                   vrsn_dpl_{assistant.getWebplugindeployment()?.getId()}
                 </span>
               </div>
-              <div className="flex shrink-0 border-x divide-x">
+              <div className="flex shrink-0 border-l divide-x">
                 <IButton
                   onClick={() => {
                     navi.goToConfigureWeb(assistantId!);

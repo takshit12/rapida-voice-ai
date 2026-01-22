@@ -121,12 +121,12 @@ const ConfigureAssistantTool: FC<{ assistantId: string }> = ({
       <YellowNoticeBlock className="flex items-center">
         <Info className="shrink-0 w-4 h-4" />
         <div className="ms-3 text-sm font-medium">
-          Rapida Assistant enables you to deploy intelligent conversational
-          agents across multiple channels.
+          Rapida Assistant enables you to call various tools and MCPs to enhance
+          your assistant's capabilities.
         </div>
         <a
           target="_blank"
-          href="https://doc.rapida.ai/assistants/overview"
+          href="https://doc.rapida.ai/assistants/tools/"
           className="h-7 flex items-center font-medium hover:underline ml-auto text-yellow-600"
           rel="noreferrer"
         >

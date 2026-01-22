@@ -52,7 +52,7 @@ export const ClickableKnowledgeCard: FC<KnowledgeCardProps> = ({
   return (
     <ClickableCard
       to={`/knowledge/${knowledge.getId()}`}
-      className={cn('p-0 rounded-[2px]', className)}
+      className={cn('p-0 rounded-lg', className)}
     >
       <div className="p-4">
         <header className="flex justify-between">

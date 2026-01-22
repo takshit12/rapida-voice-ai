@@ -4,7 +4,10 @@ import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/utils';
 import { EndpointDropdown } from '@/app/components/dropdown/endpoint-dropdown';
 import { FormLabel } from '@/app/components/form-label';
-import { IBlueBorderButton, ICancelButton } from '@/app/components/form/button';
+import {
+  IBlueBorderButton,
+  IRedBorderButton,
+} from '@/app/components/form/button';
 import { FieldSet } from '@/app/components/form/fieldset';
 import { Input } from '@/app/components/form/input';
 import { Select } from '@/app/components/form/select';
@@ -24,14 +27,15 @@ import {
 // Constants
 // ============================================================================
 
-const ENDPOINT_PARAMETER_TYPE_OPTIONS = [
-  { name: 'Tool', value: 'tool' },
-  { name: 'Assistant', value: 'assistant' },
-  { name: 'Conversation', value: 'conversation' },
-  { name: 'Argument', value: 'argument' },
-  { name: 'Metadata', value: 'metadata' },
-  { name: 'Option', value: 'option' },
-] as const;
+const ENDPOINT_PARAMETER_TYPE_OPTIONS: Array<{ name: string; value: string }> =
+  [
+    { name: 'Tool', value: 'tool' },
+    { name: 'Assistant', value: 'assistant' },
+    { name: 'Conversation', value: 'conversation' },
+    { name: 'Argument', value: 'argument' },
+    { name: 'Metadata', value: 'metadata' },
+    { name: 'Option', value: 'option' },
+  ];
 
 // ============================================================================
 // Main Component
@@ -52,7 +56,7 @@ export const ConfigureEndpoint: FC<ConfigureToolProps> = ({
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
+        <div className="flex flex-col gap-8 max-w-6xl">
           <EndpointDropdown
             className={cn('bg-light-background', inputClass)}
             currentEndpoint={getParamValue('tool.endpoint_id')}
@@ -72,11 +76,13 @@ export const ConfigureEndpoint: FC<ConfigureToolProps> = ({
         </div>
       </InputGroup>
 
-      <ToolDefinitionForm
-        toolDefinition={toolDefinition}
-        onChangeToolDefinition={onChangeToolDefinition}
-        inputClass={inputClass}
-      />
+      {toolDefinition && onChangeToolDefinition && (
+        <ToolDefinitionForm
+          toolDefinition={toolDefinition}
+          onChangeToolDefinition={onChangeToolDefinition}
+          inputClass={inputClass}
+        />
+      )}
     </>
   );
 };
@@ -210,7 +216,7 @@ const EndpointParameterRow: FC<EndpointParameterRowProps> = ({
         value={type}
         onChange={e => onTypeChange(e.target.value)}
         className={cn('bg-light-background border-none', inputClass)}
-        options={[...ENDPOINT_PARAMETER_TYPE_OPTIONS]}
+        options={ENDPOINT_PARAMETER_TYPE_OPTIONS}
       />
       <TypeKeySelector
         type={type}
@@ -218,8 +224,13 @@ const EndpointParameterRow: FC<EndpointParameterRowProps> = ({
         value={paramKey}
         onChange={onKeyChange}
       />
-      <div className="bg-light-background dark:bg-gray-950 h-full flex items-center justify-center">
-        <ArrowRight strokeWidth={1.5} className="text-blue-600" />
+      <div
+        className={cn(
+          'bg-light-background dark:bg-gray-950 h-full flex items-center justify-center',
+          inputClass,
+        )}
+      >
+        <ArrowRight strokeWidth={1.5} className="w-4 h-4" />
       </div>
     </div>
     <div className="col-span-1 flex">
@@ -227,15 +238,15 @@ const EndpointParameterRow: FC<EndpointParameterRowProps> = ({
         value={value}
         onChange={e => onValueChange(e.target.value)}
         placeholder="Value"
-        className="bg-light-background w-full border-none"
+        className={cn('bg-light-background w-full border-none', inputClass)}
       />
-      <ICancelButton
-        className="border-none outline-hidden bg-light-background"
+      <IRedBorderButton
+        className="border-none outline-hidden h-10"
         onClick={onRemove}
         type="button"
       >
         <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-      </ICancelButton>
+      </IRedBorderButton>
     </div>
   </div>
 );

@@ -43,7 +43,7 @@ export const ConfigureAPIRequest: FC<ConfigureToolProps> = ({
   return (
     <>
       <InputGroup title="Action Definition">
-        <div className={cn('flex flex-col gap-8 max-w-6xl')}>
+        <div className="flex flex-col gap-8 max-w-6xl">
           <div className="flex space-x-2">
             <FieldSet className="relative w-40">
               <FormLabel>Method</FormLabel>
@@ -51,7 +51,7 @@ export const ConfigureAPIRequest: FC<ConfigureToolProps> = ({
                 value={getParamValue('tool.method')}
                 onChange={e => updateParameter('tool.method', e.target.value)}
                 className={cn('bg-light-background', inputClass)}
-                options={[...HTTP_METHOD_OPTIONS]}
+                options={HTTP_METHOD_OPTIONS}
               />
             </FieldSet>
             <FieldSet className="relative w-full">
@@ -84,11 +84,13 @@ export const ConfigureAPIRequest: FC<ConfigureToolProps> = ({
         </div>
       </InputGroup>
 
-      <ToolDefinitionForm
-        toolDefinition={toolDefinition}
-        onChangeToolDefinition={onChangeToolDefinition}
-        inputClass={inputClass}
-      />
+      {toolDefinition && onChangeToolDefinition && (
+        <ToolDefinitionForm
+          toolDefinition={toolDefinition}
+          onChangeToolDefinition={onChangeToolDefinition}
+          inputClass={inputClass}
+        />
+      )}
     </>
   );
 };

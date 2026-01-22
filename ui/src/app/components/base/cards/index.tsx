@@ -9,7 +9,7 @@ export const Card: FC<CardProps> = ({ children, className, ...props }) => {
   return (
     <div
       className={cn(
-        'dark:bg-gray-950 bg-white relative flex flex-col overflow-hidden p-4 h-fit border-[1px]',
+        'dark:bg-gray-950 bg-white relative flex flex-col overflow-hidden p-4 h-fit border-[1px] rounded-lg',
         className,
       )}
       {...props}

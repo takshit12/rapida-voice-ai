@@ -121,7 +121,7 @@ export function DeploymentRoute() {
           element={<DeploymentConversationDetailPage />}
         />
         <Route
-          path="assistant/:assistantId/manage"
+          path="assistant/:assistantId"
           element={
             <AssistantManageLayout>
               <Outlet />

@@ -31,32 +31,32 @@ export const useGlobalNavigation = () => {
     navigate(`/deployment/assistant/${assistantId}/create-agentkit-version`);
 
   const goToConfigureWeb = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/web`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/web`);
 
   const goToConfigureApp = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/app`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/app`);
 
   const goToConfigureWhatsapp = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/whatsapp`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/whatsapp`);
 
   const goToConfigureCall = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/call`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/call`);
 
   const goToConfigureApi = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/api`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/api`);
 
   const goToConfigureDebugger = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/debugger`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/debugger`);
 
   const goToConfigureSlack = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment/slack`);
+    navigate(`/deployment/assistant/${assistantId}/deployment/slack`);
 
   const goToManageAssistant = (assistantId: string) => {
     navigate(`/deployment/assistant/${assistantId}/manage`);
   };
 
   const goToDeploymentAssistant = (assistantId: string) => {
-    navigate(`/deployment/assistant/${assistantId}/manage/deployment`);
+    navigate(`/deployment/assistant/${assistantId}/deployment`);
   };
 
   const goToAssistantPreview = (assistantId: string) =>
@@ -84,28 +84,24 @@ export const useGlobalNavigation = () => {
   };
 
   const goToCreateAssistantWebhook = (assistantId: string) =>
-    navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-webhook/create`,
-    );
+    navigate(`/deployment/assistant/${assistantId}/configure-webhook/create`,);
 
   const goToConfigureAssistantAnalysis = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/configure-analysis`);
+    navigate(`/deployment/assistant/${assistantId}/configure-analysis`);
   const goToCreateAssistantAnalysis = (assistantId: string) =>
-    navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-analysis/create`,
-    );
+    navigate(`/deployment/assistant/${assistantId}/configure-analysis/create`,);
   const goToEditAssistantAnalysis = (assistantId: string, analysisId: string) =>
     navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-analysis/${analysisId}`,
+      `/deployment/assistant/${assistantId}/configure-analysis/${analysisId}`,
     );
 
   const goToEditAssistantWebhook = (assistantId: string, webhookId: string) =>
     navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-webhook/${webhookId}`,
+      `/deployment/assistant/${assistantId}/configure-webhook/${webhookId}`,
     );
 
   const goToAssistantWebhook = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/configure-webhook`);
+    navigate(`/deployment/assistant/${assistantId}/configure-webhook`);
 
   const goToAssistantSession = (assistantId: string, sessionId: string) =>
     navigate(`/deployment/assistant/${assistantId}/sessions/${sessionId}`);
@@ -117,32 +113,32 @@ export const useGlobalNavigation = () => {
   const goToAssistantListing = () => navigate('/deployment/assistant/');
 
   const goToConfigureAssistantKnowledge = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/configure-knowledge`);
+    navigate(`/deployment/assistant/${assistantId}/configure-knowledge`);
 
   const goToEditAssistantKnowledge = (
     assistantId: string,
     knowledgeId: string,
   ) =>
     navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-knowledge/${knowledgeId}`,
+      `/deployment/assistant/${assistantId}/configure-knowledge/${knowledgeId}`,
     );
 
   const goToCreateAssistantKnowledge = (assistantId: string) =>
     navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-knowledge/create`,
+      `/deployment/assistant/${assistantId}/configure-knowledge/create`,
     );
 
   const goToConfigureAssistantTool = (assistantId: string) =>
-    navigate(`/deployment/assistant/${assistantId}/manage/configure-tool`);
+    navigate(`/deployment/assistant/${assistantId}/configure-tool`);
 
   const goToEditAssistantTool = (assistantId: string, toolId: string) =>
     navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-tool/${toolId}`,
+      `/deployment/assistant/${assistantId}/configure-tool/${toolId}`,
     );
 
   const goToCreateAssistantTool = (assistantId: string) =>
     navigate(
-      `/deployment/assistant/${assistantId}/manage/configure-tool/create`,
+      `/deployment/assistant/${assistantId}/configure-tool/create`,
     );
 
   const goToModelInformation = (provider: string) => {
