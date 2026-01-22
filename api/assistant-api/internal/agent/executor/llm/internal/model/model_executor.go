@@ -111,7 +111,6 @@ func (executor *modelAssistantExecutor) chat(
 	histories ...*protos.Message,
 ) error {
 	request := executor.buildChatRequest(communication, packet, histories...)
-
 	res, err := communication.IntegrationCaller().StreamChat(
 		ctx,
 		communication.Auth(),
@@ -127,14 +126,9 @@ func (executor *modelAssistantExecutor) chat(
 }
 
 // buildChatRequest constructs the chat request with all necessary parameters
-func (executor *modelAssistantExecutor) buildChatRequest(
-	communication internal_type.Communication,
-	packet internal_type.LLMMessagePacket,
-	histories ...*protos.Message,
-) *protos.ChatRequest {
+func (executor *modelAssistantExecutor) buildChatRequest(communication internal_type.Communication, packet internal_type.LLMMessagePacket, histories ...*protos.Message) *protos.ChatRequest {
 	assistant := communication.Assistant()
 	template := assistant.AssistantProviderModel.Template.GetTextChatCompleteTemplate()
-
 	messages := executor.inputBuilder.Message(
 		template.Prompt,
 		utils.MergeMaps(executor.inputBuilder.PromptArguments(template.Variables), communication.GetArgs()),
@@ -234,43 +228,17 @@ func (executor *modelAssistantExecutor) handleStreamComplete(
 }
 
 // executeToolCalls handles tool execution and recursive chat
-func (executor *modelAssistantExecutor) executeToolCalls(
-	ctx context.Context,
-	communication internal_type.Communication,
-	packet internal_type.LLMMessagePacket,
-	output *protos.Message,
-	histories []*protos.Message,
+func (executor *modelAssistantExecutor) executeToolCalls(ctx context.Context, communication internal_type.Communication, packet internal_type.LLMMessagePacket, output *protos.Message, histories []*protos.Message,
 ) error {
-	toolExecution, toolContents := executor.toolExecutor.ExecuteAll(
-		ctx,
-		packet,
-		output.GetToolCalls(),
-		communication,
-	)
-
-	// Build updated history with the tool call
+	toolExecution, toolContents := executor.toolExecutor.ExecuteAll(ctx, packet, output.GetToolCalls(), communication)
 	updatedHistories := append(histories, packet.Message.ToProto(), output)
-
-	// Recursive call with tool response
-	err := executor.chat(
-		ctx,
-		communication,
-		internal_type.LLMMessagePacket{
-			ContextID: packet.ContextID,
-			Message:   &types.Message{Contents: toolContents, Role: "tool"},
-		},
-		updatedHistories...,
-	)
-
 	communication.OnPacket(ctx, toolExecution...)
+	err := executor.chat(ctx, communication, internal_type.LLMMessagePacket{ContextID: packet.ContextID, Message: &types.Message{Contents: toolContents, Role: "tool"}}, updatedHistories...)
 	return err
 }
 
 // recordLLMInteraction appends messages to history and persists to storage
-func (executor *modelAssistantExecutor) recordLLMInteraction(
-	communication internal_type.Communication,
-	in, out internal_type.LLMMessagePacket,
-	metrics internal_type.MetricPacket,
+func (executor *modelAssistantExecutor) recordLLMInteraction(communication internal_type.Communication, in, out internal_type.LLMMessagePacket, metrics internal_type.MetricPacket,
 ) {
 	if in.Message != nil {
 		executor.history = append(executor.history, in.Message.ToProto())
@@ -287,11 +255,7 @@ func (executor *modelAssistantExecutor) recordLLMInteraction(
 
 // Execute processes incoming packets when user triggers a message
 func (executor *modelAssistantExecutor) Execute(ctx context.Context, communication internal_type.Communication, pctk internal_type.Packet) error {
-	ctx, span, _ := communication.Tracer().StartSpan(
-		ctx,
-		utils.AssistantAgentTextGenerationStage,
-		internal_adapter_telemetry.MessageKV(pctk.ContextId()),
-	)
+	ctx, span, _ := communication.Tracer().StartSpan(ctx, utils.AssistantAgentTextGenerationStage, internal_adapter_telemetry.MessageKV(pctk.ContextId()))
 	defer span.EndSpan(ctx, utils.AssistantAgentTextGenerationStage)
 	switch plt := pctk.(type) {
 	case internal_type.UserTextPacket:
@@ -304,23 +268,10 @@ func (executor *modelAssistantExecutor) Execute(ctx context.Context, communicati
 }
 
 // handleUserTextPacket processes user text input
-func (executor *modelAssistantExecutor) handleUserTextPacket(
-	ctx context.Context,
-	communication internal_type.Communication,
-	packet internal_type.UserTextPacket,
+func (executor *modelAssistantExecutor) handleUserTextPacket(ctx context.Context, communication internal_type.Communication, packet internal_type.UserTextPacket,
 ) error {
-	message := types.NewMessage("user", &types.Content{
-		ContentType:   commons.TEXT_CONTENT.String(),
-		ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
-		Content:       []byte(packet.Text),
-	})
-
-	llmPacket := internal_type.LLMMessagePacket{
-		ContextID: packet.ContextId(),
-		Message:   message,
-	}
-
-	return executor.chat(ctx, communication, llmPacket, executor.history...)
+	message := types.NewMessage("user", &types.Content{ContentType: commons.TEXT_CONTENT.String(), ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(), Content: []byte(packet.Text)})
+	return executor.chat(ctx, communication, internal_type.LLMMessagePacket{ContextID: packet.ContextId(), Message: message}, executor.history...)
 }
 
 // handleStaticPacket appends static assistant response to history
