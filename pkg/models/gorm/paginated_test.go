@@ -1,3 +1,5 @@
+//go:build cgo
+
 // Copyright (c) 2023-2025 RapidaAI
 // Author: Prashant Srivastav <prashant@rapida.ai>
 //

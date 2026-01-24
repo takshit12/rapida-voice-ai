@@ -35,7 +35,7 @@ require (
 	github.com/openai/openai-go v1.12.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/pkoukk/tiktoken-go v0.1.7
-	github.com/redis/go-redis/v9 v9.5.3
+	github.com/redis/go-redis/v9 v9.6.3
 	github.com/replicate/replicate-go v0.26.0
 	github.com/sendgrid/sendgrid-go v3.16.1+incompatible
 	github.com/soheilhy/cmux v0.1.5
