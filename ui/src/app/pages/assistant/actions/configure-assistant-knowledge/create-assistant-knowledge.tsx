@@ -38,7 +38,7 @@ export const CreateKnowledge: FC<{ assistantId: string }> = ({
   const [topK, setTopK] = useState(5);
   const [scoreThreshold, setScoreThreshold] = useState(0.5);
   const [rerankingEnable, setRerankingEnable] = useState(false);
-  const [providerModel, setProviderModel] = useState({
+  const [providerModel] = useState({
     provider: 'cohere',
     providerId: '1987967168435716096',
     parameters: GetDefaultRerankerConfigIfInvalid('cohere', []),

@@ -281,6 +281,8 @@ export function Version(props: VersionProps) {
                   ></DateCell>
                 </TableRow>
               );
+            default:
+              return null;
           }
         })}
       </ScrollableResizableTable>

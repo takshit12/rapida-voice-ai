@@ -28,7 +28,7 @@ export const Toast = () => {
       className="sticky top-0 left-0 right-0 w-full z-10"
     >
       {toasts.map(t => {
-        const ref = el => {
+        const ref = (el: HTMLDivElement | null) => {
           if (el && typeof t.height !== 'number') {
             const height = el.getBoundingClientRect().height;
             updateHeight(t.id, height);
@@ -66,6 +66,8 @@ export const Toast = () => {
               />
             </div>
           );
+
+        return null;
       })}
     </motion.div>
   );

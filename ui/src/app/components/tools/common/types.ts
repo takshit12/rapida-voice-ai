@@ -44,14 +44,14 @@ export const PARAMETER_TYPE_OPTIONS: Array<{
   name: string;
   value: ParameterType;
 }> = [
-    { name: 'Tool', value: 'tool' },
-    { name: 'Assistant', value: 'assistant' },
-    { name: 'Conversation', value: 'conversation' },
-    { name: 'Argument', value: 'argument' },
-    { name: 'Metadata', value: 'metadata' },
-    { name: 'Option', value: 'option' },
-    { name: 'Custom', value: 'custom' },
-  ];
+  { name: 'Tool', value: 'tool' },
+  { name: 'Assistant', value: 'assistant' },
+  { name: 'Conversation', value: 'conversation' },
+  { name: 'Argument', value: 'argument' },
+  { name: 'Metadata', value: 'metadata' },
+  { name: 'Option', value: 'option' },
+  { name: 'Custom', value: 'custom' },
+];
 
 export const HTTP_METHOD_OPTIONS = [
   { name: 'GET', value: 'GET' },

@@ -4,7 +4,6 @@ import { useRapidaStore } from '@/hooks';
 import { TabForm } from '@/app/components/form/tab-form';
 import {
   IBlueBGArrowButton,
-  IBlueBorderButton,
   ICancelButton,
 } from '@/app/components/form/button';
 import {
@@ -34,8 +33,7 @@ import {
 import { YellowNoticeBlock } from '@/app/components/container/message/notice-block';
 import { CreateAssistant } from '@rapidaai/react';
 import { connectionConfig } from '@/configs';
-import { Phone, Globe } from 'lucide-react';
-import { InputGroup } from '@/app/components/input-group';
+import { Globe } from 'lucide-react';
 import { APiParameter } from '@/app/components/external-api/api-parameter';
 import { InputHelper } from '@/app/components/input-helper';
 import { CodeEditor } from '@/app/components/form/editor/code-editor';

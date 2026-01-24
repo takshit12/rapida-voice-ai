@@ -104,7 +104,11 @@ const validateParameters = (params: string | undefined): string | undefined => {
   try {
     const parsed = JSON.parse(params);
 
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       return 'Parameters must be a valid JSON object.';
     }
 
@@ -115,7 +119,12 @@ const validateParameters = (params: string | undefined): string | undefined => {
 
     for (const [paramKey, paramValue] of entries) {
       const [type, key] = paramKey.split('.');
-      if (!type || !key || typeof paramValue !== 'string' || paramValue === '') {
+      if (
+        !type ||
+        !key ||
+        typeof paramValue !== 'string' ||
+        paramValue === ''
+      ) {
         return `Please provide a valid parameter format. Key: ${paramKey}, Value: ${paramValue}. Ensure key is in "type.key" format and value is a non-empty string.`;
       }
     }

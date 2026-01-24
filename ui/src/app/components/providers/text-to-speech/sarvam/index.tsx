@@ -7,10 +7,8 @@ import {
   SARVAM_TEXT_TO_SPEECH_MODEL,
   SARVAM_VOICE,
 } from '@/providers';
-import { ILinkBorderButton } from '@/app/components/form/button';
 import { useState } from 'react';
 import { CustomValueDropdown } from '@/app/components/dropdown/custom-value-dropdown';
-import { ExternalLink } from 'lucide-react';
 export { GetSarvamDefaultOptions, ValidateSarvamOptions } from './constant';
 
 const renderOption = c => (

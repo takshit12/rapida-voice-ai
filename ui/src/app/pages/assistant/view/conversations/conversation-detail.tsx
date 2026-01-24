@@ -46,7 +46,7 @@ import { connectionConfig } from '@/configs';
  * @returns
  */
 
-export function ConversationDetailPage({}) {
+export function ConversationDetailPage() {
   const { assistantId, sessionId } = useParams();
   const { authId, token, projectId } = useCurrentCredential();
   const { loading, showLoader, hideLoader } = useRapidaStore();

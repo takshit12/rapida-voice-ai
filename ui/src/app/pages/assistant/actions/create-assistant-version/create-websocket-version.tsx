@@ -25,7 +25,6 @@ import { connectionConfig } from '@/configs';
 import { YellowNoticeBlock } from '@/app/components/container/message/notice-block';
 import { ExternalLink, Info } from 'lucide-react';
 import { Input } from '@/app/components/form/input';
-import { APiHeader } from '@/app/components/external-api/api-header';
 import { APiParameter } from '@/app/components/external-api/api-parameter';
 
 export function CreateWebsocketVersion() {

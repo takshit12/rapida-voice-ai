@@ -11,7 +11,7 @@ import { ExternalTool } from '@/app/components/navigation/sidebar/external-tools
 import { useWorkspace } from '@/workspace';
 import { RapidaIcon } from '@/app/components/Icon/Rapida';
 import { RapidaTextIcon } from '@/app/components/Icon/RapidaText';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronsLeft } from 'lucide-react';
 import { Tooltip } from '@/app/components/tooltip';
 import { useSidebar } from '@/context/sidebar-context';
 import { cn } from '../../../../utils/index';

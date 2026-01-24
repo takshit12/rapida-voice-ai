@@ -2,7 +2,6 @@ import { SetMetadata } from '@/utils/metadata';
 import { Metadata } from '@rapidaai/react';
 import { AZURE_SPEECH_TO_TEXT_LANGUAGE } from '@/providers';
 
-
 export const GetAzureDefaultOptions = (current: Metadata[]): Metadata[] => {
   const mtds: Metadata[] = [];
   // Define the keys we want to keep
@@ -50,7 +49,9 @@ export const ValidateAzureOptions = (
   );
   if (
     !languageOption ||
-    !AZURE_SPEECH_TO_TEXT_LANGUAGE().some(lang => lang.code === languageOption.getValue())
+    !AZURE_SPEECH_TO_TEXT_LANGUAGE().some(
+      lang => lang.code === languageOption.getValue(),
+    )
   ) {
     return 'Please provide a valid azure language for speech to text.';
   }

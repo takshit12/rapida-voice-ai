@@ -2,7 +2,6 @@ import { useCredential } from '@/hooks/use-credential';
 import {
   AssistantConversation,
   AssistantConversationMessage,
-  toContentText,
 } from '@rapidaai/react';
 import { RapidaIcon } from '@/app/components/Icon/Rapida';
 import { FC, useCallback, useContext, useEffect, useRef } from 'react';
@@ -11,7 +10,6 @@ import { useBoolean } from 'ahooks';
 import { SectionLoader } from '@/app/components/loader/section-loader';
 import { ArrowDownToLine, Clock, RotateCw, Zap } from 'lucide-react';
 import { IButton } from '@/app/components/form/button';
-import MarkdownPreview from '@uiw/react-markdown-preview';
 import { ActionableEmptyMessage } from '@/app/components/container/message/actionable-empty-message';
 import { PageHeaderBlock } from '@/app/components/blocks/page-header-block';
 import { PageTitleBlock } from '@/app/components/blocks/page-title-block';

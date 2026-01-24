@@ -20,7 +20,7 @@ interface KnowledgeDropdownProps {
 export const KnowledgeDropdown: FC<KnowledgeDropdownProps> = props => {
   const [userId, token, projectId] = useCredential();
   const knowledgeActions = useKnowledgePageStore();
-  const [_, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   const showLoader = () => setLoading(true);
   const hideLoader = () => setLoading(false);
@@ -91,7 +91,7 @@ export const KnowledgeDropdown: FC<KnowledgeDropdownProps> = props => {
               if (props.onChangeKnowledge) props.onChangeKnowledge(c);
             }}
             onSearching={q => {
-              if (q.target.value && q.target.value.trim() != '') {
+              if (q.target.value && q.target.value.trim() !== '') {
                 knowledgeActions.addCriteria('name', q.target.value, 'like');
               } else {
                 knowledgeActions.removeCriteria('name');

@@ -79,7 +79,11 @@ const validateServerUrl = (options: Metadata[]): string | undefined => {
   }
 
   // Ensure it's HTTP or HTTPS
-  if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://') && !serverUrl.startsWith('wss://')) {
+  if (
+    !serverUrl.startsWith('http://') &&
+    !serverUrl.startsWith('https://') &&
+    !serverUrl.startsWith('wss://')
+  ) {
     return 'MCP Server URL must start with http://, https://, or wss://';
   }
 
@@ -89,7 +93,10 @@ const validateServerUrl = (options: Metadata[]): string | undefined => {
 const validateProtocol = (options: Metadata[]): string | undefined => {
   const protocol = getOptionValue(options, 'mcp.protocol');
 
-  if (protocol && !['sse', 'websocket', "streamable_http", ""].includes(protocol)) {
+  if (
+    protocol &&
+    !['sse', 'websocket', 'streamable_http', ''].includes(protocol)
+  ) {
     return 'Protocol must be either "sse", "websocket", or "streamable_http"';
   }
 

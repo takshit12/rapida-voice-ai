@@ -5,7 +5,6 @@ import { IBlueBGButton, ICancelButton } from '@/app/components/form/button';
 import { Select } from '@/app/components/form/select';
 import { Slider } from '@/app/components/form/slider';
 import { InputGroup } from '@/app/components/input-group';
-import { useState } from 'react';
 
 const harmfulCategories = [
   {
@@ -152,7 +151,6 @@ function PromptAttacksBlock() {
 }
 
 export const ConfigureAssistantContentFilterPage = () => {
-  const [errorMessage, setErrorMessage] = useState('');
   return (
     <div className="relative flex flex-col flex-1">
       <PageHeaderBlock>

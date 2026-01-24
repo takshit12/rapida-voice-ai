@@ -1,8 +1,6 @@
 import { InputCheckbox } from '@/app/components/form/checkbox';
 import { Label } from '@/app/components/form/label';
 import { InputGroup } from '@/app/components/input-group';
-import { cn } from '@/utils';
-import { useEffect, useState } from 'react';
 
 export interface FeatureConfig {
   qAListing: boolean;

@@ -19,7 +19,7 @@ interface EndpointDropdownProps {
 export const EndpointDropdown: FC<EndpointDropdownProps> = props => {
   const [userId, token, projectId] = useCredential();
   const endpointActions = useEndpointPageStore();
-  const [_, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   const showLoader = () => setLoading(true);
   const hideLoader = () => setLoading(false);

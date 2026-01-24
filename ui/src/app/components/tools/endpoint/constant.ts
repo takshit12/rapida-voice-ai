@@ -76,7 +76,12 @@ const validateParameters = (value: string | undefined): string | undefined => {
 
     for (const [paramKey, paramValue] of entries) {
       const [type, key] = paramKey.split('.');
-      if (!type || !key || typeof paramValue !== 'string' || paramValue === '') {
+      if (
+        !type ||
+        !key ||
+        typeof paramValue !== 'string' ||
+        paramValue === ''
+      ) {
         return 'Please ensure each parameter key follows the format "type.key" and the values are non-empty strings.';
       }
     }

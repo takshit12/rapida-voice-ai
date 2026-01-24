@@ -40,7 +40,7 @@ export const UpdateKnowledge: FC<{ assistantId: string }> = ({
   const navigator = useGlobalNavigation();
   const { assistantKnowledgeId } = useParams();
   const { authId, token, projectId } = useCurrentCredential();
-  const { loading, showLoader, hideLoader } = useRapidaStore();
+  const { showLoader, hideLoader } = useRapidaStore();
 
   const [knowledgeId, setKnowledgeId] = useState('');
   const [searchType, setSearchType] = useState(RETRIEVE_METHOD.hybrid);

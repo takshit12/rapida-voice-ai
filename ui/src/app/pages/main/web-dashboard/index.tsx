@@ -1,28 +1,11 @@
-import {
-  Bot,
-  ChevronRight,
-  ExternalLink,
-  MessageSquare,
-  Plus,
-  TestTube,
-} from 'lucide-react';
+import { MessageSquare, TestTube } from 'lucide-react';
 import { ClickableCard } from '@/app/components/base/cards';
 import { useCurrentCredential } from '@/hooks/use-credential';
 import { KnowledgeIcon } from '@/app/components/Icon/knowledge';
 import { EndpointIcon } from '@/app/components/Icon/Endpoint';
 import { AssistantIcon } from '@/app/components/Icon/Assistant';
 import { ModelIcon } from '@/app/components/Icon/Model';
-import { useProviderContext } from '@/context/provider-context';
-import {
-  IBlueBGArrowButton,
-  IButton,
-  ILinkBorderButton,
-} from '@/app/components/form/button';
-import {
-  BlueNoticeBlock,
-  YellowNoticeBlock,
-} from '@/app/components/container/message/notice-block';
-import { RightArrowIcon } from '@/app/components/Icon/RightArrow';
+import { IBlueBGArrowButton } from '@/app/components/form/button';
 import { useGlobalNavigation } from '@/hooks/use-global-navigator';
 
 export const HomePage = () => {

@@ -45,7 +45,7 @@ import { StatusIndicator } from '@/app/components/indicators/status';
 import SourceIndicator from '@/app/components/indicators/source';
 import { ConversationLogDialog } from '@/app/components/base/modal/conversation-log-modal';
 
-export const ListingPage: FC<{}> = ({}) => {
+export const ListingPage: FC<{}> = () => {
   const [userId, token, projectId] = useCredential();
   const rapidaContext = useRapidaStore();
   const [downloading, setDownloading] = useState(false);

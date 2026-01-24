@@ -1,5 +1,4 @@
-import { memo, useState } from 'react';
-import { Disclosure } from '@/app/components/disclosure';
+import { memo } from 'react';
 import { cn } from '@/utils';
 import { SidebarIconWrapper } from '@/app/components/navigation/sidebar/sidebar-icon-wrapper';
 import { SidebarLabel } from '@/app/components/navigation/sidebar/sidebar-label';

@@ -62,7 +62,7 @@ export const ManualFile: FC<ManualFileProps> = ({
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+  const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
     maxFiles: maxFiles,
     accept: accepts,

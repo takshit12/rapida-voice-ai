@@ -2,10 +2,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { FormActionHeading } from '@/app/components/heading/action-heading/form-action-heading';
 import { Helmet } from '@/app/components/helmet';
 import { SocialButtonGroup } from '@/app/components/form/button-group/SocialButtonGroup';
-import {
-  IBlueBGArrowButton,
-  IBlueBGButton,
-} from '@/app/components/form/button';
+import { IBlueBGArrowButton } from '@/app/components/form/button';
 import { Input } from '@/app/components/form/input';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RegisterUser } from '@rapidaai/react';
@@ -20,9 +17,7 @@ import { FieldSet } from '@/app/components/form/fieldset';
 import { FormLabel } from '@/app/components/form-label';
 import { useWorkspace } from '@/workspace';
 import { connectionConfig } from '@/configs';
-import { ErrorContainer } from '@/app/components/error-container';
 import { useGlobalNavigation } from '@/hooks/use-global-navigator';
-import { ChevronLeft } from 'lucide-react';
 
 /**
  * External state get passed

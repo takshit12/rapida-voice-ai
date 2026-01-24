@@ -1,10 +1,10 @@
 import productionProvider from './provider.production.json';
 import developmentProvider from './provider.development.json';
 
-export interface IntegrationProvider extends RapidaProvider { }
-interface EndOfSpeechProvider extends RapidaProvider { }
-interface VADProvider extends RapidaProvider { }
-interface NoiseCancellationProvider extends RapidaProvider { }
+export interface IntegrationProvider extends RapidaProvider {}
+interface EndOfSpeechProvider extends RapidaProvider {}
+interface VADProvider extends RapidaProvider {}
+interface NoiseCancellationProvider extends RapidaProvider {}
 export interface RapidaProvider {
   code: string;
   name: string;

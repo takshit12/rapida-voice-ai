@@ -60,7 +60,6 @@ export const AssistantViewLayout: FC<HTMLAttributes<HTMLDivElement>> = () => {
     goToAssistantPreview,
     goToAssistantPreviewCall,
     goToCreateAssistantVersion,
-    goToCreateAssistantWebsocketVersion,
     goToCreateAssistantAgentKitVersion,
     goToAssistantListing,
     goToManageAssistant,

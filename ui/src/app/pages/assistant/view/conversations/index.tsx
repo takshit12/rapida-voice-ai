@@ -28,7 +28,6 @@ import TooltipPlus from '@/app/components/base/tooltip-plus';
 import {
   Download,
   ExternalLink,
-  Eye,
   ListFilterPlus,
   PhoneCall,
   RotateCw,
@@ -60,7 +59,6 @@ export function Conversations({ currentAssistant }: ConversationProps) {
   const [telephonyEvents, setTelephonyEvents] = useState<
     AssistantConversationTelephonyEvent[]
   >([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const rapidaContext = useRapidaStore();
   const navigation = useGlobalNavigation();
   const [isFilterOpen, { setTrue: setFilterOpen, setFalse: setFilterClose }] =
@@ -158,18 +156,6 @@ export function Conversations({ currentAssistant }: ConversationProps) {
     assistantConversationListAction.pageSize,
     assistantConversationListAction.criteria,
   ]);
-
-  const onToggleSelect = (id: string) => {
-    setSelectedIds(prevSelectedIds => {
-      if (prevSelectedIds.includes(id)) {
-        // Remove from selected if already in the array
-        return prevSelectedIds.filter(selectedId => selectedId !== id);
-      } else {
-        // Add to selected if not in the array
-        return [...prevSelectedIds, id];
-      }
-    });
-  };
 
   const handleTraceClick = (assistnatId: string, conversationID: string) => {
     const ctr = new Criteria();

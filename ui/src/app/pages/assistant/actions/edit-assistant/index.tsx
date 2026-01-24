@@ -27,7 +27,6 @@ import toast from 'react-hot-toast/headless';
 import { useParams } from 'react-router-dom';
 import { UpdateAssistantDetail } from '@rapidaai/react';
 import { connectionConfig } from '@/configs';
-import { RedNoticeBlock } from '@/app/components/container/message/notice-block';
 import { ErrorMessage } from '@/app/components/form/error-message';
 
 export function EditAssistantPage() {

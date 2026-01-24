@@ -3,7 +3,7 @@ import { Dropdown } from '@/app/components/dropdown';
 import { ConfigureCohereRerankerModel } from '@/app/components/providers/reranker/cohere';
 import { GetCohereRerankerDefaultOptions } from '@/app/components/providers/reranker/cohere/constants';
 import { cn } from '@/utils';
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 import { RERANKER_PROVIDER } from '@/providers';
 import { ProviderComponentProps } from '@/app/components/providers';
 

@@ -41,8 +41,8 @@ export const GetVertexAiTextProviderDefaultOptions = (
   addMetadata('model.temperature', '1');
   addMetadata('model.max_output_tokens', '2048');
   addMetadata('model.stop_sequences', 'STOP!');
-  addMetadata('model.presence_penalty',);
-  addMetadata('model.frequency_penalty',);
+  addMetadata('model.presence_penalty');
+  addMetadata('model.frequency_penalty');
   addMetadata('model.response_format');
   addMetadata('model.top_p');
   addMetadata('model.top_k');

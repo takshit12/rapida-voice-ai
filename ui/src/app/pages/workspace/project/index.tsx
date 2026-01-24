@@ -61,7 +61,7 @@ export function ProjectPage() {
   /**
    * filter apply
    */
-  const [criteria, _] = useState<{ key: string; value: string }[]>([]);
+  const [criteria] = useState<{ key: string; value: string }[]>([]);
 
   /**
    *

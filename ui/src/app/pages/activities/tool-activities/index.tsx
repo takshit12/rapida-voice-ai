@@ -13,11 +13,7 @@ import { formatNanoToReadableMilli, toDateString } from '@/utils/date';
 import { getMetadataValue } from '@/utils/metadata';
 import { Spinner } from '@/app/components/loader/spinner';
 import { ScrollableResizableTable } from '@/app/components/data-table';
-import {
-  IButton,
-  ILinkBorderButton,
-  ILinkButton,
-} from '@/app/components/form/button';
+import { IButton, ILinkBorderButton } from '@/app/components/form/button';
 import { ExternalLink, Eye, RotateCw } from 'lucide-react';
 import { TableCell } from '@/app/components/base/tables/table-cell';
 import { TableRow } from '@/app/components/base/tables/table-row';
@@ -269,10 +265,11 @@ export function ListingPage() {
   );
 }
 
-function ActivitySource(props: { metadatas: Metadata[] }) {
-  const [acivitySource, setActivitySource] = useState('');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _ActivitySource(props: { metadatas: Metadata[] }) {
+  const [, setActivitySource] = useState('');
   const [activityLink, setActivityLink] = useState('');
-  const [external, setExternal] = useState(true);
+  const [, setExternal] = useState(true);
   useEffect(() => {
     const endpoint = getMetadataValue(props.metadatas, 'endpoint_id');
     if (endpoint) {

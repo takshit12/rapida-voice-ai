@@ -60,6 +60,7 @@ export const AssistantProviderIndicator: FC<{
     <span
       className={`shrink-0 gap-3 inline-flex items-center rounded-[2px] ${config.bgColor} ${config.textColor} font-medium ${sizeClass.container} ring-[0.5px] ring-inset ${config.ringColor}`}
     >
+      <Icon size={sizeClass.icon} className={config.iconColor} />
       <span>{config.display}</span>
     </span>
   );
