@@ -3,12 +3,6 @@ version: "2"
 run:
   timeout: 5m
   modules-download-mode: readonly
-  skip-dirs:
-    - protos
-    - sdks
-    - api/assistant-api/internal/transformer/azure
-    - api/assistant-api/internal/denoiser
-    - api/assistant-api/internal/telephony
 
 linters:
   default: none
