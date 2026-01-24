@@ -1,0 +1,130 @@
+name: Build and Push Docker Images
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches:
+      - main
+    types:
+      - completed
+
+env:
+  DOCKER_REGISTRY: rapida
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    # Only run if the CI workflow completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "date=$(date +'%Y%m%d')" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push web-api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/web-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/web-api:latest
+            ${{ env.DOCKER_REGISTRY }}/web-api:${{ steps.meta.outputs.sha_short }}
+            ${{ env.DOCKER_REGISTRY }}/web-api:${{ steps.meta.outputs.date }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push integration-api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/integration-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/integration-api:latest
+            ${{ env.DOCKER_REGISTRY }}/integration-api:${{ steps.meta.outputs.sha_short }}
+            ${{ env.DOCKER_REGISTRY }}/integration-api:${{ steps.meta.outputs.date }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push endpoint-api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/endpoint-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/endpoint-api:latest
+            ${{ env.DOCKER_REGISTRY }}/endpoint-api:${{ steps.meta.outputs.sha_short }}
+            ${{ env.DOCKER_REGISTRY }}/endpoint-api:${{ steps.meta.outputs.date }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push assistant-api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/assistant-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/assistant-api:latest
+            ${{ env.DOCKER_REGISTRY }}/assistant-api:${{ steps.meta.outputs.sha_short }}
+            ${{ env.DOCKER_REGISTRY }}/assistant-api:${{ steps.meta.outputs.date }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push document-api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/document-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/document-api:latest
+            ${{ env.DOCKER_REGISTRY }}/document-api:${{ steps.meta.outputs.sha_short }}
+            ${{ env.DOCKER_REGISTRY }}/document-api:${{ steps.meta.outputs.date }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push ui
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/ui/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/ui:latest
+            ${{ env.DOCKER_REGISTRY }}/ui:${{ steps.meta.outputs.sha_short }}
+            ${{ env.DOCKER_REGISTRY }}/ui:${{ steps.meta.outputs.date }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          {
+            echo "## Docker Images Published 🐳"
+            echo ""
+            echo "| Image | Tags |"
+            echo "|-------|------|"
+            echo "| ${{ env.DOCKER_REGISTRY }}/web-api | latest, ${{ steps.meta.outputs.sha_short }}, ${{ steps.meta.outputs.date }} |"
+            echo "| ${{ env.DOCKER_REGISTRY }}/integration-api | latest, ${{ steps.meta.outputs.sha_short }}, ${{ steps.meta.outputs.date }} |"
+            echo "| ${{ env.DOCKER_REGISTRY }}/endpoint-api | latest, ${{ steps.meta.outputs.sha_short }}, ${{ steps.meta.outputs.date }} |"
+            echo "| ${{ env.DOCKER_REGISTRY }}/assistant-api | latest, ${{ steps.meta.outputs.sha_short }}, ${{ steps.meta.outputs.date }} |"
+            echo "| ${{ env.DOCKER_REGISTRY }}/document-api | latest, ${{ steps.meta.outputs.sha_short }}, ${{ steps.meta.outputs.date }} |"
+            echo "| ${{ env.DOCKER_REGISTRY }}/ui | latest, ${{ steps.meta.outputs.sha_short }}, ${{ steps.meta.outputs.date }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

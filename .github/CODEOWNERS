@@ -1,0 +1,37 @@
+# CODEOWNERS - Define code owners for automatic review requests
+
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+
+- @rapida/maintainers
+
+# Backend Go services
+
+/api/ @rapida/backend
+/cmd/ @rapida/backend
+/pkg/ @rapida/backend
+/protos/ @rapida/backend
+
+# Frontend
+
+/ui/ @rapida/frontend
+
+# DevOps and Infrastructure
+
+/docker/ @rapida/devops
+/.github/ @rapida/devops
+/Makefile @rapida/devops
+/docker-compose.yml @rapida/devops
+
+# Documentation
+
+/docs/ @rapida/docs
+\*.md @rapida/docs
+
+# Security-sensitive files
+
+/pkg/authenticators/ @rapida/security
+/pkg/ciphers/ @rapida/security
+/pkg/tokens/ @rapida/security
+SECURITY.md @rapida/security
