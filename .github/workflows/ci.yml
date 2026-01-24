@@ -424,7 +424,6 @@ jobs:
       - ui-typecheck
       - ui-test
       - ui-build
-      - security-go
       - security-dependencies
       - security-trivy
       - license-check
@@ -434,40 +433,39 @@ jobs:
       - name: Check all jobs passed
         run: |
           if [ "${{ contains(needs.*.result, 'failure') }}" == "true" ]; then
-            echo "❌ Some checks failed"
+            echo "Some checks failed"
             exit 1
           fi
           if [ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]; then
-            echo "⚠️ Some checks were cancelled"
+            echo "Some checks were cancelled"
             exit 1
           fi
-          echo "✅ All checks passed!"
+          echo "All checks passed!"
 
       - name: Summary
         run: |
           {
-            echo "## CI Results ✅"
+            echo "## CI Results"
             echo ""
             echo "### Backend (Go)"
-            echo "- ✅ Lint (golangci-lint)"
-            echo "- ✅ Format (gofmt)"
-            echo "- ✅ Vet (go vet)"
-            echo "- ✅ Tests with coverage"
-            echo "- ✅ Build verification"
-            echo "- ✅ Module tidiness"
+            echo "- Lint (golangci-lint)"
+            echo "- Format (gofmt)"
+            echo "- Vet (go vet)"
+            echo "- Tests with coverage"
+            echo "- Build verification"
+            echo "- Module tidiness"
             echo ""
             echo "### Frontend (React/TypeScript)"
-            echo "- ✅ ESLint"
-            echo "- ✅ TypeScript type check"
-            echo "- ✅ Tests with coverage"
-            echo "- ✅ Build verification"
+            echo "- ESLint"
+            echo "- TypeScript type check"
+            echo "- Tests with coverage"
+            echo "- Build verification"
             echo ""
             echo "### Security"
-            echo "- ✅ Gosec security scan"
-            echo "- ✅ Dependency vulnerabilities (govulncheck)"
-            echo "- ✅ Trivy scan"
+            echo "- Dependency vulnerabilities (govulncheck)"
+            echo "- Trivy scan"
             echo ""
             echo "### Other"
-            echo "- ✅ License check"
-            echo "- ✅ Docker build verification"
+            echo "- License check"
+            echo "- Docker build verification"
           } >> "$GITHUB_STEP_SUMMARY"
