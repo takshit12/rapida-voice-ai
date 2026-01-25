@@ -107,8 +107,7 @@ export const APIRequestToolDefintion = {
 
 export const EndOfConverstaionToolDefintion = {
   name: 'end_conversation',
-  description:
-    'Gracefully ends the current conversation when the user indicates that they are done, expresses gratitude, or the assistant determines the session is complete.',
+  description: 'Call this function to end the conversation.',
   parameters: JSON.stringify(
     {
       properties: {

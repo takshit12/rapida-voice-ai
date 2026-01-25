@@ -66,12 +66,10 @@ const CreateNewVersion: FC<{ assistantId: string }> = ({ assistantId }) => {
   //   websocket url
 
   const [websocketUrl, setWebscoketUrl] = useState('');
-  const [headers, setHeaders] = useState<{ key: string; value: string }[]>([
-    { key: '', value: '' },
-  ]);
+  const [headers, setHeaders] = useState<{ key: string; value: string }[]>([]);
   const [parameters, setParameters] = useState<
     { key: string; value: string }[]
-  >([{ key: '', value: '' }]);
+  >([]);
 
   const validateWebsocket = (): boolean => {
     setErrorMessage('');
@@ -289,7 +287,7 @@ const CreateNewVersion: FC<{ assistantId: string }> = ({ assistantId }) => {
                         setHeaders(h);
                       }}
                       actionButtonLabel="Add Header"
-                      inputClass="bg-white dark:bg-gray-950!"
+                      inputClass="bg-light-background dark:bg-gray-950"
                     />
                   </FieldSet>
                   <FieldSet>
@@ -300,7 +298,7 @@ const CreateNewVersion: FC<{ assistantId: string }> = ({ assistantId }) => {
                         setParameters(v);
                       }}
                       actionButtonLabel="Add Parameter"
-                      inputClass="bg-white dark:bg-gray-950"
+                      inputClass="bg-light-background dark:bg-gray-950"
                     />
                   </FieldSet>
                 </div>

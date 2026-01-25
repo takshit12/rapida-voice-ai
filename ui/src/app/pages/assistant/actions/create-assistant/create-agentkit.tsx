@@ -249,7 +249,7 @@ export function CreateAgentKit() {
                         setParameters(p);
                       }}
                       initialValues={parameters}
-                      inputClass="bg-white dark:bg-gray-950"
+                      inputClass="bg-light-background dark:bg-gray-950"
                     />
                   </FieldSet>
                 </div>

@@ -64,12 +64,10 @@ export function CreateWebsocket() {
   };
 
   const [websocketUrl, setWebscoketUrl] = useState('');
-  const [headers, setHeaders] = useState<{ key: string; value: string }[]>([
-    { key: '', value: '' },
-  ]);
+  const [headers, setHeaders] = useState<{ key: string; value: string }[]>([]);
   const [parameters, setParameters] = useState<
     { key: string; value: string }[]
-  >([{ key: '', value: '' }]);
+  >([]);
 
   const validateWebsocket = (): boolean => {
     setErrorMessage('');
@@ -197,8 +195,8 @@ export function CreateWebsocket() {
                 <YellowNoticeBlock className="flex items-center">
                   <Info className="shrink-0 w-4 h-4" />
                   <div className="ms-3 text-sm font-medium">
-                    Rapida Assistant enables you to deploy intelligent
-                    conversational agents across multiple channels.
+                    Connect your external AI agent to Rapida using a WebSocket
+                    endpoint.
                   </div>
                   <a
                     target="_blank"
@@ -232,7 +230,7 @@ export function CreateWebsocket() {
                         setHeaders(h);
                       }}
                       actionButtonLabel="Add Header"
-                      inputClass="bg-white dark:bg-gray-950!"
+                      inputClass="bg-light-background dark:bg-gray-950"
                     />
                   </FieldSet>
                   <FieldSet>
@@ -243,7 +241,7 @@ export function CreateWebsocket() {
                         setParameters(v);
                       }}
                       actionButtonLabel="Add Parameter"
-                      inputClass="bg-white dark:bg-gray-950"
+                      inputClass="bg-light-background dark:bg-gray-950"
                     />
                   </FieldSet>
                 </div>

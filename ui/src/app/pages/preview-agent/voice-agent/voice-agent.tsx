@@ -317,7 +317,7 @@ export const VoiceAgentDebugger: FC<{
                     <InputGroup
                       title="Arguments"
                       childClass="p-0"
-                      className="m-0 border-x-0"
+                      className="m-0 border-x-0 rounded-none"
                     >
                       <div className="text-sm leading-normal">
                         {variables.map((x, idx) => {
@@ -415,7 +415,7 @@ export const VoiceAgentDebugger: FC<{
                   <InputGroup
                     title="Deployment"
                     childClass="p-3 text-muted"
-                    className="m-0 border-x-0"
+                    className="m-0 border-x-0 rounded-none"
                   >
                     <div className="space-y-4">
                       <div className="flex justify-between">

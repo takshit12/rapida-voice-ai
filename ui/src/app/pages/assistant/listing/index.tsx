@@ -139,14 +139,14 @@ export function AssistantPage() {
                 >
                   <span>Create new Assistant</span>
                 </IButton>
-                {/* <IButton
+                <IButton
                   className="w-full justify-start"
                   onClick={() =>
                     navigate('/deployment/assistant/connect-websocket')
                   }
                 >
                   <span>Connect new Websocket</span>
-                </IButton> */}
+                </IButton>
                 <IButton
                   className="w-full justify-start"
                   onClick={() =>

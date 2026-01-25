@@ -61,6 +61,7 @@ export const AssistantViewLayout: FC<HTMLAttributes<HTMLDivElement>> = () => {
     goToAssistantPreviewCall,
     goToCreateAssistantVersion,
     goToCreateAssistantAgentKitVersion,
+    goToCreateAssistantWebsocketVersion,
     goToAssistantListing,
     goToManageAssistant,
   } = useGlobalNavigation();
@@ -180,6 +181,14 @@ export const AssistantViewLayout: FC<HTMLAttributes<HTMLDivElement>> = () => {
                     onClick={() => goToCreateAssistantVersion(assistantId!)}
                   >
                     Create New version
+                  </IButton>
+                  <IButton
+                    className="w-full justify-start"
+                    onClick={() =>
+                      goToCreateAssistantWebsocketVersion(assistantId!)
+                    }
+                  >
+                    Connect new Websocket
                   </IButton>
                   <IButton
                     className="w-full justify-start"

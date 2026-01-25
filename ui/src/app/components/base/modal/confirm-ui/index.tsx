@@ -30,8 +30,8 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
 }) => {
   return (
     <GenericModal modalOpen={showing} setModalOpen={onClose}>
-      <div className="flex flex-col dark:bg-gray-900 bg-white">
-        <div className="w-[200px] min-w-max rounded-2xl relative py-8 px-4 flex flex-col">
+      <div className="flex flex-col dark:bg-gray-900 bg-white rounded-md">
+        <div className="w-[500px] min-w-max rounded-2xl relative py-8 px-4 flex flex-col">
           {type === 'info' && <InfoIcon className="w-10 h-10 text-blue-500" />}
           {type === 'warning' && (
             <InfoIcon className="w-10 h-10 text-red-500" />

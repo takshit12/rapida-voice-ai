@@ -419,7 +419,11 @@ export const PreviewPhoneAgent = () => {
               )}
             </div>
             {variables.length > 0 ? (
-              <InputGroup title="Arguments" childClass="!p-0">
+              <InputGroup
+                title="Arguments"
+                className="m-0 border-x-0 rounded-none"
+                childClass="text-muted px-3"
+              >
                 <div className="text-sm leading-normal">
                   {variables.map((x, idx) => {
                     return (
@@ -485,7 +489,7 @@ export const PreviewPhoneAgent = () => {
             )}
             <InputGroup
               title="Deployment"
-              className="m-0 border-0"
+              className="m-0 border-x-0 rounded-none"
               childClass="text-muted px-3"
             >
               <div className="space-y-4">
