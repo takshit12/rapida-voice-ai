@@ -27,7 +27,7 @@ import (
 	"github.com/rapidaai/api/integration-api/config"
 	integration_routers "github.com/rapidaai/api/integration-api/router"
 	web_client "github.com/rapidaai/pkg/clients/web"
-	middlewares "github.com/rapidaai/pkg/middlewares"
+	"github.com/rapidaai/pkg/middlewares"
 
 	"github.com/soheilhy/cmux"
 	"golang.org/x/sync/errgroup"
@@ -50,29 +50,21 @@ type AppRunner struct {
 }
 
 func main() {
-	// creating a common context
 	ctx := context.Background()
-
 	appRunner := AppRunner{E: gin.New(), S: grpc.NewServer()}
 
-	// resolving configuration
 	if err := appRunner.ResolveConfig(); err != nil {
 		panic(err)
 	}
 
-	// logging
 	appRunner.Logging()
-
-	// adding all connectors
 	appRunner.AllConnectors()
 
-	// Migration if needed to run
 	if err := appRunner.Migrate(); err != nil {
 		appRunner.Logger.Errorf("Warning: Migration failed: %v", err)
 		panic(err)
 	}
 
-	// interservice communication is authenticated now
 	authClient := web_client.NewAuthenticator(&appRunner.Cfg.AppConfig, appRunner.Logger, appRunner.Redis)
 	appRunner.S = grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -100,88 +92,121 @@ func main() {
 			),
 		),
 	)
-	// init
+
 	if err := appRunner.Init(ctx); err != nil {
 		panic(err)
 	}
 
-	// all routers add all handlers which required to resolve the service request
 	appRunner.AllRouters()
-
-	// add all middleware depends on configurations
 	appRunner.AllMiddlewares()
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", appRunner.Cfg.Host, appRunner.Cfg.Port))
 	if err != nil {
 		log.Fatalf("Failed to create connection tcp %v", err)
-		panic(err)
 	}
 
 	defer appRunner.Close(ctx)
 	cmuxListener := cmux.New(listener)
+
 	http2GRPCFilteredListener := cmuxListener.Match(cmux.HTTP2())
 	grpcFilteredListener := cmuxListener.Match(
 		cmux.HTTP1HeaderField("Content-type", "application/grpc-web+proto"),
-		cmux.HTTP1HeaderField("x-grpc-web", "1"))
+		cmux.HTTP1HeaderField("x-grpc-web", "1"),
+	)
 	rpcFilteredListener := cmuxListener.Match(cmux.Any())
 
 	group, ctx := errgroup.WithContext(ctx)
+
 	group.Go(func() error {
-		err = appRunner.E.RunListener(rpcFilteredListener)
-		if err != nil {
-			appRunner.Logger.Errorf("Failed to start gin server err: %v", err)
-		}
-		return err
+		return appRunner.E.RunListener(rpcFilteredListener)
 	})
+
 	group.Go(func() error {
-		//
 		wrappedServer := grpcweb.WrapServer(appRunner.S, grpcweb.WithOriginFunc(func(origin string) bool { return true }))
-		handler := func(resp http.ResponseWriter, req *http.Request) {
-			wrappedServer.ServeHTTP(resp, req)
-		}
-
 		httpServer := http.Server{
-			Handler: http.HandlerFunc(handler),
+			Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+				wrappedServer.ServeHTTP(resp, req)
+			}),
 		}
-		//
-		err = httpServer.Serve(grpcFilteredListener)
-		if err != nil {
-			appRunner.Logger.Errorf("Failed to start grpc server err: %v", err)
-		}
-		return err
+		return httpServer.Serve(grpcFilteredListener)
 	})
 
 	group.Go(func() error {
-		err = appRunner.S.Serve(http2GRPCFilteredListener)
-		if err != nil {
-			appRunner.Logger.Errorf("Failed to start grpc server err: %v", err)
-		}
-		return err
+		return appRunner.S.Serve(http2GRPCFilteredListener)
 	})
-	// serve now
-	err = cmuxListener.Serve()
-	if err != nil {
-		appRunner.Logger.Errorf("Failed to start grpc server err: %v", err)
+
+	if err := cmuxListener.Serve(); err != nil {
 		panic(err)
 	}
 
-	err = group.Wait()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	// done with ctx
-	ctx.Done()
 	<-quit
 }
 
+// -------------------- FIXED MIGRATION LOGIC --------------------
+
+func (app *AppRunner) Migrate() error {
+	skipMigration := flag.Bool("skip-migration", false, "Skip migration")
+	flag.Parse()
+	if *skipMigration {
+		app.Logger.Infof("Skipping migration")
+		return nil
+	}
+
+	var dsn string
+
+	if v := os.Getenv("DATABASE_URL"); v != "" {
+		dsn = v
+	} else if v := os.Getenv("DATABASE_DSN"); v != "" {
+		dsn = v
+	} else if v := os.Getenv("POSTGRES_DSN"); v != "" {
+		dsn = v
+	} else {
+		dsn = fmt.Sprintf(
+			"postgres://%s:%s@%s:%d/%s?sslmode=%s",
+			app.Cfg.PostgresConfig.Auth.User,
+			app.Cfg.PostgresConfig.Auth.Password,
+			app.Cfg.PostgresConfig.Host,
+			app.Cfg.PostgresConfig.Port,
+			app.Cfg.PostgresConfig.DBName,
+			app.Cfg.PostgresConfig.SslMode,
+		)
+	}
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	migrationsPath := fmt.Sprintf("file://%s/api/integration-api/migrations", currentDir)
+
+	app.Logger.Infof("Using DSN for migration: %s", dsn)
+
+	m, err := migrate.New(migrationsPath, dsn)
+	if err != nil {
+		return err
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	app.Logger.Infof("Migrations completed successfully")
+	return nil
+}
+
+// -------------------- HELPERS --------------------
+
 func (app *AppRunner) Logging() error {
-	aLogger, err := commons.NewApplicationLogger(
+	logger, err := commons.NewApplicationLogger(
 		commons.Level(app.Cfg.LogLevel),
 		commons.Name(app.Cfg.Name),
 	)
 	if err != nil {
 		return err
 	}
-	app.Logger = aLogger
+	app.Logger = logger
 	return nil
 }
 
@@ -190,163 +215,48 @@ func (g *AppRunner) AllConnectors() {
 	g.Redis = connectors.NewRedisConnector(&g.Cfg.RedisConfig, g.Logger)
 }
 
-// initialize the config of application using viper and return loaded appconfig to be used in
-// if any error return or nil.
 func (app *AppRunner) ResolveConfig() error {
 	vConfig, err := config.InitConfig()
 	if err != nil {
-		log.Fatalf("Unable to parse viper config to application configuration : %v", err)
 		return err
 	}
-
 	cfg, err := config.GetApplicationConfig(vConfig)
 	if err != nil {
-		log.Fatalf("Unable to parse viper config to application configuration : %v", err)
 		return err
 	}
-
 	app.Cfg = cfg
 	gin.SetMode(gin.ReleaseMode)
-	// debug mode of gin when running log in debug mode.
-	if cfg.LogLevel == "debug" {
-		gin.SetMode(gin.DebugMode)
-	}
 	return nil
 }
 
-// init for app close
 func (app *AppRunner) Init(ctx context.Context) error {
-	err := app.Postgres.Connect(ctx)
-	if err != nil {
-		app.Logger.Error("error while connecting to postgres.", err)
+	if err := app.Postgres.Connect(ctx); err != nil {
 		return err
 	}
-	err = app.Redis.Connect(ctx)
-	if err != nil {
-		app.Logger.Error("error while connecting to redis.", err)
+	if err := app.Redis.Connect(ctx); err != nil {
 		return err
 	}
-
-	app.Closeable = append(app.Closeable, app.Redis.Disconnect)
-	app.Closeable = append(app.Closeable, app.Postgres.Disconnect)
-
+	app.Closeable = append(app.Closeable, app.Redis.Disconnect, app.Postgres.Disconnect)
 	return nil
 }
 
-// closer for app runner
 func (app *AppRunner) Close(ctx context.Context) {
-	if len(app.Closeable) > 0 {
-		app.Logger.Debug("there are closeable references to closed")
-		for _, closeable := range app.Closeable {
-			err := closeable(ctx)
-			if err != nil {
-				app.Logger.Errorf("error while closing %v", err)
-			}
-		}
+	for _, c := range app.Closeable {
+		_ = c(ctx)
 	}
 }
 
-// all router initialize
 func (g *AppRunner) AllRouters() {
 	integration_routers.HealthCheckRoutes(g.Cfg, g.E, g.Logger, g.Postgres)
 	integration_routers.ProviderApiRoute(g.Cfg, g.S, g.Logger, g.Postgres)
 	integration_routers.AuditLoggingApiRoute(g.Cfg, g.S, g.Logger, g.Postgres)
 }
 
-// all middleware
 func (g *AppRunner) AllMiddlewares() {
-	g.RecoveryMiddleware()
-	g.CorsMiddleware()
-	g.RequestLoggerMiddleware()
-	// g.E.Use(middlewares.AuthenticationMiddleware(g.db, g.Logger))
-}
-
-// Recovery middleware
-func (g *AppRunner) RecoveryMiddleware() {
 	g.E.Use(gin.Recovery())
-}
-
-func (g *AppRunner) CorsMiddleware() {
-	g.Logger.Info("Added Default Cors middleware to the application.")
 	g.E.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
-		// AllowOrigins:     []string{".*"},
-		AllowMethods:     []string{"GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "Cache-Control", "Access-Control-Allow-Origin", "X-Grpc-Web"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		AllowMethods:    []string{"GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"},
+		AllowHeaders:    []string{"Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "Cache-Control", "Access-Control-Allow-Origin", "X-Grpc-Web"},
 	}))
-}
-
-// Logger Middleware
-func (g *AppRunner) RequestLoggerMiddleware() {
-	g.Logger.Info("Adding request middleware to the application.")
-	g.E.Use(middlewares.NewRequestLoggerMiddleware(g.Cfg.Name, g.Logger))
-}
-
-func (app *AppRunner) Migrate() error {
-	skipMigration := flag.Bool("skip-migration", false, "Skip migration when provided, eg: -skip-migration")
-	flag.Parse()
-	if *skipMigration {
-		app.Logger.Infof("Skipping migration due to -skip-migration flag")
-		return nil
-	}
-	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		app.Cfg.PostgresConfig.Auth.User,
-		app.Cfg.PostgresConfig.Auth.Password,
-		app.Cfg.PostgresConfig.Host,
-		app.Cfg.PostgresConfig.Port,
-		app.Cfg.PostgresConfig.DBName,
-		app.Cfg.PostgresConfig.SslMode,
-	)
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get current working directory: %w", err)
-	}
-	migrationsPath := fmt.Sprintf("file://%s/api/integration-api/migrations", currentDir)
-
-	app.Logger.Infof("Looking for migration files at path: %s", migrationsPath)
-	app.Logger.Infof("Using DSN for migration: %s", dsn)
-
-	m, err := migrate.New(migrationsPath, dsn)
-	if err != nil {
-		return fmt.Errorf("migration initialization failed: %w", err)
-	}
-	defer func() {
-		sourceErr, databaseErr := m.Close()
-		if sourceErr != nil {
-			app.Logger.Errorf("Source closing error: %v", sourceErr)
-		}
-		if databaseErr != nil {
-			app.Logger.Errorf("Database connection closing error: %v", databaseErr)
-		}
-	}()
-
-	version, dirty, err := m.Version()
-	if err != nil && err != migrate.ErrNilVersion {
-		return fmt.Errorf("error fetching migration version: %w", err)
-	}
-	if dirty {
-		app.Logger.Warnf("Database is in a dirty state at version: %d. Trying to force clean...", version)
-		if err := m.Force(int(version - 1)); err != nil {
-			return fmt.Errorf("failed to force migration version: %w", err)
-		}
-		app.Logger.Infof("Migration state forced to clean. You can restart migration.")
-		return nil
-	}
-
-	// Perform database migration
-	if err := m.Up(); err != nil {
-		if err == migrate.ErrNoChange {
-			app.Logger.Infof("No migration changes detected.")
-		} else {
-			return fmt.Errorf("migration failed: %w", err)
-		}
-	} else {
-		app.Logger.Infof("Migrations completed successfully.")
-	}
-
-	return nil
 }
