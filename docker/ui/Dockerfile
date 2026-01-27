@@ -1,40 +1,26 @@
-# Build stage
+# ---------- Build stage ----------
 FROM node:22-alpine AS builder
 WORKDIR /app
-RUN apk add --no-cache curl
 
-# Copy package files and install dependencies
+# Install dependencies
 COPY ui/package.json ui/yarn.lock ./
-RUN yarn install --frozen-lockfile --cache-folder .yarn-cache && \
-    rm -rf .yarn-cache
+RUN yarn install --frozen-lockfile
 
-# Copy all necessary source files
-COPY ui/.babel-plugin-macrosrc.js ./
-COPY ui/.dockerignore ./
-COPY ui/.editorconfig ./
-COPY ui/.env.production ./
-COPY ui/.eslintrc.js ./
-COPY ui/.gitattributes ./
-COPY ui/.gitignore ./
-COPY ui/.npmrc ./
-COPY ui/.nvmrc ./
-COPY ui/.pre-commit-config.yaml ./
-COPY ui/.prettierignore ./
-COPY ui/.prettierrc ./
-COPY ui/.stylelintrc ./
-COPY ui/commitlint.config.js ./
-COPY ui/craco.config.js ./
-COPY ui/package.json ./
-COPY ui/postcss.config.js ./
-COPY ui/tsconfig.json ./
-COPY ui/yarn.lock ./
+# Copy source
+COPY ui .
 
-# Copy directories for public and source files
-COPY ui/public ./public
-COPY ui/src ./src
+# Build production bundle (uses config.production.json)
+RUN yarn build
 
-# Expose the port to serve the app
-EXPOSE 3000
+# ---------- Runtime stage ----------
+FROM nginx:alpine
 
-# Run React development server
-CMD ["yarn", "start"]
+# Copy built static files
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy nginx proxy config
+COPY docker/ui/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
