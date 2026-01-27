@@ -8,6 +8,7 @@ package connectors
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/go-gorm/caches/v4"
@@ -39,51 +40,102 @@ func (psql *postgresConnector) DB(ctx context.Context) *gorm.DB {
 	return psql.db.WithContext(ctx)
 }
 
-// generating connection string from configuration
+/*
+	resolveConnectionString priority order:
+
+	1. DATABASE_URL / DATABASE_DSN / POSTGRES_DSN
+	2. POSTGRES_* / PG* env vars
+	3. Config file (existing behavior)
+*/
 func (psql *postgresConnector) connectionString() string {
-	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s", psql.cfg.Host, psql.cfg.Auth.User, psql.cfg.Auth.Password, psql.cfg.DBName, psql.cfg.Port, psql.cfg.SslMode)
+	// 1️⃣ Full DSN envs (Railway default)
+	if v := firstNonEmpty(
+		os.Getenv("DATABASE_URL"),
+		os.Getenv("DATABASE_DSN"),
+		os.Getenv("POSTGRES_DSN"),
+	); v != "" {
+		psql.logger.Infof("Using Postgres DSN from environment")
+		return v
+	}
+
+	// 2️⃣ Build from POSTGRES_* or PG*
+	host := firstNonEmpty(os.Getenv("POSTGRES_HOST"), os.Getenv("PGHOST"))
+	port := firstNonEmpty(os.Getenv("POSTGRES_PORT"), os.Getenv("PGPORT"))
+	user := firstNonEmpty(os.Getenv("POSTGRES_USER"), os.Getenv("PGUSER"))
+	password := firstNonEmpty(os.Getenv("POSTGRES_PASSWORD"), os.Getenv("PGPASSWORD"))
+	dbname := firstNonEmpty(os.Getenv("POSTGRES_DB"), os.Getenv("PGDATABASE"))
+	sslmode := os.Getenv("POSTGRES_SSLMODE")
+	if sslmode == "" {
+		sslmode = "disable"
+	}
+
+	if host != "" && user != "" && dbname != "" {
+		if port == "" {
+			port = "5432"
+		}
+		psql.logger.Infof("Using Postgres connection from env vars (POSTGRES_*/PG*)")
+		return fmt.Sprintf(
+			"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+			host, user, password, dbname, port, sslmode,
+		)
+	}
+
+	// 3️⃣ Fallback to config (existing behavior)
+	psql.logger.Warnf("Falling back to Postgres config file values")
+	return fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
+		psql.cfg.Host,
+		psql.cfg.Auth.User,
+		psql.cfg.Auth.Password,
+		psql.cfg.DBName,
+		psql.cfg.Port,
+		psql.cfg.SslMode,
+	)
 }
 
 func (psql *postgresConnector) Connect(ctx context.Context) error {
 	lgr := logger.Discard.LogMode(logger.Silent)
-	db, err := gorm.Open(postgres.Open(psql.connectionString()), &gorm.Config{
+
+	dsn := psql.connectionString()
+	psql.logger.Infof("Connecting to Postgres")
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: lgr,
 	})
 	if err != nil {
-		psql.logger.Errorf("Failed to open postgres connection %s.", err)
+		psql.logger.Errorf("Failed to open postgres connection: %v", err)
 		return err
 	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
-		psql.logger.Errorf("Failed to create postgres client connection pool %s.", err)
+		psql.logger.Errorf("Failed to create postgres client connection pool: %v", err)
 		return err
 	}
-	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+
 	sqlDB.SetMaxIdleConns(psql.cfg.MaxIdealConnection)
-	// SetMaxOpenConns sets the maximum number of open connections to the database.
 	sqlDB.SetMaxOpenConns(psql.cfg.MaxOpenConnection)
-	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
+	// Second-level cache (unchanged)
 	if psql.cfg.SLCache != nil {
 		psql.logger.Debugf("Second level caching is enabled for gorm")
 		rdb := NewRedisPostgresCacheConnector(psql.cfg.SLCache, psql.logger)
-		err = rdb.Connect(ctx)
-		if err != nil {
-			psql.logger.Errorf("unable to initialize cache connector, please check the config")
-		} else {
-			cachesPlugin := &caches.Caches{Conf: &caches.Config{
-				Cacher: rdb,
-			}}
+		if err = rdb.Connect(ctx); err == nil {
+			cachesPlugin := &caches.Caches{Conf: &caches.Config{Cacher: rdb}}
 			_ = db.Use(cachesPlugin)
+		} else {
+			psql.logger.Errorf("Unable to initialize cache connector")
 		}
 	}
+
 	psql.db = db
+	psql.logger.Infof("Postgres connected successfully")
 	return nil
 }
 
 func (psql *postgresConnector) Name() string {
-	return fmt.Sprintf("PSQL psql://%s:%d", psql.cfg.Host, psql.cfg.Port)
+	return "Postgres"
 }
 
 func (psql *postgresConnector) IsConnected(ctx context.Context) bool {
@@ -92,37 +144,30 @@ func (psql *postgresConnector) IsConnected(ctx context.Context) bool {
 	}
 	db, err := psql.db.DB()
 	if err != nil {
-		psql.logger.Errorf("Failed to get postgres client %s.", err)
 		return false
 	}
-	err = db.PingContext(ctx)
-	if err != nil {
-		psql.logger.Errorf("Failed to ping postgres client %s.", err)
-		return false
-	}
-	return true
+	return db.PingContext(ctx) == nil
 }
+
 func (psql *postgresConnector) Disconnect(ctx context.Context) error {
-	psql.logger.Debug("Disconnecting with postgres client.")
+	psql.logger.Debug("Disconnecting postgres")
 	db, err := psql.db.DB()
 	psql.db = nil
 	if err != nil {
-		psql.logger.Errorf("Disconnecting with postgres client %s.", err)
 		return err
 	}
-	err = db.Close()
-	if err != nil {
-		psql.logger.Debug("Disconnecting with postgres client %s.", err)
-		return err
-	}
-
-	return nil
+	return db.Close()
 }
 
 func (psql *postgresConnector) Query(ctx context.Context, qry string, dest interface{}) error {
-	tx := psql.db.Raw(qry).Scan(dest)
-	if tx.Error != nil {
-		return tx.Error
+	return psql.db.Raw(qry).Scan(dest).Error
+}
+
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if v != "" {
+			return v
+		}
 	}
-	return nil
+	return ""
 }
