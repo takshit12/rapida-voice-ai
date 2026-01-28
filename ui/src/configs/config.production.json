@@ -3,7 +3,7 @@
     "assistant": "/api/assistant",
     "web": "/api/web",
     "endpoint": "/api/endpoint",
-    "media": "https://assistant-api-production-2ea9.up.railway.app"
+    "media": "https://rapida-voice-ai-production.up.railway.app/api/assistant"
   },
   "analytics": {
     "dsn": "https://15153cb4befe6a0ae4249f10ff87c0b6@o4506771747831808.ingest.sentry.io/4506771748945920",
