@@ -137,6 +137,9 @@ func (client *integrationServiceClient) Chat(c context.Context,
 		return client.togetherAiClient.Chat(client.WithAuth(c, auth), request)
 	case "openai":
 		return client.openAiClient.Chat(client.WithAuth(c, auth), request)
+	case "groq":
+		// Groq uses OpenAI-compatible API, reuse OpenAI client
+		return client.openAiClient.Chat(client.WithAuth(c, auth), request)
 	case "aws-bedrock":
 		return client.bedrockClient.Chat(client.WithAuth(c, auth), request)
 	case "azure-foundry":
@@ -152,6 +155,9 @@ func (client *integrationServiceClient) Chat(c context.Context,
 func (client *integrationServiceClient) StreamChat(c context.Context, auth types.SimplePrinciple, providerName string, request *protos.ChatRequest) (protos.OpenAiService_StreamChatClient, error) {
 	switch providerName := strings.ToLower(providerName); providerName {
 	case "openai":
+		return client.openAiClient.StreamChat(client.WithAuth(c, auth), request)
+	case "groq":
+		// Groq uses OpenAI-compatible API, reuse OpenAI client
 		return client.openAiClient.StreamChat(client.WithAuth(c, auth), request)
 	case "anthropic":
 		return client.anthropicClient.StreamChat(client.WithAuth(c, auth), request)
@@ -189,6 +195,9 @@ func (client *integrationServiceClient) VerifyCredential(c context.Context,
 	case "mistral":
 		return client.mistralClient.VerifyCredential(client.WithAuth(c, auth), request)
 	case "openai":
+		return client.openAiClient.VerifyCredential(client.WithAuth(c, auth), request)
+	case "groq":
+		// Groq uses OpenAI-compatible API, reuse OpenAI client
 		return client.openAiClient.VerifyCredential(client.WithAuth(c, auth), request)
 	case "voyageai":
 		return client.voyageAiClient.VerifyCredential(client.WithAuth(c, auth), request)

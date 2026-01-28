@@ -26,6 +26,11 @@ import {
   GetOpenaiTextProviderDefaultOptions,
   ValidateOpenaiTextProviderDefaultOptions,
 } from '@/app/components/providers/text/openai/constants';
+import { ConfigureGroqTextProviderModel } from '@/app/components/providers/text/groq';
+import {
+  GetGroqTextProviderDefaultOptions,
+  ValidateGroqTextProviderDefaultOptions,
+} from '@/app/components/providers/text/groq/constants';
 import { cn } from '@/utils';
 import { FC, useCallback } from 'react';
 import { FieldSet } from '@/app/components/form/fieldset';
@@ -61,6 +66,8 @@ export const GetDefaultTextProviderConfigIfInvalid = (
       return GetAnthropicTextProviderDefaultOptions(parameters);
     case 'cohere':
       return GetCohereTextProviderDefaultOptions(parameters);
+    case 'groq':
+      return GetGroqTextProviderDefaultOptions(parameters);
     default:
       return parameters;
   }
@@ -89,6 +96,8 @@ export const ValidateTextProviderDefaultOptions = (
       return ValidateAnthropicTextProviderDefaultOptions(parameters);
     case 'cohere':
       return ValidateCohereTextProviderDefaultOptions(parameters);
+    case 'groq':
+      return ValidateGroqTextProviderDefaultOptions(parameters);
     default:
       return 'Please select a valid model and provider.';
   }
@@ -143,6 +152,13 @@ const TextProviderConfigComponent: FC<ProviderComponentProps> = ({
     case 'cohere':
       return (
         <ConfigureCohereTextProviderModel
+          parameters={parameters}
+          onParameterChange={onChangeParameter}
+        />
+      );
+    case 'groq':
+      return (
+        <ConfigureGroqTextProviderModel
           parameters={parameters}
           onParameterChange={onChangeParameter}
         />

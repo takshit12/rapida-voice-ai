@@ -250,6 +250,31 @@
         "website": "https://openai.com"
     },
     {
+        "code": "groq",
+        "name": "Groq",
+        "description": "Blazing fast AI inference with LPU technology. Supports Llama, Mixtral, and Gemma models with ultra-low latency.",
+        "image": "https://cdn.brandfetch.io/id2S-_5WdS/theme/dark/logo.svg",
+        "featureList": [
+            "text",
+            "external"
+        ],
+        "configurations": [
+            {
+                "name": "key",
+                "type": "string",
+                "label": "API Key"
+            },
+            {
+                "name": "url",
+                "type": "string",
+                "label": "Base URL",
+                "default": "https://api.groq.com/openai/v1"
+            }
+        ],
+        "humanname": "Groq",
+        "website": "https://groq.com"
+    },
+    {
         "code": "mistral",
         "name": "Mistral",
         "description": "Mistral specializes in creating fast, secure, open-source large language models (LLMs).",

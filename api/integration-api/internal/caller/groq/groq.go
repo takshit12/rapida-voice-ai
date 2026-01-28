@@ -1,4 +1,4 @@
-package internal_openai_callers
+package internal_groq_callers
 
 import (
 	"errors"
@@ -14,17 +14,14 @@ import (
 	integration_api "github.com/rapidaai/protos"
 )
 
-type OpenAI struct {
+type Groq struct {
 	logger     commons.Logger
 	credential internal_callers.CredentialResolver
 }
 
 var (
-	DEFAULT_URL         = "https://api.openai.com/v1"
-	API_URL             = "url"
-	API_KEY             = "key"
-	AZ_ENDPOINT_KEY     = "endpoint"
-	AZ_SUBSCRIPTION_KEY = "subscription_key"
+	GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+	API_KEY       = "key"
 )
 
 const (
@@ -40,37 +37,30 @@ const (
 	ChatRoleUser string = "user"
 )
 
-func openAI(logger commons.Logger, credential *integration_api.Credential) OpenAI {
+func groq(logger commons.Logger, credential *integration_api.Credential) Groq {
 	_credential := credential.GetValue().AsMap()
-	return OpenAI{logger: logger,
+	return Groq{logger: logger,
 		credential: func() map[string]interface{} {
 			return _credential
 		}}
 }
 
-func (openAI *OpenAI) GetClient() (*openai.Client, error) {
-	openAI.logger.Debugf("Getting client for open ai")
-	credentials := openAI.credential()
-	cx, ok := credentials[API_KEY]
+func (g *Groq) GetClient() (*openai.Client, error) {
+	g.logger.Debugf("Getting client for Groq")
+	credentials := g.credential()
+	apiKey, ok := credentials[API_KEY]
 	if !ok {
-		openAI.logger.Errorf("Unable to get client for user")
+		g.logger.Errorf("Unable to get client for Groq - missing API key")
 		return nil, errors.New("unable to resolve the credential")
 	}
-
-	// Check if custom base URL is provided (for OpenAI-compatible providers like Groq)
-	opts := []option.RequestOption{
-		option.WithAPIKey(cx.(string)),
-	}
-	if baseURL, ok := credentials[API_URL]; ok && baseURL != "" {
-		openAI.logger.Debugf("Using custom base URL: %s", baseURL)
-		opts = append(opts, option.WithBaseURL(baseURL.(string)))
-	}
-
-	clt := openai.NewClient(opts...)
+	clt := openai.NewClient(
+		option.WithAPIKey(apiKey.(string)),
+		option.WithBaseURL(GROQ_BASE_URL),
+	)
 	return &clt, nil
 }
 
-func (openAI *OpenAI) GetComplitionUsages(usages openai.CompletionUsage) types.Metrics {
+func (g *Groq) GetComplitionUsages(usages openai.CompletionUsage) types.Metrics {
 	metrics := make(types.Metrics, 0)
 	metrics = append(metrics, &types.Metric{
 		Name:        type_enums.OUTPUT_TOKEN.String(),
