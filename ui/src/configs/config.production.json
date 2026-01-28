@@ -1,8 +1,8 @@
 {
   "connection": {
-    "assistant": "/api/assistant",
-    "web": "/api/web",
-    "endpoint": "/api/endpoint",
+    "assistant": "https://rapida-voice-ai-production.up.railway.app/api/assistant",
+    "web": "https://rapida-voice-ai-production.up.railway.app/api/web",
+    "endpoint": "https://rapida-voice-ai-production.up.railway.app/api/endpoint",
     "media": "https://rapida-voice-ai-production.up.railway.app/api/assistant"
   },
   "analytics": {
