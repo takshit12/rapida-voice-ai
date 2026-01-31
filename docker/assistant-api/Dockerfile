@@ -52,6 +52,11 @@ COPY cmd/ ./cmd/
 COPY protos/ ./protos/
 COPY pkg/ ./pkg/
 
+# ---- Download Silero VAD model (v5, required by silero-vad-go v0.2.1) ----
+RUN mkdir -p /opt/models && \
+    wget -q -O /opt/models/silero_vad.onnx \
+    https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
+
 # ---- Build Go binary with all CGO flags in one RUN command ----
 RUN export CGO_CFLAGS="-I/opt/onnxruntime/include -I/usr/local/include -I/opt/azure-speech-sdk/include/c_api" && \
     export CGO_LDFLAGS="-L/opt/onnxruntime/lib -lonnxruntime -L/usr/local/lib -lrnnoise -L/opt/azure-speech-sdk/lib/x64 -lMicrosoft.CognitiveServices.Speech.core" && \
@@ -77,17 +82,21 @@ COPY --from=builder /opt/onnxruntime /opt/onnxruntime
 COPY --from=builder /opt/azure-speech-sdk /opt/azure-speech-sdk
 COPY --from=builder /usr/local/lib /usr/local/lib
 
+# Copy VAD model
+COPY --from=builder /opt/models/silero_vad.onnx /opt/apps/models/silero_vad.onnx
+
 # Copy migrations and env
 COPY api/assistant-api/migrations/ ./api/assistant-api/migrations/
 COPY docker/assistant-api/.assistant.env ./env/.assistant.env
 
 # Create required directories
-RUN mkdir -p /opt/apps/assets /var/log/go-app && \
+RUN mkdir -p /opt/apps/assets /opt/apps/rapida-data/assets/workflow /opt/apps/models /var/log/go-app && \
     chown -R rapida-app:rapida-app /opt/apps /var/log/go-app
 
 USER rapida-app
 
 ENV LD_LIBRARY_PATH="/usr/local/lib:/opt/onnxruntime/lib:/opt/azure-speech-sdk/lib/x64"
+ENV SILERO_MODEL_PATH="/opt/apps/models/silero_vad.onnx"
 
 EXPOSE 9007
 
