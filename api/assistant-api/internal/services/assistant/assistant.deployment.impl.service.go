@@ -8,6 +8,7 @@ package internal_assistant_service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/rapidaai/api/assistant-api/config"
 	internal_assistant_entity "github.com/rapidaai/api/assistant-api/internal/entity/assistants"
@@ -338,18 +339,28 @@ func (eService assistantDeploymentService) CreatePhoneDeployment(
 		},
 	}
 
-	// TODO: Persist the deployment to the database
+	// Persist the deployment to the database
 	tx := db.Create(deployment)
 	if tx.Error != nil {
-		eService.logger.Errorf("unable to create web plugin deployment for assistant wiht error %v", tx.Error)
+		eService.logger.Errorf("unable to create phone deployment for assistant with error %v", tx.Error)
 		return nil, tx.Error
 	}
 
 	if inputAudio != nil {
-		eService.createAssistantDeploymentAudio(ctx, auth, deployment.Id, "input", inputAudio)
+		inputAudioDeployment, err := eService.createAssistantDeploymentAudio(ctx, auth, deployment.Id, "input", inputAudio)
+		if err != nil {
+			eService.logger.Errorf("unable to create input audio config for phone deployment %d: %v", deployment.Id, err)
+			return nil, fmt.Errorf("failed to create input audio configuration: %w", err)
+		}
+		deployment.InputAudio = inputAudioDeployment
 	}
 	if outputAudio != nil {
-		eService.createAssistantDeploymentAudio(ctx, auth, deployment.Id, "output", outputAudio)
+		outputAudioDeployment, err := eService.createAssistantDeploymentAudio(ctx, auth, deployment.Id, "output", outputAudio)
+		if err != nil {
+			eService.logger.Errorf("unable to create output audio config for phone deployment %d: %v", deployment.Id, err)
+			return nil, fmt.Errorf("failed to create output audio configuration: %w", err)
+		}
+		deployment.OuputAudio = outputAudioDeployment
 	}
 
 	if len(opts) == 0 {

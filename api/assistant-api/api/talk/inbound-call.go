@@ -6,6 +6,7 @@
 package assistant_talk_api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -236,7 +237,7 @@ func (cApi *ConversationApi) CallTalker(c *gin.Context) {
 		}
 
 		if !assistant.IsPhoneDeploymentEnable() {
-			return err
+			return fmt.Errorf("phone deployment is not enabled for assistant %d", assistantId)
 		}
 		credentialID, err := assistant.AssistantPhoneDeployment.GetOptions().GetUint64("rapida.credential_id")
 		if err != nil {
