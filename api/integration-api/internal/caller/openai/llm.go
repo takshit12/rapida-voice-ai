@@ -1,8 +1,14 @@
 package internal_openai_callers
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -13,6 +19,7 @@ import (
 	internal_caller_metrics "github.com/rapidaai/api/integration-api/internal/caller/metrics"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
+	type_enums "github.com/rapidaai/pkg/types/enums"
 	"github.com/rapidaai/pkg/utils"
 	protos "github.com/rapidaai/protos"
 )
@@ -287,6 +294,46 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 	metrics := internal_caller_metrics.NewMetricBuilder(options.RequestId)
 	metrics.OnStart()
 
+	completionsOptions := llc.ChatCompletionOptions(options)
+
+	// GPT-OSS models: bypass the OpenAI SDK entirely and use raw HTTP/1.1.
+	// The SDK works for other models but GPT-OSS on Groq returns empty responses
+	// through the SDK despite identical JSON bodies and headers. This eliminates
+	// all SDK transport-level variables (HTTP/2, connection pooling, etc.).
+	modelName := ""
+	if mn, ok := options.ModelParameter["model.name"]; ok {
+		modelName, _ = utils.AnyToString(mn)
+	}
+	if strings.HasPrefix(modelName, "openai/gpt-oss") || strings.HasPrefix(completionsOptions.Model, "openai/gpt-oss") {
+		credentials := llc.credential()
+		apiKey, _ := credentials[API_KEY].(string)
+		baseURL := DEFAULT_URL
+		if url, ok := credentials[API_URL]; ok && url != nil {
+			if urlStr, ok := url.(string); ok && urlStr != "" {
+				baseURL = urlStr
+			}
+		}
+		// Build plain messages from proto
+		var plainMessages []map[string]string
+		for _, msg := range allMessages {
+			role := msg.GetRole()
+			content := types.OnlyStringProtoContent(msg.GetContents())
+			if content != "" {
+				plainMessages = append(plainMessages, map[string]string{
+					"role":    role,
+					"content": content,
+				})
+			}
+		}
+		options.PreHook(map[string]interface{}{
+			"model":    completionsOptions.Model,
+			"messages": plainMessages,
+			"method":   "rawStreamGPTOSS",
+		})
+		return llc.rawStreamGPTOSS(ctx, apiKey, baseURL, plainMessages,
+			completionsOptions.Model, onStream, onMetrics, onError, metrics, options)
+	}
+
 	client, err := llc.GetClient()
 	if err != nil {
 		llc.logger.Errorf("chat completion unable to get client for openai: %v", err)
@@ -295,7 +342,6 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		return err
 	}
 
-	completionsOptions := llc.ChatCompletionOptions(options)
 	completionsOptions.Messages = llc.BuildHistory(allMessages)
 
 	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v reasoning_effort=%q",
@@ -477,6 +523,200 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 	metrics.OnSuccess()
 	options.PostHook(map[string]interface{}{
 		"result": utils.ToJson(accumulate),
+	}, metrics.Build())
+	onMetrics(&completeMsg, metrics.Build())
+	return nil
+}
+
+// rawStreamGPTOSS bypasses the OpenAI SDK entirely and makes a raw HTTP/1.1
+// request to the Groq API for GPT-OSS models. This eliminates all SDK-related
+// variables (HTTP/2, connection pooling, header injection, serialization).
+func (llc *largeLanguageCaller) rawStreamGPTOSS(
+	ctx context.Context,
+	apiKey string,
+	baseURL string,
+	messages []map[string]string,
+	model string,
+	onStream func(types.Message) error,
+	onMetrics func(*types.Message, types.Metrics) error,
+	onError func(err error),
+	metrics *internal_caller_metrics.MetricBuilder,
+	options *internal_callers.ChatCompletionOptions,
+) error {
+	// Build request body exactly matching working curl from Groq playground
+	reqBody := map[string]interface{}{
+		"messages":              messages,
+		"model":                 model,
+		"temperature":           1,
+		"max_completion_tokens": 8192,
+		"top_p":                 1,
+		"stream":                true,
+		"reasoning_effort":      "medium",
+	}
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		onError(fmt.Errorf("failed to marshal request: %w", err))
+		onMetrics(nil, metrics.OnFailure().Build())
+		return err
+	}
+
+	llc.logger.Infof("rawStreamGPTOSS: POST %s/chat/completions body=%s", baseURL, string(bodyBytes))
+
+	// Create raw HTTP/1.1 request (matching curl behavior exactly)
+	url := strings.TrimRight(baseURL, "/") + "/chat/completions"
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(bodyBytes))
+	if err != nil {
+		onError(fmt.Errorf("failed to create request: %w", err))
+		onMetrics(nil, metrics.OnFailure().Build())
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Force HTTP/1.1 to match curl (Go defaults to HTTP/2 with TLS)
+	transport := &http.Transport{
+		ForceAttemptHTTP2: false,
+		TLSNextProto:     make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+	}
+	httpClient := &http.Client{Transport: transport}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		llc.logger.Errorf("rawStreamGPTOSS: HTTP error: %v", err)
+		onError(fmt.Errorf("HTTP request failed: %w", err))
+		onMetrics(nil, metrics.OnFailure().Build())
+		return err
+	}
+	defer resp.Body.Close()
+
+	llc.logger.Infof("rawStreamGPTOSS: response status=%d proto=%s", resp.StatusCode, resp.Proto)
+	for key, values := range resp.Header {
+		llc.logger.Infof("rawStreamGPTOSS: response header %s: %s", key, values)
+	}
+
+	if resp.StatusCode != 200 {
+		respBytes, _ := io.ReadAll(resp.Body)
+		errMsg := fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(respBytes))
+		llc.logger.Errorf("rawStreamGPTOSS: %s", errMsg)
+		onError(fmt.Errorf(errMsg))
+		onMetrics(nil, metrics.OnFailure().Build())
+		return fmt.Errorf(errMsg)
+	}
+
+	// Parse SSE response line by line
+	scanner := bufio.NewScanner(resp.Body)
+	// Increase scanner buffer for large chunks
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	completeMsg := types.Message{
+		Role:     "assistant",
+		Contents: make([]*types.Content, 0),
+	}
+	var fullContent strings.Builder
+	chunkCount := 0
+	var lastUsage struct {
+		PromptTokens     int
+		CompletionTokens int
+		TotalTokens      int
+	}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+		data := strings.TrimPrefix(line, "data: ")
+		if data == "[DONE]" {
+			llc.logger.Infof("rawStreamGPTOSS: received [DONE] after %d chunks", chunkCount)
+			break
+		}
+
+		chunkCount++
+		var chunk struct {
+			Choices []struct {
+				Delta struct {
+					Content string `json:"content"`
+					Role    string `json:"role"`
+				} `json:"delta"`
+				FinishReason *string `json:"finish_reason"`
+			} `json:"choices"`
+			Usage struct {
+				PromptTokens     int `json:"prompt_tokens"`
+				CompletionTokens int `json:"completion_tokens"`
+				TotalTokens      int `json:"total_tokens"`
+			} `json:"usage"`
+		}
+
+		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+			llc.logger.Warnf("rawStreamGPTOSS: failed to parse chunk #%d: %v", chunkCount, err)
+			continue
+		}
+
+		llc.logger.Infof("rawStreamGPTOSS: chunk #%d: %s", chunkCount, data)
+
+		// Track usage
+		if chunk.Usage.PromptTokens > 0 || chunk.Usage.CompletionTokens > 0 {
+			lastUsage.PromptTokens = chunk.Usage.PromptTokens
+			lastUsage.CompletionTokens = chunk.Usage.CompletionTokens
+			lastUsage.TotalTokens = chunk.Usage.TotalTokens
+		}
+
+		for _, choice := range chunk.Choices {
+			if choice.Delta.Content != "" {
+				fullContent.WriteString(choice.Delta.Content)
+				deltaMsg := types.Message{
+					Role: "assistant",
+					Contents: []*types.Content{{
+						ContentType:   commons.TEXT_CONTENT.String(),
+						ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+						Content:       []byte(choice.Delta.Content),
+					}},
+				}
+				if err := onStream(deltaMsg); err != nil {
+					llc.logger.Errorf("rawStreamGPTOSS: error sending stream: %v", err)
+					return err
+				}
+			}
+
+			if choice.FinishReason != nil && *choice.FinishReason == "stop" {
+				llc.logger.Infof("rawStreamGPTOSS: finish_reason=stop after %d chunks, content_len=%d", chunkCount, fullContent.Len())
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		llc.logger.Errorf("rawStreamGPTOSS: scanner error: %v", err)
+		onError(err)
+		onMetrics(nil, metrics.OnFailure().Build())
+		return err
+	}
+
+	// Build complete message
+	llc.logger.Infof("rawStreamGPTOSS: stream complete. chunks=%d content_len=%d prompt_tokens=%d completion_tokens=%d",
+		chunkCount, fullContent.Len(), lastUsage.PromptTokens, lastUsage.CompletionTokens)
+
+	if fullContent.Len() > 0 {
+		completeMsg.Contents = append(completeMsg.Contents, &types.Content{
+			ContentType:   commons.TEXT_CONTENT.String(),
+			ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+			Content:       []byte(fullContent.String()),
+		})
+	}
+
+	metrics.OnAddMetrics(
+		&types.Metric{Name: type_enums.OUTPUT_TOKEN.String(), Value: fmt.Sprintf("%d", lastUsage.CompletionTokens), Description: "Output Token"},
+		&types.Metric{Name: type_enums.INPUT_TOKEN.String(), Value: fmt.Sprintf("%d", lastUsage.PromptTokens), Description: "Input Token"},
+		&types.Metric{Name: type_enums.TOTAL_TOKEN.String(), Value: fmt.Sprintf("%d", lastUsage.TotalTokens), Description: "Total Token"},
+	)
+	metrics.OnSuccess()
+	options.PostHook(map[string]interface{}{
+		"result":   fullContent.String(),
+		"method":   "rawStreamGPTOSS",
+		"chunks":   chunkCount,
+		"usage":    lastUsage,
 	}, metrics.Build())
 	onMetrics(&completeMsg, metrics.Build())
 	return nil
