@@ -168,6 +168,12 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 			}
 		}
 	}
+	// Don't send tool_choice when no tools are defined — sending tool_choice
+	// without tools causes GPT OSS 120B (and potentially other models) to
+	// return empty responses with prompt_tokens: 0.
+	if len(options.Tools) == 0 {
+		options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{}
+	}
 	// GPT OSS models (reasoning models) require reasoning_effort to generate content.
 	// Default to "medium" if not explicitly set by the user.
 	if strings.HasPrefix(options.Model, "openai/gpt-oss") && options.ReasoningEffort == "" {

@@ -150,6 +150,10 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 			}
 		}
 	}
+	// Don't send tool_choice when no tools are defined
+	if len(options.Tools) == 0 {
+		options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{}
+	}
 	return options
 }
 
