@@ -321,6 +321,20 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		}
 
 		if _, ok := accumulate.JustFinishedContent(); ok {
+			// If completeMsg is empty but accumulator has content, use accumulated content
+			if len(completeMsg.Contents) == 0 && len(accumulate.Choices) > 0 && accumulate.Choices[0].Message.Content != "" {
+				completeMsg.Contents = append(completeMsg.Contents, &types.Content{
+					ContentType:   commons.TEXT_CONTENT.String(),
+					ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+					Content:       []byte(accumulate.Choices[0].Message.Content),
+				})
+				completeMsg.Role = string(accumulate.Choices[0].Message.Role)
+				// Send content via onStream so it reaches the UI as LLMStreamPacket
+				if err := onStream(completeMsg); err != nil {
+					llc.logger.Errorf("Error sending accumulated stream data: %v", err)
+					return err
+				}
+			}
 			metrics.OnAddMetrics(llc.GetComplitionUsages(accumulate.Usage)...)
 			metrics.OnSuccess()
 			options.PostHook(map[string]interface{}{
@@ -364,6 +378,24 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	// Fallback: if JustFinishedContent/JustFinishedToolCall never fired,
 	// still send metrics so the caller gets proper completion
+	if len(accumulate.Choices) > 0 {
+		// If we have accumulated content but completeMsg is empty, use accumulated content
+		if len(completeMsg.Contents) == 0 && accumulate.Choices[0].Message.Content != "" {
+			completeMsg.Contents = append(completeMsg.Contents, &types.Content{
+				ContentType:   commons.TEXT_CONTENT.String(),
+				ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+				Content:       []byte(accumulate.Choices[0].Message.Content),
+			})
+			completeMsg.Role = string(accumulate.Choices[0].Message.Role)
+		}
+	}
+	// Send content via onStream so it reaches the UI as LLMStreamPacket
+	if len(completeMsg.Contents) > 0 {
+		if err := onStream(completeMsg); err != nil {
+			llc.logger.Errorf("Error sending fallback stream data: %v", err)
+			return err
+		}
+	}
 	metrics.OnAddMetrics(llc.GetComplitionUsages(accumulate.Usage)...)
 	metrics.OnSuccess()
 	options.PostHook(map[string]interface{}{
