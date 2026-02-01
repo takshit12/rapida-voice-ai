@@ -121,10 +121,7 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 					options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{
 						OfAuto: openai.String("none"),
 					}
-				default:
-					options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{
-						OfAuto: openai.String("none"),
-					}
+				// Empty or unknown values: don't set tool_choice, let the API use its default
 				}
 			}
 		case "model.response_format":
