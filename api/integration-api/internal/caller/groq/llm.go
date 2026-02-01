@@ -96,7 +96,7 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 			}
 		case "model.max_completion_tokens":
 			if maxTokens, err := utils.AnyToInt64(value); err == nil {
-				options.MaxTokens = openai.Int(maxTokens)
+				options.MaxCompletionTokens = openai.Int(maxTokens)
 			}
 		case "model.stop":
 			if stopStr, err := utils.AnyToString(value); err == nil {

@@ -114,7 +114,7 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 			}
 		case "model.max_completion_tokens":
 			if maxTokens, err := utils.AnyToInt64(value); err == nil {
-				options.MaxTokens = openai.Int(maxTokens)
+				options.MaxCompletionTokens = openai.Int(maxTokens)
 			}
 		case "model.stop":
 			if stopStr, err := utils.AnyToString(value); err == nil {
@@ -273,6 +273,9 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	completionsOptions := llc.ChatCompletionOptions(options)
 	completionsOptions.Messages = llc.BuildHistory(allMessages)
+	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v",
+		completionsOptions.Model, len(completionsOptions.Messages), len(completionsOptions.Tools),
+		completionsOptions.MaxTokens, completionsOptions.MaxCompletionTokens, completionsOptions.Temperature)
 	options.PreHook(utils.ToJson(completionsOptions))
 	llc.logger.Benchmark("Openai.llm.GetChatCompletion.llmRequestPrepare", time.Since(start))
 
