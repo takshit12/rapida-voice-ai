@@ -190,19 +190,15 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 	if len(options.Tools) == 0 {
 		options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{}
 	}
-	// GPT OSS models (reasoning models) require reasoning_effort to generate content.
-	// Default to "medium" if not explicitly set by the user.
-	// Also clear temperature and top_p — reasoning models may not support
-	// custom values (working Groq examples use only defaults).
+	// GPT OSS models: strip ALL optional parameters and only send model + messages + stream.
+	// The model consistently returns empty content (prompt_tokens:0) with HTTP 200,
+	// suggesting optional parameters may be causing silent failures.
 	if strings.HasPrefix(options.Model, "openai/gpt-oss") {
-		if options.ReasoningEffort == "" {
-			options.ReasoningEffort = shared.ReasoningEffort("medium")
-		}
-		// Clear temperature and top_p for reasoning models — Groq may silently
-		// reject requests with these parameters set for GPT-OSS models.
-		var zeroFloat openai.ChatCompletionNewParams
-		options.Temperature = zeroFloat.Temperature
-		options.TopP = zeroFloat.TopP
+		var zero openai.ChatCompletionNewParams
+		options.Temperature = zero.Temperature
+		options.TopP = zero.TopP
+		options.MaxCompletionTokens = zero.MaxCompletionTokens
+		options.ReasoningEffort = ""
 	}
 	return options
 }
