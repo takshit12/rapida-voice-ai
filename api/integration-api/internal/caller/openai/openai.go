@@ -72,6 +72,12 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 	// Log the actual HTTP request and response for debugging GPT OSS issues
 	logger := openAI.logger
 	opts = append(opts, option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+		// Log request headers (excluding Authorization)
+		for key, values := range req.Header {
+			if key != "Authorization" {
+				logger.Infof("HTTP request header %s: %s", key, values)
+			}
+		}
 		if req.Body != nil {
 			bodyBytes, err := io.ReadAll(req.Body)
 			if err == nil {

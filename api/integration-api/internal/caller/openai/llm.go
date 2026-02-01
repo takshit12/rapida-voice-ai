@@ -21,21 +21,6 @@ type largeLanguageCaller struct {
 	OpenAI
 }
 
-// convertSystemToUserForReasoningModels converts system messages to user messages
-// for GPT-OSS reasoning models. Groq docs recommend: "Avoid system prompts —
-// include all instructions in the user message" for optimal reasoning model performance.
-func convertSystemToUserForReasoningModels(messages []openai.ChatCompletionMessageParamUnion) []openai.ChatCompletionMessageParamUnion {
-	converted := make([]openai.ChatCompletionMessageParamUnion, 0, len(messages))
-	for _, msg := range messages {
-		if msg.OfSystem != nil {
-			// Convert system message to user message with same content
-			converted = append(converted, openai.UserMessage(msg.OfSystem.Content.OfString.Value))
-		} else {
-			converted = append(converted, msg)
-		}
-	}
-	return converted
-}
 
 func NewLargeLanguageCaller(logger commons.Logger, credential *protos.Credential) internal_callers.LargeLanguageCaller {
 	return &largeLanguageCaller{
@@ -190,15 +175,15 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 	if len(options.Tools) == 0 {
 		options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{}
 	}
-	// GPT OSS models: strip ALL optional parameters and only send model + messages + stream.
-	// The model consistently returns empty content (prompt_tokens:0) with HTTP 200,
-	// suggesting optional parameters may be causing silent failures.
+	// GPT OSS models: use exact parameters from working Groq example.
+	// temperature=1, max_completion_tokens=8192, top_p=1, reasoning_effort="medium"
 	if strings.HasPrefix(options.Model, "openai/gpt-oss") {
-		var zero openai.ChatCompletionNewParams
-		options.Temperature = zero.Temperature
-		options.TopP = zero.TopP
-		options.MaxCompletionTokens = zero.MaxCompletionTokens
-		options.ReasoningEffort = ""
+		options.Temperature = openai.Float(1)
+		options.TopP = openai.Float(1)
+		options.MaxCompletionTokens = openai.Int(8192)
+		if options.ReasoningEffort == "" {
+			options.ReasoningEffort = shared.ReasoningEffort("medium")
+		}
 	}
 	return options
 }
@@ -220,12 +205,6 @@ func (llc *largeLanguageCaller) GetChatCompletion(
 	// message and options
 	llmRequest := llc.ChatCompletionOptions(options)
 	llmRequest.Messages = llc.BuildHistory(allMessages)
-
-	// For GPT-OSS reasoning models, convert system messages to user messages.
-	// Groq docs: "Avoid system prompts — include all instructions in the user message"
-	if strings.HasPrefix(llmRequest.Model, "openai/gpt-oss") {
-		llmRequest.Messages = convertSystemToUserForReasoningModels(llmRequest.Messages)
-	}
 
 	// prehook
 	options.PreHook(utils.ToJson(llmRequest))
@@ -308,12 +287,6 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	completionsOptions := llc.ChatCompletionOptions(options)
 	completionsOptions.Messages = llc.BuildHistory(allMessages)
-
-	// For GPT-OSS reasoning models, convert system messages to user messages.
-	// Groq docs: "Avoid system prompts — include all instructions in the user message"
-	if strings.HasPrefix(completionsOptions.Model, "openai/gpt-oss") {
-		completionsOptions.Messages = convertSystemToUserForReasoningModels(completionsOptions.Messages)
-	}
 
 	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v reasoning_effort=%q",
 		completionsOptions.Model, len(completionsOptions.Messages), len(completionsOptions.Tools),
