@@ -192,8 +192,17 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 	}
 	// GPT OSS models (reasoning models) require reasoning_effort to generate content.
 	// Default to "medium" if not explicitly set by the user.
-	if strings.HasPrefix(options.Model, "openai/gpt-oss") && options.ReasoningEffort == "" {
-		options.ReasoningEffort = shared.ReasoningEffort("medium")
+	// Also clear temperature and top_p — reasoning models may not support
+	// custom values (working Groq examples use only defaults).
+	if strings.HasPrefix(options.Model, "openai/gpt-oss") {
+		if options.ReasoningEffort == "" {
+			options.ReasoningEffort = shared.ReasoningEffort("medium")
+		}
+		// Clear temperature and top_p for reasoning models — Groq may silently
+		// reject requests with these parameters set for GPT-OSS models.
+		var zeroFloat openai.ChatCompletionNewParams
+		options.Temperature = zeroFloat.Temperature
+		options.TopP = zeroFloat.TopP
 	}
 	return options
 }

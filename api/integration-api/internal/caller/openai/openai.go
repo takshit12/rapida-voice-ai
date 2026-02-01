@@ -69,7 +69,7 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 		opts = append(opts, option.WithBaseURL(baseURL.(string)))
 	}
 
-	// Log the actual HTTP request body sent by the SDK (for debugging GPT OSS issues)
+	// Log the actual HTTP request and response for debugging GPT OSS issues
 	logger := openAI.logger
 	opts = append(opts, option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		if req.Body != nil {
@@ -79,7 +79,20 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			}
 		}
-		return next(req)
+		resp, err := next(req)
+		if err != nil {
+			logger.Errorf("HTTP error from %s: %v", req.URL.String(), err)
+		} else if resp != nil {
+			logger.Infof("HTTP response from %s: status=%d", req.URL.String(), resp.StatusCode)
+			if resp.StatusCode >= 400 && resp.Body != nil {
+				respBytes, readErr := io.ReadAll(resp.Body)
+				if readErr == nil {
+					logger.Errorf("HTTP error body: %s", string(respBytes))
+					resp.Body = io.NopCloser(bytes.NewBuffer(respBytes))
+				}
+			}
+		}
+		return resp, err
 	}))
 	clt := openai.NewClient(opts...)
 	return &clt, nil
