@@ -85,16 +85,16 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 			}
 			req.Header.Set("User-Agent", "rapida-voice-ai")
 		}
-		// Log request headers (excluding Authorization)
+		// Log request details at debug level
 		for key, values := range req.Header {
 			if key != "Authorization" {
-				logger.Infof("HTTP request header %s: %s", key, values)
+				logger.Debugf("HTTP request header %s: %s", key, values)
 			}
 		}
 		if req.Body != nil {
 			bodyBytes, err := io.ReadAll(req.Body)
 			if err == nil {
-				logger.Infof("HTTP request to %s: %s", req.URL.String(), string(bodyBytes))
+				logger.Debugf("HTTP request to %s: %s", req.URL.String(), string(bodyBytes))
 				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			}
 		}
@@ -102,12 +102,14 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 		if err != nil {
 			logger.Errorf("HTTP error from %s: %v", req.URL.String(), err)
 		} else if resp != nil {
-			logger.Infof("HTTP response from %s: status=%d", req.URL.String(), resp.StatusCode)
-			if resp.StatusCode >= 400 && resp.Body != nil {
-				respBytes, readErr := io.ReadAll(resp.Body)
-				if readErr == nil {
-					logger.Errorf("HTTP error body: %s", string(respBytes))
-					resp.Body = io.NopCloser(bytes.NewBuffer(respBytes))
+			if resp.StatusCode >= 400 {
+				logger.Errorf("HTTP response from %s: status=%d", req.URL.String(), resp.StatusCode)
+				if resp.Body != nil {
+					respBytes, readErr := io.ReadAll(resp.Body)
+					if readErr == nil {
+						logger.Errorf("HTTP error body: %s", string(respBytes))
+						resp.Body = io.NopCloser(bytes.NewBuffer(respBytes))
+					}
 				}
 			}
 		}

@@ -344,16 +344,8 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	completionsOptions.Messages = llc.BuildHistory(allMessages)
 
-	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v reasoning_effort=%q",
-		completionsOptions.Model, len(completionsOptions.Messages), len(completionsOptions.Tools),
-		completionsOptions.MaxTokens, completionsOptions.MaxCompletionTokens, completionsOptions.Temperature,
-		completionsOptions.ReasoningEffort)
-	// Log the full request JSON to verify serialization (excluding messages for brevity)
-	reqCopy := completionsOptions
-	reqCopy.Messages = nil
-	if reqJSON, err := json.Marshal(reqCopy); err == nil {
-		llc.logger.Infof("stream request JSON (no messages): %s", string(reqJSON))
-	}
+	llc.logger.Infof("stream request: model=%q messages=%d tools=%d",
+		completionsOptions.Model, len(completionsOptions.Messages), len(completionsOptions.Tools))
 	options.PreHook(utils.ToJson(completionsOptions))
 	llc.logger.Benchmark("Openai.llm.GetChatCompletion.llmRequestPrepare", time.Since(start))
 
@@ -383,9 +375,9 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		accumulate.AddChunk(chatCompletions)
 		chunkCount++
 
-		// Log raw chunk JSON for debugging streaming issues (especially reasoning models)
+		// Log raw chunk JSON at debug level for troubleshooting
 		if rawJSON, err := json.Marshal(chatCompletions); err == nil {
-			llc.logger.Infof("stream chunk #%d raw: %s", chunkCount, string(rawJSON))
+			llc.logger.Debugf("stream chunk #%d raw: %s", chunkCount, string(rawJSON))
 		}
 		for ci, choice := range chatCompletions.Choices {
 			llc.logger.Debugf("stream chunk #%d choice[%d]: delta.content=%q delta.role=%q finish_reason=%q refusal=%q",
@@ -560,7 +552,7 @@ func (llc *largeLanguageCaller) rawStreamGPTOSS(
 		return err
 	}
 
-	llc.logger.Infof("rawStreamGPTOSS: POST %s/chat/completions body=%s", baseURL, string(bodyBytes))
+	llc.logger.Infof("rawStreamGPTOSS: POST %s/chat/completions messages=%d model=%s", baseURL, len(messages), model)
 
 	// Create raw HTTP/1.1 request (matching curl behavior exactly)
 	url := strings.TrimRight(baseURL, "/") + "/chat/completions"
@@ -590,9 +582,6 @@ func (llc *largeLanguageCaller) rawStreamGPTOSS(
 	defer resp.Body.Close()
 
 	llc.logger.Infof("rawStreamGPTOSS: response status=%d proto=%s", resp.StatusCode, resp.Proto)
-	for key, values := range resp.Header {
-		llc.logger.Infof("rawStreamGPTOSS: response header %s: %s", key, values)
-	}
 
 	if resp.StatusCode != 200 {
 		respBytes, _ := io.ReadAll(resp.Body)
@@ -655,7 +644,7 @@ func (llc *largeLanguageCaller) rawStreamGPTOSS(
 			continue
 		}
 
-		llc.logger.Infof("rawStreamGPTOSS: chunk #%d: %s", chunkCount, data)
+		llc.logger.Debugf("rawStreamGPTOSS: chunk #%d: %s", chunkCount, data)
 
 		// Track usage
 		if chunk.Usage.PromptTokens > 0 || chunk.Usage.CompletionTokens > 0 {
