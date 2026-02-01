@@ -176,7 +176,7 @@ func (t *smallestTTS) Transform(ctx context.Context, in internal_type.LLMPacket)
 			"sample_rate": int(t.GetSampleRate()),
 			"speed":       1.0,
 			"continue":    true,
-			"flush":       true,
+			"flush":       false,
 		}
 		t.logger.Infof("smallest-tts: sending text chunk voice_id=%s language=%s sample_rate=%d len=%d", voiceID, language, t.GetSampleRate(), len(input.Text))
 
