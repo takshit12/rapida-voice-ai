@@ -1,5 +1,14 @@
 [
     {
+        "voice_id": "aditi",
+        "name": "Aditi",
+        "tags": {
+            "language": "hi",
+            "accent": "Indian",
+            "gender": "female"
+        }
+    },
+    {
         "voice_id": "emily",
         "name": "Emily",
         "tags": {
@@ -18,24 +27,6 @@
         }
     },
     {
-        "voice_id": "arman",
-        "name": "Arman",
-        "tags": {
-            "language": "en",
-            "accent": "American",
-            "gender": "male"
-        }
-    },
-    {
-        "voice_id": "james",
-        "name": "James",
-        "tags": {
-            "language": "en",
-            "accent": "American",
-            "gender": "male"
-        }
-    },
-    {
         "voice_id": "mithali",
         "name": "Mithali",
         "tags": {
@@ -45,47 +36,29 @@
         }
     },
     {
-        "voice_id": "raj",
-        "name": "Raj",
+        "voice_id": "nyah",
+        "name": "Nyah",
         "tags": {
-            "language": "hi",
-            "accent": "Indian",
-            "gender": "male"
-        }
-    },
-    {
-        "voice_id": "priya",
-        "name": "Priya",
-        "tags": {
-            "language": "hi",
-            "accent": "Indian",
+            "language": "en",
+            "accent": "American",
             "gender": "female"
         }
     },
     {
-        "voice_id": "aravind",
-        "name": "Aravind",
+        "voice_id": "irisha",
+        "name": "Irisha",
         "tags": {
-            "language": "ta",
-            "accent": "Indian",
-            "gender": "male"
-        }
-    },
-    {
-        "voice_id": "maria",
-        "name": "Maria",
-        "tags": {
-            "language": "es",
-            "accent": "Spanish",
+            "language": "en",
+            "accent": "American",
             "gender": "female"
         }
     },
     {
-        "voice_id": "hans",
-        "name": "Hans",
+        "voice_id": "lakshya",
+        "name": "Lakshya",
         "tags": {
-            "language": "de",
-            "accent": "German",
+            "language": "hi",
+            "accent": "Indian",
             "gender": "male"
         }
     }

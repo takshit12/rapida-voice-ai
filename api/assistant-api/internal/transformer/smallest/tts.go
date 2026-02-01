@@ -149,7 +149,7 @@ func (t *smallestTTS) Transform(ctx context.Context, in internal_type.LLMPacket)
 
 	switch input := in.(type) {
 	case internal_type.LLMStreamPacket:
-		voiceID := "emily"
+		voiceID := "aditi"
 		if voiceIDValue, err := t.mdlOpts.GetString("speak.voice.id"); err == nil {
 			voiceID = voiceIDValue
 		}
@@ -159,13 +159,16 @@ func (t *smallestTTS) Transform(ctx context.Context, in internal_type.LLMPacket)
 			language = langValue
 		}
 
-		if err := cnn.WriteJSON(map[string]interface{}{
+		payload := map[string]interface{}{
 			"text":        input.Text,
 			"voice_id":    voiceID,
 			"language":    language,
 			"sample_rate": int(t.GetSampleRate()),
 			"speed":       1.0,
-		}); err != nil {
+		}
+		t.logger.Infof("smallest-tts: sending payload voice_id=%s language=%s sample_rate=%d", voiceID, language, t.GetSampleRate())
+
+		if err := cnn.WriteJSON(payload); err != nil {
 			t.logger.Errorf("smallest-tts: unable to write json for text to speech: %v", err)
 			return err
 		}
