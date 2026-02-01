@@ -171,6 +171,11 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 			}
 		}
 	}
+	// GPT OSS models (reasoning models) require reasoning_effort to generate content.
+	// Default to "medium" if not explicitly set by the user.
+	if strings.HasPrefix(options.Model, "openai/gpt-oss") && options.ReasoningEffort == "" {
+		options.ReasoningEffort = shared.ReasoningEffort("medium")
+	}
 	return options
 }
 
