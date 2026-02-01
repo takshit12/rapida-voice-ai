@@ -1,37 +1,595 @@
 [
     {
-        "voice_id": "aditi",
-        "name": "Aditi",
+        "voice_id": "leon",
+        "name": "Leon",
         "tags": {
-            "language": "hi",
-            "accent": "Indian",
+            "language": "german",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "bruce",
+        "name": "Bruce",
+        "tags": {
+            "language": "english",
+            "accent": "australian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "ashley",
+        "name": "Ashley",
+        "tags": {
+            "language": "english",
+            "accent": "american",
             "gender": "female"
         }
     },
     {
-        "voice_id": "emily",
-        "name": "Emily",
+        "voice_id": "tasha",
+        "name": "Tasha",
         "tags": {
-            "language": "en",
-            "accent": "American",
+            "language": "english",
+            "accent": "american",
             "gender": "female"
         }
     },
     {
-        "voice_id": "jasmine",
-        "name": "Jasmine",
+        "voice_id": "chloe",
+        "name": "Chloe",
         "tags": {
-            "language": "en",
-            "accent": "American",
+            "language": "english",
+            "accent": "australian",
             "gender": "female"
         }
     },
     {
-        "voice_id": "mithali",
-        "name": "Mithali",
+        "voice_id": "ryan",
+        "name": "Ryan",
         "tags": {
-            "language": "hi",
-            "accent": "Indian",
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "alistair",
+        "name": "Alistair",
+        "tags": {
+            "language": "english",
+            "accent": "british",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "walter",
+        "name": "Walter",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "julian",
+        "name": "Julian",
+        "tags": {
+            "language": "english",
+            "accent": "british",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "shivangi",
+        "name": "Shivangi",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "aarushi",
+        "name": "Aarushi",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "kartik",
+        "name": "Kartik",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "alice",
+        "name": "Alice",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "katie",
+        "name": "Katie",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "natalie",
+        "name": "Natalie",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "meera",
+        "name": "Meera",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "ishika",
+        "name": "Ishika",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "isha",
+        "name": "Isha",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "neha",
+        "name": "Neha",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "tanvi",
+        "name": "Tanvi",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "blofeld",
+        "name": "Blofeld",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "chirag",
+        "name": "Chirag",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "eleanor",
+        "name": "Eleanor",
+        "tags": {
+            "language": "english",
+            "accent": "british",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "madison",
+        "name": "Madison",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "ariba",
+        "name": "Ariba",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "varun",
+        "name": "Varun",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "christine",
+        "name": "Christine",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "john",
+        "name": "John",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "ronald",
+        "name": "Ronald",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "gerard",
+        "name": "Gerard",
+        "tags": {
+            "language": "spanish",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "isabel",
+        "name": "Isabel",
+        "tags": {
+            "language": "spanish",
+            "accent": "",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "enzo",
+        "name": "Enzo",
+        "tags": {
+            "language": "italian",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "hamees",
+        "name": "Hamees",
+        "tags": {
+            "language": "arabic",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "yasmin",
+        "name": "Yasmin",
+        "tags": {
+            "language": "arabic, hebrew",
+            "accent": "",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "biswa",
+        "name": "Biswa",
+        "tags": {
+            "language": "bengali",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "adele",
+        "name": "Adele",
+        "tags": {
+            "language": "german",
+            "accent": "",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "maya",
+        "name": "Maya",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "anika",
+        "name": "Anika",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "rishika",
+        "name": "Rishika",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "wasim",
+        "name": "Wasim",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "ganya",
+        "name": "Ganya",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "khushi",
+        "name": "Khushi",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "claire",
+        "name": "Claire",
+        "tags": {
+            "language": "french",
+            "accent": "",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "priya",
+        "name": "Priya",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "aahan",
+        "name": "Aahan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "fatema",
+        "name": "Fatema",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "ayaan",
+        "name": "Ayaan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "sanjay",
+        "name": "Sanjay",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "amit",
+        "name": "Amit",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "disha",
+        "name": "Disha",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "advait",
+        "name": "Advait",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "malcolm",
+        "name": "Malcolm",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "nirupma",
+        "name": "Nirupma",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "anita",
+        "name": "Anita",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "rohit",
+        "name": "Rohit",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "sangeeta",
+        "name": "Sangeeta",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "ram",
+        "name": "Ram",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "kiara",
+        "name": "Kiara",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "aditya",
+        "name": "Aditya",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "saad",
+        "name": "Saad",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "kabir",
+        "name": "Kabir",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "rohan",
+        "name": "Rohan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "vikram",
+        "name": "Vikram",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "vihaan",
+        "name": "Vihaan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "luther",
+        "name": "Luther",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "erica",
+        "name": "Erica",
+        "tags": {
+            "language": "english",
+            "accent": "canadian",
             "gender": "female"
         }
     },
@@ -39,27 +597,288 @@
         "voice_id": "nyah",
         "name": "Nyah",
         "tags": {
-            "language": "en",
-            "accent": "American",
+            "language": "english",
+            "accent": "australian",
             "gender": "female"
         }
     },
     {
-        "voice_id": "irisha",
-        "name": "Irisha",
+        "voice_id": "angela",
+        "name": "Angela",
         "tags": {
-            "language": "en",
-            "accent": "American",
+            "language": "english",
+            "accent": "british",
             "gender": "female"
+        }
+    },
+    {
+        "voice_id": "zorin",
+        "name": "Zorin",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "julia",
+        "name": "Julia",
+        "tags": {
+            "language": "english",
+            "accent": "british",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "william",
+        "name": "William",
+        "tags": {
+            "language": "english",
+            "accent": "canadian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "aditi",
+        "name": "Aditi",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "felix",
+        "name": "Felix",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "radhika",
+        "name": "Radhika",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "solomon",
+        "name": "Solomon",
+        "tags": {
+            "language": "english",
+            "accent": "british",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "yash",
+        "name": "Yash",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "chinmay",
+        "name": "Chinmay",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "roma",
+        "name": "Roma",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "vidya",
+        "name": "Vidya",
+        "tags": {
+            "language": "tamil",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "alec",
+        "name": "Alec",
+        "tags": {
+            "language": "english",
+            "accent": "canadian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "ilsa",
+        "name": "Ilsa",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "bellatrix",
+        "name": "Bellatrix",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "nikita",
+        "name": "Nikita",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "karan",
+        "name": "Karan",
+        "tags": {
+            "language": "hindi, english, marathi",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "gargi",
+        "name": "Gargi",
+        "tags": {
+            "language": "hindi, english, gujarati",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "albus",
+        "name": "Albus",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "american",
+            "gender": "male"
         }
     },
     {
         "voice_id": "lakshya",
         "name": "Lakshya",
         "tags": {
-            "language": "hi",
-            "accent": "Indian",
+            "language": "hindi, english",
+            "accent": "indian",
             "gender": "male"
+        }
+    },
+    {
+        "voice_id": "irisha",
+        "name": "Irisha",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "dhruv",
+        "name": "Dhruv",
+        "tags": {
+            "language": "hindi, english",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "bogambo",
+        "name": "Bogambo",
+        "tags": {
+            "language": "african",
+            "accent": "african",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "natasha",
+        "name": "Natasha",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "andrea",
+        "name": "Andrea",
+        "tags": {
+            "language": "english",
+            "accent": "american",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "vijay",
+        "name": "Vijay",
+        "tags": {
+            "language": "tamil, kannada",
+            "accent": "indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "dmitry",
+        "name": "Dmitry",
+        "tags": {
+            "language": "russian",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "maria",
+        "name": "Maria",
+        "tags": {
+            "language": "italian",
+            "accent": "",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "emmanuel",
+        "name": "Emmanuel",
+        "tags": {
+            "language": "french",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "lukas",
+        "name": "Lukas",
+        "tags": {
+            "language": "dutch, polish",
+            "accent": "",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "adriana",
+        "name": "Adriana",
+        "tags": {
+            "language": "dutch",
+            "accent": "",
+            "gender": "female"
         }
     }
 ]

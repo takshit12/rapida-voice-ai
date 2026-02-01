@@ -114,6 +114,8 @@ func (st *smallestTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Co
 				continue
 			}
 
+			st.logger.Infof("smallest-tts: received status=%s request_id=%s done=%v message=%s hasData=%v", audioData.Status, audioData.RequestID, audioData.Done, audioData.Message, audioData.Data != nil)
+
 			switch audioData.Status {
 			case "chunk":
 				if audioData.Data != nil && audioData.Data.Audio != "" {
@@ -131,7 +133,7 @@ func (st *smallestTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Co
 					ContextID: contextID,
 				})
 			case "error":
-				st.logger.Errorf("smallest-tts: server error: %s", audioData.Message)
+				st.logger.Errorf("smallest-tts: server error: %s (raw: %s)", audioData.Message, string(audioChunk))
 			}
 		}
 	}
@@ -149,7 +151,7 @@ func (t *smallestTTS) Transform(ctx context.Context, in internal_type.LLMPacket)
 
 	switch input := in.(type) {
 	case internal_type.LLMStreamPacket:
-		voiceID := "aditi"
+		voiceID := "ashley"
 		if voiceIDValue, err := t.mdlOpts.GetString("speak.voice.id"); err == nil {
 			voiceID = voiceIDValue
 		}
