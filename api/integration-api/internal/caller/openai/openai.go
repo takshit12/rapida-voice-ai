@@ -1,8 +1,11 @@
 package internal_openai_callers
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -66,6 +69,18 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 		opts = append(opts, option.WithBaseURL(baseURL.(string)))
 	}
 
+	// Log the actual HTTP request body sent by the SDK (for debugging GPT OSS issues)
+	logger := openAI.logger
+	opts = append(opts, option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+		if req.Body != nil {
+			bodyBytes, err := io.ReadAll(req.Body)
+			if err == nil {
+				logger.Infof("HTTP request to %s: %s", req.URL.String(), string(bodyBytes))
+				req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			}
+		}
+		return next(req)
+	}))
 	clt := openai.NewClient(opts...)
 	return &clt, nil
 }
