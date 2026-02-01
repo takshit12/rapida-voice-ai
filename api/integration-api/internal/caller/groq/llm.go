@@ -282,6 +282,44 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		chatCompletions := resp.Current()
 		accumulate.AddChunk(chatCompletions)
 
+		// Process delta content BEFORE checking JustFinishedContent/JustFinishedToolCall.
+		// Some models (e.g. GPT OSS on Groq) send content and finish_reason in the same chunk.
+		// If we check JustFinishedContent first, the delta from that chunk is never processed.
+		deltaMsg := types.Message{
+			Role:     "assistant",
+			Contents: make([]*types.Content, 0),
+		}
+
+		for i, choice := range chatCompletions.Choices {
+			content := choice.Delta.Content
+			if content != "" {
+				// Update complete message
+				if len(completeMsg.Contents) <= i {
+					completeMsg.Contents = append(completeMsg.Contents, &types.Content{
+						ContentType:   commons.TEXT_CONTENT.String(),
+						ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+						Content:       []byte(content),
+					})
+				} else {
+					completeMsg.Contents[i].Content = append(completeMsg.Contents[i].Content, []byte(content)...)
+				}
+				// Update delta message
+				deltaMsg.Contents = append(deltaMsg.Contents, &types.Content{
+					ContentType:   commons.TEXT_CONTENT.String(),
+					ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+					Content:       []byte(content),
+				})
+			}
+		}
+
+		// Stream content if there are changes
+		if len(deltaMsg.Contents) > 0 {
+			if err := onStream(deltaMsg); err != nil {
+				llc.logger.Errorf("Error sending stream data: %v", err)
+				return err
+			}
+		}
+
 		if _, ok := accumulate.JustFinishedContent(); ok {
 			metrics.OnAddMetrics(llc.GetComplitionUsages(accumulate.Usage)...)
 			metrics.OnSuccess()
@@ -314,43 +352,24 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 			onMetrics(&completeMsg, metrics.Build())
 			return nil
 		}
-
-		deltaMsg := types.Message{
-			Role:     "assistant",
-			Contents: make([]*types.Content, 0),
-		}
-
-		for i, choice := range chatCompletions.Choices {
-			content := choice.Delta.Content
-			if content != "" {
-				// Update complete message
-				if len(completeMsg.Contents) <= i {
-					completeMsg.Contents = append(completeMsg.Contents, &types.Content{
-						ContentType:   commons.TEXT_CONTENT.String(),
-						ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
-						Content:       []byte(content),
-					})
-				} else {
-					completeMsg.Contents[i].Content = append(completeMsg.Contents[i].Content, []byte(content)...)
-				}
-				// Update delta message
-				deltaMsg.Contents = append(deltaMsg.Contents, &types.Content{
-					ContentType:   commons.TEXT_CONTENT.String(),
-					ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
-					Content:       []byte(content),
-				})
-			}
-		}
-
-		// Stream content if there are changes and no tool calls
-		if len(deltaMsg.Contents) > 0 {
-			if err := onStream(deltaMsg); err != nil {
-				llc.logger.Errorf("Error sending stream data: %v", err)
-				return err
-			}
-		}
 	}
 
+	// Check for streaming errors
+	if resp.Err() != nil {
+		llc.logger.Errorf("Stream error after loop: %v", resp.Err())
+		onError(resp.Err())
+		onMetrics(nil, metrics.OnFailure().Build())
+		return resp.Err()
+	}
+
+	// Fallback: if JustFinishedContent/JustFinishedToolCall never fired,
+	// still send metrics so the caller gets proper completion
+	metrics.OnAddMetrics(llc.GetComplitionUsages(accumulate.Usage)...)
+	metrics.OnSuccess()
+	options.PostHook(map[string]interface{}{
+		"result": utils.ToJson(accumulate),
+	}, metrics.Build())
+	onMetrics(&completeMsg, metrics.Build())
 	return nil
 }
 
