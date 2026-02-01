@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/zaf/g711"
 
 	smallest_internal "github.com/rapidaai/api/assistant-api/internal/transformer/smallest/internal"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
@@ -84,6 +85,9 @@ func (*smallestTTS) Name() string {
 }
 
 func (st *smallestTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Context) {
+	// Smallest WS always returns PCM16; convert to mulaw if telephony requires it
+	needsMulaw := st.audioConfig.GetAudioFormat() == protos.AudioConfig_MuLaw8
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -114,12 +118,16 @@ func (st *smallestTTS) textToSpeechCallback(conn *websocket.Conn, ctx context.Co
 				continue
 			}
 
-			st.logger.Infof("smallest-tts: received status=%s request_id=%s done=%v message=%s hasData=%v", audioData.Status, audioData.RequestID, audioData.Done, audioData.Message, audioData.Data != nil)
+			st.logger.Infof("smallest-tts: received status=%s request_id=%s done=%v hasData=%v needsMulaw=%v", audioData.Status, audioData.RequestID, audioData.Done, audioData.Data != nil, needsMulaw)
 
 			switch audioData.Status {
 			case "chunk":
 				if audioData.Data != nil && audioData.Data.Audio != "" {
 					if rawAudioData, err := base64.StdEncoding.DecodeString(audioData.Data.Audio); err == nil {
+						// Smallest returns PCM16 audio; encode to mulaw for telephony
+						if needsMulaw {
+							rawAudioData = g711.EncodeUlaw(rawAudioData)
+						}
 						st.onPacket(internal_type.TextToSpeechAudioPacket{
 							ContextID:  contextID,
 							AudioChunk: rawAudioData,
@@ -149,33 +157,49 @@ func (t *smallestTTS) Transform(ctx context.Context, in internal_type.LLMPacket)
 		return fmt.Errorf("smallest-tts: websocket connection is not initialized")
 	}
 
+	voiceID := "ashley"
+	if voiceIDValue, err := t.mdlOpts.GetString("speak.voice.id"); err == nil {
+		voiceID = voiceIDValue
+	}
+
+	language := "en"
+	if langValue, err := t.mdlOpts.GetString("speak.language"); err == nil {
+		language = langValue
+	}
+
 	switch input := in.(type) {
 	case internal_type.LLMStreamPacket:
-		voiceID := "ashley"
-		if voiceIDValue, err := t.mdlOpts.GetString("speak.voice.id"); err == nil {
-			voiceID = voiceIDValue
-		}
-
-		language := "en"
-		if langValue, err := t.mdlOpts.GetString("speak.language"); err == nil {
-			language = langValue
-		}
-
 		payload := map[string]interface{}{
 			"text":        input.Text,
 			"voice_id":    voiceID,
 			"language":    language,
 			"sample_rate": int(t.GetSampleRate()),
 			"speed":       1.0,
+			"continue":    true,
+			"flush":       true,
 		}
-		t.logger.Infof("smallest-tts: sending payload voice_id=%s language=%s sample_rate=%d", voiceID, language, t.GetSampleRate())
+		t.logger.Infof("smallest-tts: sending text chunk voice_id=%s language=%s sample_rate=%d len=%d", voiceID, language, t.GetSampleRate(), len(input.Text))
 
 		if err := cnn.WriteJSON(payload); err != nil {
 			t.logger.Errorf("smallest-tts: unable to write json for text to speech: %v", err)
 			return err
 		}
 	case internal_type.LLMMessagePacket:
-		return nil
+		// Send flush to signal end of stream
+		payload := map[string]interface{}{
+			"text":        "",
+			"voice_id":    voiceID,
+			"language":    language,
+			"sample_rate": int(t.GetSampleRate()),
+			"speed":       1.0,
+			"continue":    false,
+			"flush":       true,
+		}
+		t.logger.Infof("smallest-tts: sending flush (end of stream)")
+		if err := cnn.WriteJSON(payload); err != nil {
+			t.logger.Errorf("smallest-tts: unable to write flush for text to speech: %v", err)
+			return err
+		}
 	default:
 		return fmt.Errorf("smallest-tts: unsupported input type %T", in)
 	}
