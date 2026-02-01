@@ -21,6 +21,22 @@ type largeLanguageCaller struct {
 	OpenAI
 }
 
+// convertSystemToUserForReasoningModels converts system messages to user messages
+// for GPT-OSS reasoning models. Groq docs recommend: "Avoid system prompts —
+// include all instructions in the user message" for optimal reasoning model performance.
+func convertSystemToUserForReasoningModels(messages []openai.ChatCompletionMessageParamUnion) []openai.ChatCompletionMessageParamUnion {
+	converted := make([]openai.ChatCompletionMessageParamUnion, 0, len(messages))
+	for _, msg := range messages {
+		if msg.OfSystem != nil {
+			// Convert system message to user message with same content
+			converted = append(converted, openai.UserMessage(msg.OfSystem.Content.OfString.Value))
+		} else {
+			converted = append(converted, msg)
+		}
+	}
+	return converted
+}
+
 func NewLargeLanguageCaller(logger commons.Logger, credential *protos.Credential) internal_callers.LargeLanguageCaller {
 	return &largeLanguageCaller{
 		OpenAI: openAI(logger, credential),
@@ -200,6 +216,12 @@ func (llc *largeLanguageCaller) GetChatCompletion(
 	llmRequest := llc.ChatCompletionOptions(options)
 	llmRequest.Messages = llc.BuildHistory(allMessages)
 
+	// For GPT-OSS reasoning models, convert system messages to user messages.
+	// Groq docs: "Avoid system prompts — include all instructions in the user message"
+	if strings.HasPrefix(llmRequest.Model, "openai/gpt-oss") {
+		llmRequest.Messages = convertSystemToUserForReasoningModels(llmRequest.Messages)
+	}
+
 	// prehook
 	options.PreHook(utils.ToJson(llmRequest))
 
@@ -281,6 +303,13 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	completionsOptions := llc.ChatCompletionOptions(options)
 	completionsOptions.Messages = llc.BuildHistory(allMessages)
+
+	// For GPT-OSS reasoning models, convert system messages to user messages.
+	// Groq docs: "Avoid system prompts — include all instructions in the user message"
+	if strings.HasPrefix(completionsOptions.Model, "openai/gpt-oss") {
+		completionsOptions.Messages = convertSystemToUserForReasoningModels(completionsOptions.Messages)
+	}
+
 	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v reasoning_effort=%q",
 		completionsOptions.Model, len(completionsOptions.Messages), len(completionsOptions.Tools),
 		completionsOptions.MaxTokens, completionsOptions.MaxCompletionTokens, completionsOptions.Temperature,
