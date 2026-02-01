@@ -295,10 +295,21 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		ToolCalls: make([]*types.ToolCall, 0),
 	}
 
+	chunkCount := 0
 	accumulate := openai.ChatCompletionAccumulator{}
 	for resp.Next() {
 		chatCompletions := resp.Current()
 		accumulate.AddChunk(chatCompletions)
+		chunkCount++
+
+		// Log each chunk for debugging streaming issues
+		for ci, choice := range chatCompletions.Choices {
+			llc.logger.Debugf("stream chunk #%d choice[%d]: delta.content=%q delta.role=%q finish_reason=%q refusal=%q",
+				chunkCount, ci, choice.Delta.Content, choice.Delta.Role, choice.FinishReason, choice.Delta.Refusal)
+		}
+		if len(chatCompletions.Choices) == 0 {
+			llc.logger.Debugf("stream chunk #%d: no choices (usage update or empty chunk)", chunkCount)
+		}
 
 		// Process delta content BEFORE checking JustFinishedContent/JustFinishedToolCall.
 		// Some models (e.g. Groq GPT OSS) send content and finish_reason in the same chunk.
@@ -339,6 +350,8 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		}
 
 		if _, ok := accumulate.JustFinishedContent(); ok {
+			llc.logger.Infof("stream: JustFinishedContent after %d chunks, completeMsg.Contents=%d, accumulated=%q",
+				chunkCount, len(completeMsg.Contents), accumulate.Choices[0].Message.Content)
 			metrics.OnAddMetrics(llc.GetComplitionUsages(accumulate.Usage)...)
 			metrics.OnSuccess()
 			options.PostHook(map[string]interface{}{
@@ -382,6 +395,22 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	// Fallback: if JustFinishedContent/JustFinishedToolCall never fired,
 	// still send metrics so the caller gets proper completion
+	llc.logger.Warnf("stream: loop exited without JustFinishedContent/JustFinishedToolCall after %d chunks, completeMsg.Contents=%d",
+		chunkCount, len(completeMsg.Contents))
+	if len(accumulate.Choices) > 0 {
+		llc.logger.Warnf("stream: accumulated content=%q, finish_reason=%q",
+			accumulate.Choices[0].Message.Content, accumulate.Choices[0].FinishReason)
+		// If we have accumulated content but completeMsg is empty, use accumulated content
+		if len(completeMsg.Contents) == 0 && accumulate.Choices[0].Message.Content != "" {
+			llc.logger.Infof("stream: using accumulated content as fallback")
+			completeMsg.Contents = append(completeMsg.Contents, &types.Content{
+				ContentType:   commons.TEXT_CONTENT.String(),
+				ContentFormat: commons.TEXT_CONTENT_FORMAT_RAW.String(),
+				Content:       []byte(accumulate.Choices[0].Message.Content),
+			})
+			completeMsg.Role = string(accumulate.Choices[0].Message.Role)
+		}
+	}
 	metrics.OnAddMetrics(llc.GetComplitionUsages(accumulate.Usage)...)
 	metrics.OnSuccess()
 	options.PostHook(map[string]interface{}{
