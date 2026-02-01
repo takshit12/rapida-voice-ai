@@ -278,9 +278,16 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 
 	completionsOptions := llc.ChatCompletionOptions(options)
 	completionsOptions.Messages = llc.BuildHistory(allMessages)
-	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v",
+	llc.logger.Infof("stream request: model=%q messages=%d tools=%d maxTokens=%v maxCompletionTokens=%v temperature=%v reasoning_effort=%q",
 		completionsOptions.Model, len(completionsOptions.Messages), len(completionsOptions.Tools),
-		completionsOptions.MaxTokens, completionsOptions.MaxCompletionTokens, completionsOptions.Temperature)
+		completionsOptions.MaxTokens, completionsOptions.MaxCompletionTokens, completionsOptions.Temperature,
+		completionsOptions.ReasoningEffort)
+	// Log the full request JSON to verify serialization (excluding messages for brevity)
+	reqCopy := completionsOptions
+	reqCopy.Messages = nil
+	if reqJSON, err := json.Marshal(reqCopy); err == nil {
+		llc.logger.Infof("stream request JSON (no messages): %s", string(reqJSON))
+	}
 	options.PreHook(utils.ToJson(completionsOptions))
 	llc.logger.Benchmark("Openai.llm.GetChatCompletion.llmRequestPrepare", time.Since(start))
 
