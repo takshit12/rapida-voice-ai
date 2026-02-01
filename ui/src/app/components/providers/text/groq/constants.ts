@@ -140,6 +140,7 @@ export const GetGroqTextProviderDefaultOptions = (
     'model.stop',
     'model.tool_choice',
     'model.response_format',
+    'model.reasoning_effort',
   ];
 
   const addMetadata = (
@@ -166,6 +167,7 @@ export const GetGroqTextProviderDefaultOptions = (
   addMetadata('model.stop');
   addMetadata('model.tool_choice');
   addMetadata('model.response_format');
+  addMetadata('model.reasoning_effort');
   addMetadata('rapida.credential_id');
 
   return mtds.filter(m => keysToKeep.includes(m.getKey()));

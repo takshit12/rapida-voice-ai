@@ -267,6 +267,29 @@ export const ConfigureGroqTextProviderModel: React.FC<{
             </InputHelper>
           </FieldSet>
 
+          {getParamValue('model.name').startsWith('openai/gpt-oss') && (
+            <FieldSet>
+              <FormLabel>Reasoning Effort</FormLabel>
+              <Select
+                onChange={e =>
+                  updateParameter('model.reasoning_effort', e.target.value)
+                }
+                placeholder="Reasoning Effort"
+                className="text-sm! h-9 pl-3"
+                value={getParamValue('model.reasoning_effort') || 'medium'}
+                options={[
+                  { name: 'Low', value: 'low' },
+                  { name: 'Medium', value: 'medium' },
+                  { name: 'High', value: 'high' },
+                ]}
+              />
+              <InputHelper className="text-xs">
+                Controls reasoning depth for GPT OSS models. Higher values
+                produce more thorough but slower responses.
+              </InputHelper>
+            </FieldSet>
+          )}
+
           <FieldSet className="col-span-2">
             <FormLabel>Response Format</FormLabel>
             <Textarea
