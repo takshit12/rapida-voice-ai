@@ -97,7 +97,7 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 				options.Metadata = shared.Metadata(mtd)
 			}
 		case "model.frequency_penalty":
-			if fp, err := utils.AnyToFloat64(value); err == nil {
+			if fp, err := utils.AnyToFloat64(value); err == nil && fp != 0 {
 				options.FrequencyPenalty = openai.Float(fp)
 			}
 		case "model.temperature":
@@ -109,7 +109,7 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 				options.TopP = openai.Float(topP)
 			}
 		case "model.presence_penalty":
-			if pp, err := utils.AnyToFloat64(value); err == nil {
+			if pp, err := utils.AnyToFloat64(value); err == nil && pp != 0 {
 				options.PresencePenalty = openai.Float(pp)
 			}
 		case "model.max_completion_tokens":
