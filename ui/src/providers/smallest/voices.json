@@ -6,7 +6,10 @@
             "language": "german",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "bruce",
@@ -15,7 +18,10 @@
             "language": "english",
             "accent": "australian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ashley",
@@ -24,7 +30,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "tasha",
@@ -33,7 +42,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "chloe",
@@ -42,7 +54,10 @@
             "language": "english",
             "accent": "australian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ryan",
@@ -51,7 +66,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "alistair",
@@ -60,7 +78,10 @@
             "language": "english",
             "accent": "british",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "walter",
@@ -69,7 +90,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "julian",
@@ -78,7 +102,10 @@
             "language": "english",
             "accent": "british",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "shivangi",
@@ -87,7 +114,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "aarushi",
@@ -96,7 +126,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "kartik",
@@ -105,7 +138,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "alice",
@@ -114,7 +150,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "katie",
@@ -123,7 +162,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "natalie",
@@ -132,7 +174,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "meera",
@@ -141,7 +186,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ishika",
@@ -150,7 +198,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "isha",
@@ -159,7 +210,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "neha",
@@ -168,7 +222,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "tanvi",
@@ -177,7 +234,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "blofeld",
@@ -186,7 +246,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "chirag",
@@ -195,7 +258,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "eleanor",
@@ -204,7 +270,10 @@
             "language": "english",
             "accent": "british",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "madison",
@@ -213,7 +282,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ariba",
@@ -222,7 +294,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "varun",
@@ -231,7 +306,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "christine",
@@ -240,7 +318,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "john",
@@ -249,7 +330,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ronald",
@@ -258,7 +342,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "gerard",
@@ -267,7 +354,10 @@
             "language": "spanish",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "isabel",
@@ -276,7 +366,10 @@
             "language": "spanish",
             "accent": "",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "enzo",
@@ -285,7 +378,10 @@
             "language": "italian",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "hamees",
@@ -294,7 +390,10 @@
             "language": "arabic",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "yasmin",
@@ -303,7 +402,10 @@
             "language": "arabic, hebrew",
             "accent": "",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "biswa",
@@ -312,7 +414,10 @@
             "language": "bengali",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "adele",
@@ -321,7 +426,10 @@
             "language": "german",
             "accent": "",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "maya",
@@ -330,7 +438,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "anika",
@@ -339,7 +450,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "rishika",
@@ -348,7 +462,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "wasim",
@@ -357,7 +474,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ganya",
@@ -366,7 +486,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "khushi",
@@ -375,7 +498,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "claire",
@@ -384,7 +510,10 @@
             "language": "french",
             "accent": "",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "priya",
@@ -393,7 +522,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "aahan",
@@ -402,7 +534,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "fatema",
@@ -411,7 +546,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ayaan",
@@ -420,7 +558,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "sanjay",
@@ -429,7 +570,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "amit",
@@ -438,7 +582,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "disha",
@@ -447,7 +594,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "advait",
@@ -456,7 +606,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "malcolm",
@@ -465,7 +618,10 @@
             "language": "hindi, english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "nirupma",
@@ -474,7 +630,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "anita",
@@ -483,7 +642,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "rohit",
@@ -492,7 +654,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "sangeeta",
@@ -501,7 +666,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ram",
@@ -510,7 +678,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "kiara",
@@ -519,7 +690,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "aditya",
@@ -528,7 +702,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "saad",
@@ -537,7 +714,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "kabir",
@@ -546,7 +726,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "rohan",
@@ -555,7 +738,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "vikram",
@@ -564,7 +750,10 @@
             "language": "english, hindi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "vihaan",
@@ -573,7 +762,10 @@
             "language": "english, hindi",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "luther",
@@ -582,7 +774,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "erica",
@@ -591,7 +786,10 @@
             "language": "english",
             "accent": "canadian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "nyah",
@@ -600,7 +798,10 @@
             "language": "english",
             "accent": "australian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "angela",
@@ -609,7 +810,10 @@
             "language": "english",
             "accent": "british",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "zorin",
@@ -618,7 +822,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "julia",
@@ -627,7 +834,10 @@
             "language": "english",
             "accent": "british",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "william",
@@ -636,7 +846,10 @@
             "language": "english",
             "accent": "canadian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "aditi",
@@ -645,7 +858,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "felix",
@@ -654,7 +870,10 @@
             "language": "english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "radhika",
@@ -663,7 +882,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "solomon",
@@ -672,7 +894,10 @@
             "language": "english",
             "accent": "british",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "yash",
@@ -681,7 +906,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "chinmay",
@@ -690,7 +918,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "roma",
@@ -699,7 +930,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "vidya",
@@ -708,7 +942,10 @@
             "language": "tamil",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "alec",
@@ -717,7 +954,10 @@
             "language": "english",
             "accent": "canadian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "ilsa",
@@ -726,7 +966,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "bellatrix",
@@ -735,7 +978,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "nikita",
@@ -744,7 +990,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "karan",
@@ -753,7 +1002,10 @@
             "language": "hindi, english, marathi",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "gargi",
@@ -762,7 +1014,10 @@
             "language": "hindi, english, gujarati",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "albus",
@@ -771,7 +1026,10 @@
             "language": "hindi, english",
             "accent": "american",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "lakshya",
@@ -780,7 +1038,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "irisha",
@@ -789,7 +1050,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "dhruv",
@@ -798,7 +1062,10 @@
             "language": "hindi, english",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "bogambo",
@@ -807,7 +1074,10 @@
             "language": "african",
             "accent": "african",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "natasha",
@@ -816,7 +1086,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "andrea",
@@ -825,7 +1098,10 @@
             "language": "english",
             "accent": "american",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "vijay",
@@ -834,7 +1110,10 @@
             "language": "tamil, kannada",
             "accent": "indian",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "dmitry",
@@ -843,7 +1122,10 @@
             "language": "russian",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "maria",
@@ -852,7 +1134,10 @@
             "language": "italian",
             "accent": "",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "emmanuel",
@@ -861,7 +1146,10 @@
             "language": "french",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "lukas",
@@ -870,7 +1158,10 @@
             "language": "dutch, polish",
             "accent": "",
             "gender": "male"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
     },
     {
         "voice_id": "adriana",
@@ -879,6 +1170,429 @@
             "language": "dutch",
             "accent": "",
             "gender": "female"
-        }
+        },
+        "models": [
+            "lightning-v2"
+        ]
+    },
+    {
+        "voice_id": "sophia",
+        "name": "Sophia",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "sandra",
+        "name": "Sandra",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "robert",
+        "name": "Robert",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "johnny",
+        "name": "Johnny",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "vivaan",
+        "name": "Vivaan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "daniel",
+        "name": "Daniel",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "megan",
+        "name": "Megan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "arjun",
+        "name": "Arjun",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "edward",
+        "name": "Edward",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "british",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "advika",
+        "name": "Advika",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "aisha",
+        "name": "Aisha",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "yuvika",
+        "name": "Yuvika",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "ishani",
+        "name": "Ishani",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "gaurav",
+        "name": "Gaurav",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "hitesh",
+        "name": "Hitesh",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "vaibhav",
+        "name": "Vaibhav",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "rachel",
+        "name": "Rachel",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "ethan",
+        "name": "Ethan",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "lauren",
+        "name": "Lauren",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "hannah",
+        "name": "Hannah",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "vanessa",
+        "name": "Vanessa",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "lucas",
+        "name": "Lucas",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "raju",
+        "name": "Raju",
+        "tags": {
+            "language": "tamil",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "anitha",
+        "name": "Anitha",
+        "tags": {
+            "language": "tamil",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "brooke",
+        "name": "Brooke",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "american",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "kunal",
+        "name": "Kunal",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "anuja",
+        "name": "Anuja",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "siddharth",
+        "name": "Siddharth",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "sandhya",
+        "name": "Sandhya",
+        "tags": {
+            "language": "tamil",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "balaji",
+        "name": "Balaji",
+        "tags": {
+            "language": "tamil",
+            "accent": "indian",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "lucia",
+        "name": "Lucia",
+        "tags": {
+            "language": "spanish",
+            "accent": "",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "javier",
+        "name": "Javier",
+        "tags": {
+            "language": "spanish",
+            "accent": "",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "miguel",
+        "name": "Miguel",
+        "tags": {
+            "language": "spanish",
+            "accent": "",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "diego",
+        "name": "Diego",
+        "tags": {
+            "language": "spanish",
+            "accent": "",
+            "gender": "male"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
+    },
+    {
+        "voice_id": "kavya",
+        "name": "Kavya",
+        "tags": {
+            "language": "english, hindi",
+            "accent": "indian",
+            "gender": "female"
+        },
+        "models": [
+            "lightning-v3.1"
+        ]
     }
 ]
