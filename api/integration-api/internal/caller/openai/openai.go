@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -69,9 +70,21 @@ func (openAI *OpenAI) GetClient() (*openai.Client, error) {
 		opts = append(opts, option.WithBaseURL(baseURL.(string)))
 	}
 
-	// Log the actual HTTP request and response for debugging GPT OSS issues
+	// HTTP middleware: strip SDK-specific headers for non-OpenAI providers,
+	// log requests/responses for debugging
 	logger := openAI.logger
 	opts = append(opts, option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+		// For non-OpenAI hosts (e.g. Groq), strip SDK-injected headers that
+		// may confuse the provider. Only keep Authorization and Content-Type.
+		isNonOpenAI := req.URL.Host != "" && !strings.Contains(req.URL.Host, "openai.com")
+		if isNonOpenAI {
+			for key := range req.Header {
+				if strings.HasPrefix(key, "X-Stainless") || strings.HasPrefix(key, "Openai-") || strings.HasPrefix(key, "OpenAI-") {
+					req.Header.Del(key)
+				}
+			}
+			req.Header.Set("User-Agent", "rapida-voice-ai")
+		}
 		// Log request headers (excluding Authorization)
 		for key, values := range req.Header {
 			if key != "Authorization" {

@@ -175,15 +175,25 @@ func (llc *largeLanguageCaller) ChatCompletionOptions(
 	if len(options.Tools) == 0 {
 		options.ToolChoice = openai.ChatCompletionToolChoiceOptionUnionParam{}
 	}
-	// GPT OSS models: use exact parameters from working Groq example.
-	// temperature=1, max_completion_tokens=8192, top_p=1, reasoning_effort="medium"
+	// GPT OSS models: return a completely fresh params struct with ONLY the
+	// fields that the working Groq curl example uses. The OpenAI SDK's apijson
+	// serializer may include extra null fields (tool_choice, response_format,
+	// audio, etc.) from union/struct types with embedded paramUnion metadata,
+	// even when we don't set them. GPT-OSS on Groq may not tolerate these.
 	if strings.HasPrefix(options.Model, "openai/gpt-oss") {
-		options.Temperature = openai.Float(1)
-		options.TopP = openai.Float(1)
-		options.MaxCompletionTokens = openai.Int(8192)
-		if options.ReasoningEffort == "" {
-			options.ReasoningEffort = shared.ReasoningEffort("medium")
+		cleanOptions := openai.ChatCompletionNewParams{
+			Model:               options.Model,
+			Temperature:         openai.Float(1),
+			TopP:                openai.Float(1),
+			MaxCompletionTokens: openai.Int(8192),
+			ReasoningEffort:     shared.ReasoningEffort("medium"),
 		}
+		// Preserve tools if defined
+		if len(options.Tools) > 0 {
+			cleanOptions.Tools = options.Tools
+			cleanOptions.ToolChoice = options.ToolChoice
+		}
+		return cleanOptions
 	}
 	return options
 }
