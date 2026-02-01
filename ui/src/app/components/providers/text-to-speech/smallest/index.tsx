@@ -68,10 +68,24 @@ export const ConfigureSmallestTextToSpeech: React.FC<{
   };
 
   const handleModelChange = (v: { model_id: string }) => {
-    updateParameter('speak.model', v.model_id);
-    // Reset voice and language when model changes since available options differ
-    updateParameter('speak.voice.id', '');
-    updateParameter('speak.language', '');
+    // Batch all parameter updates into a single onParameterChange call
+    // to avoid stale props (each updateParameter reads from the same parameters snapshot)
+    const updatedParams = [...(parameters || [])];
+    const setParam = (key: string, value: string) => {
+      const existingIndex = updatedParams.findIndex(p => p.getKey() === key);
+      const newParam = new Metadata();
+      newParam.setKey(key);
+      newParam.setValue(value);
+      if (existingIndex >= 0) {
+        updatedParams[existingIndex] = newParam;
+      } else {
+        updatedParams.push(newParam);
+      }
+    };
+    setParam('speak.model', v.model_id);
+    setParam('speak.voice.id', '');
+    setParam('speak.language', '');
+    onParameterChange(updatedParams);
     const voices = SMALLEST_VOICE().filter(
       (voice: { models?: string[] }) =>
         !voice.models || voice.models.includes(v.model_id),
