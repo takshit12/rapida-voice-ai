@@ -305,7 +305,10 @@ func (llc *largeLanguageCaller) StreamChatCompletion(
 		accumulate.AddChunk(chatCompletions)
 		chunkCount++
 
-		// Log each chunk for debugging streaming issues
+		// Log raw chunk JSON for debugging streaming issues (especially reasoning models)
+		if rawJSON, err := json.Marshal(chatCompletions); err == nil {
+			llc.logger.Infof("stream chunk #%d raw: %s", chunkCount, string(rawJSON))
+		}
 		for ci, choice := range chatCompletions.Choices {
 			llc.logger.Debugf("stream chunk #%d choice[%d]: delta.content=%q delta.role=%q finish_reason=%q refusal=%q",
 				chunkCount, ci, choice.Delta.Content, choice.Delta.Role, choice.FinishReason, choice.Delta.Refusal)
