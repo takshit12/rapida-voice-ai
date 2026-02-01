@@ -160,12 +160,11 @@ func (t *smallestTTS) Transform(ctx context.Context, in internal_type.LLMPacket)
 		}
 
 		if err := cnn.WriteJSON(map[string]interface{}{
-			"text":          input.Text,
-			"voice_id":      voiceID,
-			"language":      language,
-			"sample_rate":   t.GetSampleRate(),
-			"speed":         1.0,
-			"output_format": t.GetOutputFormat(),
+			"text":        input.Text,
+			"voice_id":    voiceID,
+			"language":    language,
+			"sample_rate": int(t.GetSampleRate()),
+			"speed":       1.0,
 		}); err != nil {
 			t.logger.Errorf("smallest-tts: unable to write json for text to speech: %v", err)
 			return err
