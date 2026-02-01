@@ -470,30 +470,47 @@ func (llc *largeLanguageCaller) BuildHistory(allMessages []*protos.Message) []op
 	for _, cntn := range allMessages {
 		switch cntn.GetRole() {
 		case ChatRoleUser:
-			var messageContent []openai.ChatCompletionContentPartUnionParam
+			// Check if all content is text-only (no images). If so, use simple
+			// string format for broader compatibility (e.g. Groq GPT OSS models
+			// may not support the content parts array format).
+			allText := true
+			var textParts []string
 			for _, ct := range cntn.GetContents() {
-				switch ct.ContentType {
-				case commons.TEXT_CONTENT.String():
-					messageContent = append(messageContent, openai.ChatCompletionContentPartUnionParam{
-						OfText: &openai.ChatCompletionContentPartTextParam{
-							Text: string(ct.GetContent()),
-						},
-					})
-				case commons.IMAGE_CONTENT.String():
-					if ct.GetContentFormat() == commons.IMAGE_CONTENT_FORMAT_URL.String() {
-						messageContent = append(messageContent, openai.ChatCompletionContentPartUnionParam{
-							OfImageURL: &openai.ChatCompletionContentPartImageParam{
-								ImageURL: openai.ChatCompletionContentPartImageImageURLParam{
-									URL: string(ct.GetContent()),
-								},
-							},
-						})
-					}
-				default:
-					llc.logger.Warnf("Unknown content type: %s", ct.ContentType)
+				if ct.ContentType == commons.TEXT_CONTENT.String() {
+					textParts = append(textParts, string(ct.GetContent()))
+				} else {
+					allText = false
+					break
 				}
 			}
-			msg = append(msg, openai.UserMessage(messageContent))
+			if allText && len(textParts) > 0 {
+				msg = append(msg, openai.UserMessage(strings.Join(textParts, "\n")))
+			} else {
+				var messageContent []openai.ChatCompletionContentPartUnionParam
+				for _, ct := range cntn.GetContents() {
+					switch ct.ContentType {
+					case commons.TEXT_CONTENT.String():
+						messageContent = append(messageContent, openai.ChatCompletionContentPartUnionParam{
+							OfText: &openai.ChatCompletionContentPartTextParam{
+								Text: string(ct.GetContent()),
+							},
+						})
+					case commons.IMAGE_CONTENT.String():
+						if ct.GetContentFormat() == commons.IMAGE_CONTENT_FORMAT_URL.String() {
+							messageContent = append(messageContent, openai.ChatCompletionContentPartUnionParam{
+								OfImageURL: &openai.ChatCompletionContentPartImageParam{
+									ImageURL: openai.ChatCompletionContentPartImageImageURLParam{
+										URL: string(ct.GetContent()),
+									},
+								},
+							})
+						}
+					default:
+						llc.logger.Warnf("Unknown content type: %s", ct.ContentType)
+					}
+				}
+				msg = append(msg, openai.UserMessage(messageContent))
+			}
 		case ChatRoleAssistant:
 			txtContent := types.OnlyStringProtoContent(cntn.GetContents())
 			toolCalls := cntn.GetToolCalls()
