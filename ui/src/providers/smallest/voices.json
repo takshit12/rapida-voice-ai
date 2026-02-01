@@ -1,0 +1,92 @@
+[
+    {
+        "voice_id": "emily",
+        "name": "Emily",
+        "tags": {
+            "language": "en",
+            "accent": "American",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "jasmine",
+        "name": "Jasmine",
+        "tags": {
+            "language": "en",
+            "accent": "American",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "arman",
+        "name": "Arman",
+        "tags": {
+            "language": "en",
+            "accent": "American",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "james",
+        "name": "James",
+        "tags": {
+            "language": "en",
+            "accent": "American",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "mithali",
+        "name": "Mithali",
+        "tags": {
+            "language": "hi",
+            "accent": "Indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "raj",
+        "name": "Raj",
+        "tags": {
+            "language": "hi",
+            "accent": "Indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "priya",
+        "name": "Priya",
+        "tags": {
+            "language": "hi",
+            "accent": "Indian",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "aravind",
+        "name": "Aravind",
+        "tags": {
+            "language": "ta",
+            "accent": "Indian",
+            "gender": "male"
+        }
+    },
+    {
+        "voice_id": "maria",
+        "name": "Maria",
+        "tags": {
+            "language": "es",
+            "accent": "Spanish",
+            "gender": "female"
+        }
+    },
+    {
+        "voice_id": "hans",
+        "name": "Hans",
+        "tags": {
+            "language": "de",
+            "accent": "German",
+            "gender": "male"
+        }
+    }
+]

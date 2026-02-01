@@ -18,6 +18,7 @@ import (
 	internal_transformer_google "github.com/rapidaai/api/assistant-api/internal/transformer/google"
 	internal_transformer_revai "github.com/rapidaai/api/assistant-api/internal/transformer/revai"
 	internal_transformer_sarvam "github.com/rapidaai/api/assistant-api/internal/transformer/sarvam"
+	internal_transformer_smallest "github.com/rapidaai/api/assistant-api/internal/transformer/smallest"
 	internal_type "github.com/rapidaai/api/assistant-api/internal/type"
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/utils"
@@ -34,6 +35,7 @@ const (
 	REVAI                 AudioTransformer = "revai"
 	SARVAM                AudioTransformer = "sarvamai"
 	ELEVENLABS            AudioTransformer = "elevenlabs"
+	SMALLEST              AudioTransformer = "smallest"
 	ASSEMBLYAI            AudioTransformer = "assemblyai"
 )
 
@@ -70,6 +72,8 @@ func GetTextToSpeechTransformer(ctx context.Context,
 		return internal_transformer_sarvam.NewSarvamTextToSpeech(ctx, logger, credential, audioConfig, onPacket, opts)
 	case ELEVENLABS:
 		return internal_transformer_elevenlabs.NewElevenlabsTextToSpeech(ctx, logger, credential, audioConfig, onPacket, opts)
+	case SMALLEST:
+		return internal_transformer_smallest.NewSmallestTextToSpeech(ctx, logger, credential, audioConfig, onPacket, opts)
 	default:
 		return nil, fmt.Errorf("illegal text to speech idenitfier")
 	}

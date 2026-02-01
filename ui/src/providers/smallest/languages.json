@@ -1,0 +1,18 @@
+[
+    { "language_id": "en", "name": "English" },
+    { "language_id": "hi", "name": "Hindi" },
+    { "language_id": "ta", "name": "Tamil" },
+    { "language_id": "kn", "name": "Kannada" },
+    { "language_id": "ml", "name": "Malayalam" },
+    { "language_id": "te", "name": "Telugu" },
+    { "language_id": "gu", "name": "Gujarati" },
+    { "language_id": "bn", "name": "Bengali" },
+    { "language_id": "mr", "name": "Marathi" },
+    { "language_id": "de", "name": "German" },
+    { "language_id": "fr", "name": "French" },
+    { "language_id": "es", "name": "Spanish" },
+    { "language_id": "it", "name": "Italian" },
+    { "language_id": "pl", "name": "Polish" },
+    { "language_id": "nl", "name": "Dutch" },
+    { "language_id": "ru", "name": "Russian" }
+]

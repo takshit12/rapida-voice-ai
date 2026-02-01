@@ -205,6 +205,22 @@ export const ELEVENLABS_LANGUAGE = () => {
 };
 
 /**
+ * Smallest AI constants
+ * @returns
+ */
+export const SMALLEST_MODEL = () => {
+  return require('./smallest/models.json');
+};
+
+export const SMALLEST_VOICE = () => {
+  return require('./smallest/voices.json');
+};
+
+export const SMALLEST_LANGUAGE = () => {
+  return require('./smallest/languages.json');
+};
+
+/**
  * cartesia
  */
 

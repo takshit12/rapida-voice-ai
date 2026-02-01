@@ -47,6 +47,11 @@ import {
   GetSarvamDefaultOptions,
   ValidateSarvamOptions,
 } from '@/app/components/providers/text-to-speech/sarvam';
+import {
+  ConfigureSmallestTextToSpeech,
+  GetSmallestDefaultOptions,
+  ValidateSmallestOptions,
+} from '@/app/components/providers/text-to-speech/smallest';
 
 /**
  *
@@ -107,6 +112,8 @@ export const GetDefaultTextToSpeechIfInvalid = (
       return GetCartesiaDefaultOptions(parameters);
     case 'sarvamai':
       return GetSarvamDefaultOptions(parameters);
+    case 'smallest':
+      return GetSmallestDefaultOptions(parameters);
     default:
       return parameters;
   }
@@ -133,6 +140,8 @@ export const ValidateTextToSpeechIfInvalid = (
       return ValidateCartesiaOptions(parameters);
     case 'sarvamai':
       return ValidateSarvamOptions(parameters);
+    case 'smallest':
+      return ValidateSmallestOptions(parameters);
     default:
       return undefined;
   }
@@ -196,6 +205,13 @@ export const TextToSpeechConfigComponent: FC<ProviderComponentProps> = ({
     case 'sarvamai':
       return (
         <ConfigureSarvamTextToSpeech
+          parameters={parameters}
+          onParameterChange={onChangeParameter}
+        />
+      );
+    case 'smallest':
+      return (
+        <ConfigureSmallestTextToSpeech
           parameters={parameters}
           onParameterChange={onChangeParameter}
         />

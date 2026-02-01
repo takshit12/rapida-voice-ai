@@ -1,0 +1,12 @@
+[
+    {
+        "model_id": "lightning-v2",
+        "name": "Lightning v2",
+        "description": "Fastest model, 100ms TTFB, 16+ languages"
+    },
+    {
+        "model_id": "lightning-v3.1",
+        "name": "Lightning v3.1",
+        "description": "Most natural, 44kHz, voice cloning support"
+    }
+]
