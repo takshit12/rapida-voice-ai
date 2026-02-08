@@ -6,12 +6,32 @@
 package parsers
 
 import (
+	"encoding/json"
+
 	"github.com/flosch/pongo2/v6"
 
 	"github.com/rapidaai/pkg/commons"
 	"github.com/rapidaai/pkg/types"
 	"github.com/rapidaai/pkg/utils"
 )
+
+func init() {
+	// Register a "tojson" filter so templates can render complex values
+	// (slices, maps) as clean JSON instead of Go's default fmt representation.
+	// Usage in prompts: {{ messages|tojson }}
+	_ = pongo2.RegisterFilter("tojson", filterToJSON)
+}
+
+func filterToJSON(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
+	jsonBytes, err := json.Marshal(in.Interface())
+	if err != nil {
+		return pongo2.AsValue(""), &pongo2.Error{
+			Sender:    "filter:tojson",
+			OrigError: err,
+		}
+	}
+	return pongo2.AsValue(string(jsonBytes)), nil
+}
 
 type pongo2TemplateParser struct {
 	logger commons.Logger

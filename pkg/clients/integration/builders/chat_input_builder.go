@@ -6,6 +6,8 @@
 package integration_client_builders
 
 import (
+	"strings"
+
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -95,6 +97,13 @@ func (in *inputChatBuilder) PromptArguments(
 ) map[string]interface{} {
 	existing := make(map[string]interface{}, 0)
 	for _, v := range variables {
+		// Skip variables with dots in their name (e.g., "msg.role", "msg.message").
+		// These are loop variable attributes auto-detected by the UI from pongo2
+		// for-loop bodies like {{ msg.role }}. Adding them as top-level context keys
+		// shadows the actual loop variable attribute resolution in pongo2.
+		if strings.Contains(v.Name, ".") {
+			continue
+		}
 		existing[v.Name] = v.DefaultValue
 	}
 	return existing
