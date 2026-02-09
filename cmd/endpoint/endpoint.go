@@ -265,6 +265,7 @@ func (g *AppRunner) AllRouters() {
 	router.HealthCheckRoutes(g.Cfg, g.E, g.Logger, g.Postgres)
 	router.EndpointReaderApiRoute(g.Cfg, g.S, g.Logger, g.Postgres, g.Redis)
 	router.InvokeApiRoute(g.Cfg, g.S, g.Logger, g.Postgres, g.Redis)
+	router.WebhookRoutes(g.E, g.Logger)
 } // all router initialize
 
 // all middleware
