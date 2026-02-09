@@ -137,8 +137,16 @@ func (md *GenericRequestor) Webhook(event string, arguments map[string]interface
 		maxRetryCount := webhook.GetMaxRetryCount()
 		retryStatusCodes := webhook.GetRetryStatusCode()
 
+		// Use a detached context for webhook HTTP calls. The conversation context
+		// (md.Context()) gets cancelled when the conversation ends and the client
+		// disconnects. Since webhooks are fire-and-forget notifications triggered
+		// AFTER conversation completion, they must not be aborted by that
+		// cancellation. The HTTP client already enforces its own timeout via
+		// webhook.GetTimeoutSecond(), so there is no risk of leaked requests.
+		webhookCtx := context.Background()
+
 		for retryCount <= maxRetryCount {
-			res, err = md.webhook(md.Context(),
+			res, err = md.webhook(webhookCtx,
 				webhook.GetTimeoutSecond(),
 				webhook.GetUrl(),
 				webhook.GetMethod(),
