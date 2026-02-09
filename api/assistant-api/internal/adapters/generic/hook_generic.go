@@ -96,8 +96,25 @@ func (hk *GenericRequestor) Analysis(endpointId uint64, endpointVersion string, 
 	}
 	if ivk.GetSuccess() {
 		if data := ivk.GetData(); len(data) > 0 {
+			content := strings.TrimSpace(string(data[0].Content))
+
+			// Strip markdown code fences if the LLM wrapped its JSON response
+			// in ```json ... ``` or ``` ... ``` blocks.
+			if strings.HasPrefix(content, "```") {
+				// Remove opening fence (e.g., "```json\n" or "```\n")
+				if idx := strings.Index(content, "\n"); idx != -1 {
+					content = content[idx+1:]
+				}
+				// Remove closing fence
+				content = strings.TrimSpace(content)
+				if strings.HasSuffix(content, "```") {
+					content = content[:len(content)-3]
+				}
+				content = strings.TrimSpace(content)
+			}
+
 			var contentData map[string]interface{}
-			if err := json.Unmarshal(data[0].Content, &contentData); err != nil {
+			if err := json.Unmarshal([]byte(content), &contentData); err != nil {
 				return map[string]interface{}{
 					"result": string(data[0].Content),
 				}, nil

@@ -112,6 +112,29 @@ func (h *GoogleSheetsWebhookHandler) Handle(c *gin.Context) {
 	// Extract the nested analysis object (may be nil if not present)
 	analysis, _ := body["analysis"].(map[string]interface{})
 
+	// Safety net: if the analysis only contains a "result" key with a raw string,
+	// the LLM likely wrapped its JSON in markdown fences (```json ... ```).
+	// Try to strip the fences and parse the inner JSON.
+	if analysis != nil {
+		if result, ok := analysis["result"].(string); ok && len(analysis) == 1 {
+			cleaned := strings.TrimSpace(result)
+			if strings.HasPrefix(cleaned, "```") {
+				if idx := strings.Index(cleaned, "\n"); idx != -1 {
+					cleaned = cleaned[idx+1:]
+				}
+				cleaned = strings.TrimSpace(cleaned)
+				if strings.HasSuffix(cleaned, "```") {
+					cleaned = cleaned[:len(cleaned)-3]
+				}
+				cleaned = strings.TrimSpace(cleaned)
+			}
+			var parsed map[string]interface{}
+			if err := json.Unmarshal([]byte(cleaned), &parsed); err == nil {
+				analysis = parsed
+			}
+		}
+	}
+
 	// ── Step 4: Build the row based on column mapping ──
 	row := make([]interface{}, len(columns))
 	for i, col := range columns {
