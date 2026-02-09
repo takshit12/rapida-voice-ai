@@ -6,6 +6,7 @@
 package endpoint_api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -160,7 +161,11 @@ func (h *GoogleSheetsWebhookHandler) Handle(c *gin.Context) {
 	}
 
 	// ── Step 5: Initialize Google Sheets client ──
-	ctx := c.Request.Context()
+	// Use a detached context (not the request context) because the webhook caller
+	// (Assistant API) may cancel its context when the conversation ends. If we used
+	// c.Request.Context(), the Google Sheets API call would be aborted mid-flight
+	// when the caller disconnects after conversation cleanup.
+	ctx := context.Background()
 	srv, err := sheets.NewService(ctx, option.WithCredentialsJSON([]byte(h.serviceAccountJSON)))
 	if err != nil {
 		h.logger.Errorf("Failed to create Google Sheets service: %v", err)
