@@ -24,4 +24,21 @@ func WebhookRoutes(engine *gin.Engine, logger commons.Logger) {
 	{
 		v1.POST("/google-sheets", handler.Handle)
 	}
+
+	// Cal.com webhook for booking events (booking.created, booking.canceled, etc.)
+	calcomHandler := endpoint_api.NewCalcomHandler(logger)
+	v1.POST("/calcom", calcomHandler.HandleWebhook)
+}
+
+// CalcomRoutes registers HTTP routes for Cal.com availability and booking.
+// These are called by the Assistant API's api_request tool during conversations.
+func CalcomRoutes(engine *gin.Engine, logger commons.Logger) {
+	logger.Info("Cal.com routes added to engine.")
+	calcomHandler := endpoint_api.NewCalcomHandler(logger)
+
+	v1 := engine.Group("/v1/calcom")
+	{
+		v1.POST("/availability", calcomHandler.HandleAvailability)
+		v1.POST("/book", calcomHandler.HandleBook)
+	}
 }
