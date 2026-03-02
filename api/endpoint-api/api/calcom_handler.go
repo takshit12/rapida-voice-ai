@@ -32,6 +32,10 @@ const (
 // This handler exposes two endpoints:
 //   - POST /v1/calcom/availability  — returns available time slots for a given date range
 //   - POST /v1/calcom/book          — creates a booking on Cal.com
+//
+// When configuring api_request tools in the UI, use one of:
+//   - Via gateway: https://<gateway-host>/api/endpoint/v1/calcom/availability and /v1/calcom/book
+//   - Direct:      https://<endpoint-api-host>/v1/calcom/availability and /v1/calcom/book
 type CalcomHandler struct {
 	logger   commons.Logger
 	apiToken string
@@ -228,6 +232,12 @@ func (h *CalcomHandler) HandleBook(c *gin.Context) {
 	}
 	req := wrapper.Data
 
+	// Cal.com requires attendee.language to be one of its allowed locale codes; default to "en" if omitted
+	attendeeLang := req.Attendee.Language
+	if attendeeLang == "" {
+		attendeeLang = "en"
+	}
+
 	// Build the Cal.com v2 booking payload
 	calcomPayload := map[string]interface{}{
 		"eventTypeId": req.EventTypeID,
@@ -236,7 +246,7 @@ func (h *CalcomHandler) HandleBook(c *gin.Context) {
 			"name":     req.Attendee.Name,
 			"email":    req.Attendee.Email,
 			"timeZone": req.Attendee.TimeZone,
-			"language": req.Attendee.Language,
+			"language": attendeeLang,
 		},
 	}
 
